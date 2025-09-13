@@ -1,334 +1,753 @@
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+import logging
+from datetime import datetime
 
 from ...database import get_db
+from ...models.experiment import ExperimentStatus
 from ...models import experiment as models
 from ...schemas import experiment as schemas
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
+async def log_request(request: Request, action: str, data: dict = None):
+    """Log incoming request details"""
+    logger.info(f"[{datetime.now()}] {action} - Request from {request.client.host}")
+    if data:
+        logger.info(f"Request data: {data}")
+
+async def log_response(action: str, response: dict):
+    """Log outgoing response"""
+    logger.info(f"[{datetime.now()}] {action} - Response: {response}")
+
 @router.get("/graph/overview", response_model=schemas.GraphOverview)
-def get_graph_overview(db: Session = Depends(get_db)):
+async def get_graph_overview(request: Request, db: Session = Depends(get_db)):
     """
     Get a concise representation of the entire experiment graph.
     Returns all nodes (experiments) and their connections.
     """
-    # Get all experiments
-    experiments = db.query(models.Experiment).all()
-    # Get all relationships
-    relationships = db.query(models.ExperimentRelationship).all()
+    await log_request(request, "GET_GRAPH_OVERVIEW")
+    try:
+        experiments = db.query(models.Experiment).all()
+        relationships = db.query(models.ExperimentRelationship).all()
 
-    # Format nodes
-    nodes = [
-        {
-            "id": exp.id,
-            "title": exp.title,
-            "status": exp.status,
-            "type": "experiment",  # Using current structure
-            "description": exp.description[:100] if exp.description else None  # Short preview
-        }
-        for exp in experiments
-    ]
+        nodes = [
+            {
+                "id": exp.id,
+                "title": exp.title,
+                "status": exp.status,
+                "type": "experiment",
+                "description": exp.description[:100] if exp.description else None,
+                "created_at": exp.created_at.isoformat() if exp.created_at else None,
+                "updated_at": exp.updated_at.isoformat() if exp.updated_at else None
+            }
+            for exp in experiments
+        ]
 
-    # Format edges
-    edges = [
-        {
-            "id": rel.id,
-            "from": rel.from_experiment_id,
-            "to": rel.to_experiment_id,
-            "type": rel.relationship_type,
-            "label": rel.label
-        }
-        for rel in relationships
-    ]
+        edges = [
+            {
+                "id": rel.id,
+                "from": rel.from_experiment_id,
+                "to": rel.to_experiment_id,
+                "type": rel.relationship_type,
+                "label": rel.label
+            }
+            for rel in relationships
+        ]
 
-    return {"nodes": nodes, "edges": edges}
+        response = {"nodes": nodes, "edges": edges}
+        await log_response("GET_GRAPH_OVERVIEW", response)
+        return response
+    except Exception as e:
+        logger.error(f"Error in get_graph_overview: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to retrieve graph overview",
+                "message": str(e),
+                "action_required": "Please try again or check input parameters"
+            }
+        )
 
 @router.get("/nodes/{node_id}", response_model=schemas.NodeInfo)
-def get_node_info(
+async def get_node_info(
     node_id: int,
+    request: Request,
     with_parents: bool = True,
     with_children: bool = True,
     db: Session = Depends(get_db)
 ):
     """
-    Get detailed information about a specific node (experiment) including optional
-    parent and child relationships.
+    Get detailed information about a specific node (experiment).
     """
-    # Get the experiment
-    experiment = db.query(models.Experiment).filter(models.Experiment.id == node_id).first()
-    if not experiment:
-        raise HTTPException(status_code=404, detail="Node not found")
+    await log_request(request, "GET_NODE_INFO", {"node_id": node_id})
+    try:
+        node = db.query(models.Experiment).filter(models.Experiment.id == node_id).first()
+        if not node:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Node not found",
+                    "message": f"No node exists with ID {node_id}",
+                    "action_required": "Please verify the node ID"
+                }
+            )
 
-    # Get relationships if requested
-    incoming_rels = []
-    outgoing_rels = []
-    
-    if with_parents:
-        incoming_rels = db.query(models.ExperimentRelationship).filter(
-            models.ExperimentRelationship.to_experiment_id == node_id
-        ).all()
-    
-    if with_children:
-        outgoing_rels = db.query(models.ExperimentRelationship).filter(
-            models.ExperimentRelationship.from_experiment_id == node_id
-        ).all()
+        # Get relationships if requested
+        parent_nodes = []
+        child_nodes = []
+        
+        if with_parents:
+            # Get parent relationships and nodes in one query
+            parent_rels = db.query(
+                models.ExperimentRelationship,
+                models.Experiment
+            ).join(
+                models.Experiment,
+                models.ExperimentRelationship.from_experiment_id == models.Experiment.id
+            ).filter(
+                models.ExperimentRelationship.to_experiment_id == node_id
+            ).all()
+            
+            parent_nodes = [
+                schemas.RelatedNode(
+                    id=parent.id,
+                    title=parent.title,
+                    description=parent.description[:100] if parent.description else None,
+                    relationship_type=rel.relationship_type,
+                    relationship_id=rel.id
+                )
+                for rel, parent in parent_rels
+            ]
 
-    # Get parent nodes
-    parent_nodes = []
-    if with_parents:
-        parent_ids = [rel.from_experiment_id for rel in incoming_rels]
-        parents = db.query(models.Experiment).filter(models.Experiment.id.in_(parent_ids)).all()
-        parent_nodes = [{
-            "id": p.id,
-            "title": p.title,
-            "description": p.description[:100] if p.description else None,
-            "relationship": next(r.relationship_type for r in incoming_rels if r.from_experiment_id == p.id)
-        } for p in parents]
+        if with_children:
+            # Get child relationships and nodes in one query
+            child_rels = db.query(
+                models.ExperimentRelationship,
+                models.Experiment
+            ).join(
+                models.Experiment,
+                models.ExperimentRelationship.to_experiment_id == models.Experiment.id
+            ).filter(
+                models.ExperimentRelationship.from_experiment_id == node_id
+            ).all()
+            
+            child_nodes = [
+                schemas.RelatedNode(
+                    id=child.id,
+                    title=child.title,
+                    description=child.description[:100] if child.description else None,
+                    relationship_type=rel.relationship_type,
+                    relationship_id=rel.id
+                )
+                for rel, child in child_rels
+            ]
 
-    # Get child nodes
-    child_nodes = []
-    if with_children:
-        child_ids = [rel.to_experiment_id for rel in outgoing_rels]
-        children = db.query(models.Experiment).filter(models.Experiment.id.in_(child_ids)).all()
-        child_nodes = [{
-            "id": c.id,
-            "title": c.title,
-            "description": c.description[:100] if c.description else None,
-            "relationship": next(r.relationship_type for r in outgoing_rels if r.to_experiment_id == c.id)
-        } for c in children]
-
-    return {
-        "node": {
-            "id": experiment.id,
-            "title": experiment.title,
-            "description": experiment.description,
-            "status": experiment.status,
-            "type": experiment.extra_data.get("node_type", "experiment") if experiment.extra_data else "experiment"
-        },
-        "parents": parent_nodes,
-        "children": child_nodes
-    }
-
-@router.get("/nodes", response_model=List[schemas.Experiment])
-def get_all_nodes(
-    concise: bool = False,
-    db: Session = Depends(get_db)
-):
-    """
-    Get a list of all nodes. If concise=true, returns only basic information.
-    """
-    experiments = db.query(models.Experiment).all()
-    if not concise:
-        return experiments
-    
-    return [{
-        "id": exp.id,
-        "title": exp.title,
-        "display_text": exp.description[:100] if exp.description else None,
-        "status": exp.status,
-        "type": exp.extra_data.get("node_type", "experiment") if exp.extra_data else "experiment"
-    } for exp in experiments]
+        response = {
+            "node": {
+                "id": node.id,
+                "title": node.title,
+                "description": node.description,
+                "motivation": node.motivation,
+                "expectations": node.expectations,
+                "status": node.status,
+                "hypothesis": node.hypothesis,
+                "result": node.result,
+                "extra_data": node.extra_data,
+                "created_at": node.created_at.isoformat() if node.created_at else None,
+                "updated_at": node.updated_at.isoformat() if node.updated_at else None
+            },
+            "parents": parent_nodes,
+            "children": child_nodes
+        }
+        await log_response("GET_NODE_INFO", response)
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in get_node_info: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to retrieve node information",
+                "message": str(e),
+                "action_required": "Please try again or check input parameters"
+            }
+        )
 
 @router.post("/nodes", response_model=schemas.Experiment)
-def create_node(
+async def create_node(
     experiment: schemas.ExperimentCreate,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
-    Create a new node (experiment) with metadata.
+    Create a new node (experiment).
+    Validates input and provides specific guidance for AI agent reprompting.
     """
-    db_experiment = models.Experiment(**experiment.model_dump())
-    db.add(db_experiment)
-    db.commit()
-    db.refresh(db_experiment)
-    return db_experiment
+    await log_request(request, "CREATE_NODE", experiment.model_dump())
+    try:
+        # Comprehensive input validation
+        validation_errors = {
+            "missing_fields": [],
+            "invalid_fields": {},
+            "suggestions": {}
+        }
+
+        # Check required fields
+        if not experiment.title:
+            validation_errors["missing_fields"].append("title")
+            validation_errors["suggestions"]["title"] = "Provide a clear, descriptive title for the experiment"
+        elif len(experiment.title.strip()) < 5:
+            validation_errors["invalid_fields"]["title"] = "Title is too short"
+            validation_errors["suggestions"]["title"] = "Title should be at least 5 characters long and descriptive"
+
+        if experiment.status is None:
+            validation_errors["missing_fields"].append("status")
+            validation_errors["suggestions"]["status"] = f"Must be one of: {', '.join([s.value for s in ExperimentStatus])}"
+
+        # Validate content quality
+        if experiment.description and len(experiment.description.strip()) < 20:
+            validation_errors["invalid_fields"]["description"] = "Description is too brief"
+            validation_errors["suggestions"]["description"] = "Provide a more detailed description (at least 20 characters)"
+
+        if experiment.motivation and len(experiment.motivation.strip()) < 20:
+            validation_errors["invalid_fields"]["motivation"] = "Motivation is too brief"
+            validation_errors["suggestions"]["motivation"] = "Explain the motivation more thoroughly"
+
+        # Check for logical consistency
+        if experiment.result and experiment.status != ExperimentStatus.COMPLETED:
+            validation_errors["invalid_fields"]["status"] = "Experiment has results but status is not COMPLETED"
+            validation_errors["suggestions"]["status"] = "Set status to COMPLETED or remove results"
+
+        # If any validation errors found, return detailed feedback
+        if validation_errors["missing_fields"] or validation_errors["invalid_fields"]:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "error": "Invalid experiment data",
+                    "validation_errors": validation_errors,
+                    "message": "The provided experiment data needs improvement",
+                    "action_required": "Please address the following issues:",
+                    "reprompt_guidance": {
+                        "missing_fields": "You must provide values for all required fields",
+                        "invalid_fields": "Some fields need to be improved",
+                        "suggestions": "Follow the suggestions to improve the data quality",
+                        "examples": {
+                            "title": "PCR Optimization for DNA Amplification",
+                            "description": "A detailed study to optimize PCR conditions for improved DNA amplification efficiency",
+                            "motivation": "Current PCR protocols show inconsistent results. This experiment aims to identify optimal conditions."
+                        }
+                    }
+                }
+            )
+
+        db_experiment = models.Experiment(**experiment.model_dump())
+        db.add(db_experiment)
+        db.commit()
+        db.refresh(db_experiment)
+        
+        response = schemas.Experiment.model_validate(db_experiment)
+        await log_response("CREATE_NODE", response.model_dump())
+        return response
+    except IntegrityError as e:
+        db.rollback()
+        logger.error(f"Database integrity error in create_node: {str(e)}")
+        
+        # Extract specific constraint violation details
+        error_msg = str(e)
+        if "NOT NULL constraint failed" in error_msg:
+            field = error_msg.split(".")[-1].strip()
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Missing required field",
+                    "field": field,
+                    "message": f"The field '{field}' cannot be null",
+                    "action_required": f"Please provide a value for '{field}'"
+                }
+            )
+        elif "UNIQUE constraint failed" in error_msg:
+            field = error_msg.split(".")[-1].strip()
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Duplicate value",
+                    "field": field,
+                    "message": f"The value for '{field}' already exists",
+                    "action_required": f"Please provide a unique value for '{field}'"
+                }
+            )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Database constraint violation",
+                    "message": str(e),
+                    "action_required": "Please check your input data and try again"
+                }
+            )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in create_node: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to create node",
+                "message": str(e),
+                "action_required": "Please verify your input data and try again"
+            }
+        )
 
 @router.patch("/nodes/{node_id}", response_model=schemas.Experiment)
-def update_node(
+async def update_node(
     node_id: int,
     update_data: schemas.ExperimentCreate,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
-    Update an existing node (experiment). Only provided fields will be updated.
+    Update an existing node (experiment).
     """
-    experiment = db.query(models.Experiment).filter(models.Experiment.id == node_id).first()
-    if not experiment:
-        raise HTTPException(status_code=404, detail="Node not found")
-
-    # Update only provided fields
+    # Print the raw data before any processing
+    print("\n[DEBUG] Raw update_data:", update_data)
+    
+    # Print with and without exclude_unset to see the difference
+    full_dict = update_data.model_dump(exclude_unset=False)
     update_dict = update_data.model_dump(exclude_unset=True)
-    for field, value in update_dict.items():
-        if field == 'extra_data' and value and experiment.extra_data:
-            # Merge extra_data instead of overwriting
-            experiment.extra_data.update(value)
-        else:
-            setattr(experiment, field, value)
-
-    db.commit()
-    db.refresh(experiment)
-    return experiment
-
-def collect_subgraph_nodes(node_id: int, db: Session) -> set:
-    """
-    Collect all descendant nodes in the subgraph using BFS.
-    """
-    to_visit = {node_id}
-    visited = set()
     
-    while to_visit:
-        current = to_visit.pop()
-        if current in visited:
-            continue
+    print("\n[DEBUG] Full data dictionary (including unset fields):", full_dict)
+    print("[DEBUG] Update dictionary (only set fields):", update_dict)
+    
+    print(f"\n[UPDATE NODE] Received request - Node ID: {node_id}")
+    print(f"[UPDATE NODE] Update data received: {update_dict}")
+    
+    await log_request(request, "UPDATE_NODE", {"node_id": node_id, "data": update_dict})
+    try:
+        experiment = db.query(models.Experiment).filter(models.Experiment.id == node_id).first()
+        print(f"[UPDATE NODE] Found experiment: {experiment.title if experiment else 'Not found'}")
+        
+        if not experiment:
+            print(f"[UPDATE NODE ERROR] Node {node_id} not found")
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Node not found",
+                    "message": f"No node exists with ID {node_id}",
+                    "action_required": "Please verify the node ID"
+                }
+            )
+
+        # Validate update data
+        update_dict = update_data.model_dump(exclude_unset=True)
+        
+        if not update_dict:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "error": "No update data provided",
+                    "message": "At least one field must be provided for update",
+                    "action_required": "Please provide at least one field to update",
+                    "available_fields": ["title", "description", "motivation", "expectations", "status", "hypothesis", "result", "extra_data"]
+                }
+            )
+
+        # Validate specific fields
+        print("\n[VALIDATION] Starting field validation...")
+        invalid_fields = []
+        if 'status' in update_dict:
+            print(f"[VALIDATION] Checking status field: {update_dict['status']}")
+            # Convert status to lowercase for case-insensitive comparison
+            status_value = update_dict['status'].lower() if isinstance(update_dict['status'], str) else update_dict['status']
+            valid_statuses = [s.value for s in ExperimentStatus]
+            print(f"[VALIDATION] Valid status values: {valid_statuses}")
+            print(f"[VALIDATION] Received status (lowercase): {status_value}")
             
-        visited.add(current)
-        
-        # Get all children
-        children = db.query(models.ExperimentRelationship.to_experiment_id).filter(
-            models.ExperimentRelationship.from_experiment_id == current
-        ).all()
-        
-        to_visit.update(child[0] for child in children)
-    
-    return visited
+            print(f"[DEBUG] Comparing '{status_value}' with valid statuses: {valid_statuses}")
+            if status_value not in valid_statuses:
+                print(f"[VALIDATION ERROR] Invalid status value: {status_value}")
+                invalid_fields.append(('status', f"Must be one of: {', '.join(valid_statuses)}"))
+            else:
+                # Ensure correct case is used
+                print(f"[DEBUG] Finding matching status enum for value: {status_value}")
+                matching_status = next(s for s in ExperimentStatus if s.value == status_value)
+                update_dict['status'] = matching_status
+                print(f"[DEBUG] Set status to enum value: {matching_status}")
+                print(f"[VALIDATION] Status value accepted and normalized to: {update_dict['status']}")
+
+        if 'title' in update_dict and not update_dict['title'].strip():
+            invalid_fields.append(('title', "Cannot be empty"))
+
+        if invalid_fields:
+            error_response = {
+                "error": "Invalid field values",
+                "invalid_fields": dict(invalid_fields),
+                "message": "Some fields contain invalid values",
+                "action_required": f"Please correct the invalid fields. Valid status values are: {', '.join([s.value for s in ExperimentStatus])}",
+                "debug_info": {
+                    "received_value": update_dict.get('status'),
+                    "valid_values": [s.value for s in ExperimentStatus],
+                    "validation_errors": invalid_fields
+                }
+            }
+            logger.error(f"Validation error in update_node: {error_response}")
+            raise HTTPException(
+                status_code=422,
+                detail=error_response
+            )
+
+        # Apply updates
+        print("\n[UPDATE] Applying field updates...")
+        for field, value in update_dict.items():
+            print(f"[UPDATE] Setting field '{field}' to value: {value}")
+            if field == 'extra_data' and value and experiment.extra_data:
+                print(f"[UPDATE] Merging extra_data: {value}")
+                experiment.extra_data.update(value)
+            else:
+                print(f"[UPDATE] Setting attribute {field}={value}")
+                setattr(experiment, field, value)
+
+        try:
+            db.commit()
+            db.refresh(experiment)
+            response = schemas.Experiment.model_validate(experiment)
+            await log_response("UPDATE_NODE", response.model_dump())
+            return response
+        except IntegrityError as e:
+            db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Database constraint violation",
+                    "message": str(e),
+                    "action_required": "Please check your input data and try again"
+                }
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in update_node: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to update node",
+                "message": str(e),
+                "action_required": "Please verify your input data and try again"
+            }
+        )
 
 @router.delete("/nodes/{node_id}")
-def delete_node(
+async def delete_node(
     node_id: int,
+    request: Request,
     force_delete: bool = False,
     db: Session = Depends(get_db)
 ):
     """
-    Delete a node (experiment). If force_delete is True, also delete the entire subgraph.
+    Delete a node and optionally its subgraph.
     """
-    # Check if node exists
-    node = db.query(models.Experiment).filter(models.Experiment.id == node_id).first()
-    if not node:
-        raise HTTPException(status_code=404, detail="Node not found")
+    await log_request(request, "DELETE_NODE", {"node_id": node_id, "force_delete": force_delete})
+    try:
+        # Check if node exists
+        node = db.query(models.Experiment).filter(models.Experiment.id == node_id).first()
+        if not node:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Node not found",
+                    "message": f"No node exists with ID {node_id}",
+                    "action_required": "Please verify the node ID"
+                }
+            )
 
-    # Check if node has any outgoing relationships (is not a leaf)
-    has_children = db.query(models.ExperimentRelationship).filter(
-        models.ExperimentRelationship.from_experiment_id == node_id
-    ).first() is not None
+        # Check for children
+        has_children = db.query(models.ExperimentRelationship).filter(
+            models.ExperimentRelationship.from_experiment_id == node_id
+        ).first() is not None
 
-    if has_children and not force_delete:
+        if has_children and not force_delete:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Node has children",
+                    "message": "Cannot delete node with children without force_delete=true",
+                    "action_required": "Set force_delete=true to delete node and its subgraph"
+                }
+            )
+
+        if force_delete:
+            # Get all descendant nodes
+            nodes_to_delete = set()
+            to_visit = {node_id}
+            
+            while to_visit:
+                current = to_visit.pop()
+                if current not in nodes_to_delete:
+                    nodes_to_delete.add(current)
+                    children = db.query(models.ExperimentRelationship.to_experiment_id).filter(
+                        models.ExperimentRelationship.from_experiment_id == current
+                    ).all()
+                    to_visit.update(child[0] for child in children)
+
+            # Delete relationships
+            db.query(models.ExperimentRelationship).filter(
+                (models.ExperimentRelationship.from_experiment_id.in_(nodes_to_delete)) |
+                (models.ExperimentRelationship.to_experiment_id.in_(nodes_to_delete))
+            ).delete(synchronize_session=False)
+
+            # Delete nodes
+            db.query(models.Experiment).filter(
+                models.Experiment.id.in_(nodes_to_delete)
+            ).delete(synchronize_session=False)
+        else:
+            # Delete relationships for this node
+            db.query(models.ExperimentRelationship).filter(
+                (models.ExperimentRelationship.from_experiment_id == node_id) |
+                (models.ExperimentRelationship.to_experiment_id == node_id)
+            ).delete(synchronize_session=False)
+            
+            # Delete the node
+            db.query(models.Experiment).filter(models.Experiment.id == node_id).delete()
+
+        db.commit()
+        response = {"success": True, "deleted_node_id": node_id}
+        await log_response("DELETE_NODE", response)
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in delete_node: {str(e)}")
         raise HTTPException(
-            status_code=400,
-            detail="Node has children. Set force_delete=True to delete node and its subgraph"
+            status_code=500,
+            detail={
+                "error": "Failed to delete node",
+                "message": str(e),
+                "action_required": "Please try again or check input parameters"
+            }
         )
 
-    if force_delete:
-        # Collect all nodes in the subgraph
-        nodes_to_delete = collect_subgraph_nodes(node_id, db)
-        
-        # Delete all relationships involving these nodes
-        db.query(models.ExperimentRelationship).filter(
-            (models.ExperimentRelationship.from_experiment_id.in_(nodes_to_delete)) |
-            (models.ExperimentRelationship.to_experiment_id.in_(nodes_to_delete))
-        ).delete(synchronize_session=False)
-        
-        # Delete all nodes
-        db.query(models.Experiment).filter(
-            models.Experiment.id.in_(nodes_to_delete)
-        ).delete(synchronize_session=False)
-    else:
-        # Just delete relationships involving this node
-        db.query(models.ExperimentRelationship).filter(
-            (models.ExperimentRelationship.from_experiment_id == node_id) |
-            (models.ExperimentRelationship.to_experiment_id == node_id)
-        ).delete(synchronize_session=False)
-        
-        # Delete the node
-        db.query(models.Experiment).filter(
-            models.Experiment.id == node_id
-        ).delete(synchronize_session=False)
-
-    db.commit()
-    return {"success": True}
-
 @router.post("/edges", response_model=schemas.ExperimentRelationship)
-def create_edge(
+async def create_edge(
     edge: schemas.ExperimentRelationshipCreate,
+    request: Request,
     db: Session = Depends(get_db)
 ):
-    """
-    Create a new edge (relationship) between nodes.
-    """
-    # Verify both nodes exist
-    from_node = db.query(models.Experiment).filter(models.Experiment.id == edge.from_experiment_id).first()
-    to_node = db.query(models.Experiment).filter(models.Experiment.id == edge.to_experiment_id).first()
-    
-    if not from_node or not to_node:
-        raise HTTPException(status_code=404, detail="One or both nodes not found")
+    """Create a new edge between experiments"""
+    await log_request(request, "CREATE_EDGE", edge.model_dump())
+    try:
+        # Verify both nodes exist
+        from_node = db.query(models.Experiment).filter(models.Experiment.id == edge.from_experiment_id).first()
+        to_node = db.query(models.Experiment).filter(models.Experiment.id == edge.to_experiment_id).first()
 
-    db_edge = models.ExperimentRelationship(**edge.model_dump())
-    db.add(db_edge)
-    db.commit()
-    db.refresh(db_edge)
-    return db_edge
+        if not from_node or not to_node:
+            missing_nodes = []
+            if not from_node:
+                missing_nodes.append(f"from_experiment_id: {edge.from_experiment_id}")
+            if not to_node:
+                missing_nodes.append(f"to_experiment_id: {edge.to_experiment_id}")
+                
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Node(s) not found",
+                    "message": f"The following nodes do not exist: {', '.join(missing_nodes)}",
+                    "action_required": "Please verify both node IDs exist"
+                }
+            )
+
+        # Prevent self-loops
+        if edge.from_experiment_id == edge.to_experiment_id:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Invalid edge",
+                    "message": "Cannot create an edge from a node to itself",
+                    "action_required": "Please provide different from_experiment_id and to_experiment_id"
+                }
+            )
+
+        # Normalize relationship type
+        edge_data = edge.model_dump()
+        edge_data['relationship_type'] = models.RelationshipType.normalize(edge_data['relationship_type'])
+        
+        # Create edge
+        db_edge = models.ExperimentRelationship(**edge_data)
+        db.add(db_edge)
+        db.commit()
+        db.refresh(db_edge)
+        
+        response = schemas.ExperimentRelationship.model_validate(db_edge)
+        await log_response("CREATE_EDGE", response.model_dump())
+        return response
+
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Invalid edge data",
+                "message": str(e),
+                "action_required": "Please check node IDs and relationship type"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in create_edge: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to create edge",
+                "message": str(e),
+                "action_required": "Please try again"
+            }
+        )
 
 @router.patch("/edges/{edge_id}", response_model=schemas.ExperimentRelationship)
-def update_edge(
+async def update_edge(
     edge_id: int,
-    edge: schemas.ExperimentRelationshipCreate,
+    edge_update: schemas.ExperimentRelationshipCreate,
+    request: Request,
     db: Session = Depends(get_db)
 ):
-    """
-    Update an existing edge (relationship).
-    """
-    db_edge = db.query(models.ExperimentRelationship).filter(models.ExperimentRelationship.id == edge_id).first()
-    if not db_edge:
-        raise HTTPException(status_code=404, detail="Edge not found")
+    """Update an edge's properties"""
+    await log_request(request, "UPDATE_EDGE", {"edge_id": edge_id, "data": edge_update.model_dump()})
+    try:
+        edge = db.query(models.ExperimentRelationship).filter(
+            models.ExperimentRelationship.id == edge_id
+        ).first()
+        
+        if not edge:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Edge not found",
+                    "message": f"No edge exists with ID {edge_id}",
+                    "action_required": "Please verify the edge ID"
+                }
+            )
 
-    update_data = edge.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_edge, field, value)
+        # If updating node connections, verify the nodes exist
+        update_data = edge_update.model_dump(exclude_unset=True)
+        if 'from_experiment_id' in update_data or 'to_experiment_id' in update_data:
+            from_id = update_data.get('from_experiment_id', edge.from_experiment_id)
+            to_id = update_data.get('to_experiment_id', edge.to_experiment_id)
+            
+            # Check nodes exist
+            nodes = db.query(models.Experiment).filter(
+                models.Experiment.id.in_([from_id, to_id])
+            ).all()
+            existing_ids = {node.id for node in nodes}
+            
+            missing_nodes = []
+            if from_id not in existing_ids:
+                missing_nodes.append(f"from_experiment_id: {from_id}")
+            if to_id not in existing_ids:
+                missing_nodes.append(f"to_experiment_id: {to_id}")
+            
+            if missing_nodes:
+                raise HTTPException(
+                    status_code=404,
+                    detail={
+                        "error": "Node(s) not found",
+                        "message": f"The following nodes do not exist: {', '.join(missing_nodes)}",
+                        "action_required": "Please verify node IDs"
+                    }
+                )
+            
+            # Prevent self-loops
+            if from_id == to_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "error": "Invalid edge",
+                        "message": "Cannot create an edge from a node to itself",
+                        "action_required": "Please provide different from_experiment_id and to_experiment_id"
+                    }
+                )
 
-    db.commit()
-    db.refresh(db_edge)
-    return db_edge
+        # Update edge properties
+        for field, value in update_data.items():
+            if field == 'relationship_type':
+                value = models.RelationshipType.normalize(value)
+            setattr(edge, field, value)
 
-def find_edge_by_nodes(
-    db: Session,
-    from_id: int,
-    to_id: int,
-    label: str = None
-) -> models.ExperimentRelationship:
-    """Helper to find edge by node IDs and optional label"""
-    query = db.query(models.ExperimentRelationship).filter(
-        models.ExperimentRelationship.from_experiment_id == from_id,
-        models.ExperimentRelationship.to_experiment_id == to_id
-    )
-    if label:
-        query = query.filter(models.ExperimentRelationship.label == label)
-    return query.first()
+        db.commit()
+        db.refresh(edge)
+        
+        response = schemas.ExperimentRelationship.model_validate(edge)
+        await log_response("UPDATE_EDGE", response.model_dump())
+        return response
+
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Invalid edge update",
+                "message": str(e),
+                "action_required": "Please check node IDs and relationship type"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in update_edge: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to update edge",
+                "message": str(e),
+                "action_required": "Please try again"
+            }
+        )
 
 @router.delete("/edges/{edge_id}")
-def delete_edge_by_id(edge_id: int, db: Session = Depends(get_db)):
-    """
-    Delete an edge by its ID.
-    """
-    result = db.query(models.ExperimentRelationship).filter(models.ExperimentRelationship.id == edge_id).delete()
-    if not result:
-        raise HTTPException(status_code=404, detail="Edge not found")
-    
-    db.commit()
-    return {"success": True}
-
-@router.delete("/edges/by-nodes")
-def delete_edge(
-    from_id: int,
-    to_id: int,
-    label: str = None,
+async def delete_edge(
+    edge_id: int,
+    request: Request,
     db: Session = Depends(get_db)
 ):
-    """
-    Delete an edge by specifying source and target nodes, and optionally a label.
-    """
-    edge = find_edge_by_nodes(db, from_id, to_id, label)
-    if not edge:
-        raise HTTPException(status_code=404, detail="Edge not found")
-    
-    return delete_edge_by_id(edge.id, db)
+    """Delete an edge between experiments"""
+    await log_request(request, "DELETE_EDGE", {"edge_id": edge_id})
+    try:
+        result = db.query(models.ExperimentRelationship).filter(
+            models.ExperimentRelationship.id == edge_id
+        ).delete()
+        
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Edge not found",
+                    "message": f"No edge exists with ID {edge_id}",
+                    "action_required": "Please verify the edge ID"
+                }
+            )
+        
+        db.commit()
+        return {"success": True, "deleted_edge_id": edge_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in delete_edge: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to delete edge",
+                "message": str(e),
+                "action_required": "Please try again"
+            }
+        )

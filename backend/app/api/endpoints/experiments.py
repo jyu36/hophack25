@@ -322,20 +322,35 @@ async def update_node(
 
         # Validate specific fields
         invalid_fields = []
-        if 'status' in update_dict and update_dict['status'] not in [s.value for s in ExperimentStatus]:
-            invalid_fields.append(('status', f"Must be one of: {', '.join([s.value for s in ExperimentStatus])}"))
+        if 'status' in update_dict:
+            # Convert status to lowercase for case-insensitive comparison
+            status_value = update_dict['status'].lower() if isinstance(update_dict['status'], str) else update_dict['status']
+            valid_statuses = [s.value for s in ExperimentStatus]
+            if status_value not in valid_statuses:
+                invalid_fields.append(('status', f"Must be one of: {', '.join(valid_statuses)}"))
+            else:
+                # Ensure correct case is used
+                update_dict['status'] = next(s.value for s in ExperimentStatus if s.value == status_value)
+
         if 'title' in update_dict and not update_dict['title'].strip():
             invalid_fields.append(('title', "Cannot be empty"))
 
         if invalid_fields:
+            error_response = {
+                "error": "Invalid field values",
+                "invalid_fields": dict(invalid_fields),
+                "message": "Some fields contain invalid values",
+                "action_required": f"Please correct the invalid fields. Valid status values are: {', '.join([s.value for s in ExperimentStatus])}",
+                "debug_info": {
+                    "received_value": update_dict.get('status'),
+                    "valid_values": [s.value for s in ExperimentStatus],
+                    "validation_errors": invalid_fields
+                }
+            }
+            logger.error(f"Validation error in update_node: {error_response}")
             raise HTTPException(
                 status_code=422,
-                detail={
-                    "error": "Invalid field values",
-                    "invalid_fields": dict(invalid_fields),
-                    "message": "Some fields contain invalid values",
-                    "action_required": "Please correct the invalid fields"
-                }
+                detail=error_response
             )
 
         # Apply updates

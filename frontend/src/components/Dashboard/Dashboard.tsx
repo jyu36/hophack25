@@ -78,7 +78,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-gray-50 p-6">
+    <div className="flex-1 overflow-y-auto bg-gray-50 p-6 h-screen">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8">
@@ -182,7 +182,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="h-[calc(100vh-32rem)] min-h-[400px] overflow-y-auto p-6">
+            <div className="max-h-[calc(100vh-32rem)] min-h-[400px] overflow-y-auto p-6">
               {loading ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="text-center text-gray-500">

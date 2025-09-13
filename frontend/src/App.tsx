@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import AIChatResearchAssistant from './components/AIChatResearchAssistant';
-import Dashboard from './components/Dashboard/Dashboard';
-import { ExperimentSuggestion } from './types/research';
-import { useExperiments } from './hooks/useExperiments';
+import React, { useState } from "react";
+import AIChatResearchAssistant from "./components/AIChatResearchAssistant";
+import Dashboard from "./components/Dashboard/Dashboard";
+import { ExperimentSuggestion } from "./types/research";
+import { useExperiments } from "./hooks/useExperiments";
 
 const App: React.FC = () => {
   const [showChat, setShowChat] = useState(false);
   const [suggestions, setSuggestions] = useState<ExperimentSuggestion[]>([]);
 
-  const handleSuggestionsGenerated = (newSuggestions: ExperimentSuggestion[]) => {
+  const handleSuggestionsGenerated = (
+    newSuggestions: ExperimentSuggestion[]
+  ) => {
     setSuggestions(newSuggestions);
     setShowChat(true);
   };

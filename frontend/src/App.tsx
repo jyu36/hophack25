@@ -1,35 +1,49 @@
 import React, { useState } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import AIChatResearchAssistant from "./components/AIChatResearchAssistant";
 import Dashboard from "./components/Dashboard/Dashboard";
 import { ExperimentSuggestion } from "./types/research";
-import { useExperiments } from "./hooks/useExperiments";
 
-const App: React.FC = () => {
-  const [showChat, setShowChat] = useState(false);
+const DashboardWrapper: React.FC = () => {
+  const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState<ExperimentSuggestion[]>([]);
 
   const handleSuggestionsGenerated = (
     newSuggestions: ExperimentSuggestion[]
   ) => {
     setSuggestions(newSuggestions);
-    setShowChat(true);
+    navigate("/research", { state: { suggestions: newSuggestions } });
   };
 
   return (
-    <div className="h-screen">
-      {showChat ? (
-        <AIChatResearchAssistant
-          initialSuggestions={suggestions}
-          onBackToDashboard={() => setShowChat(false)}
-        />
-      ) : (
-        <Dashboard
-          onNewExperiment={() => setShowChat(true)}
-          onViewGraph={() => setShowChat(true)}
-          onSuggestionsGenerated={handleSuggestionsGenerated}
-        />
-      )}
-    </div>
+    <Dashboard
+      onNewExperiment={() => navigate("/research")}
+      onViewGraph={() => navigate("/research")}
+      onSuggestionsGenerated={handleSuggestionsGenerated}
+    />
+  );
+};
+
+const ResearchAssistantWrapper: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <AIChatResearchAssistant
+      initialSuggestions={[]}
+      onBackToDashboard={() => navigate("/")}
+    />
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <div className="h-screen">
+        <Routes>
+          <Route path="/" element={<DashboardWrapper />} />
+          <Route path="/research" element={<ResearchAssistantWrapper />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 };
 

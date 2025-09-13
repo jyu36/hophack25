@@ -30,8 +30,8 @@ class Experiment(Base, TimestampMixin):
     description = Column(Text, nullable=True)    # Detailed description of the experiment
     
     # Experiment planning and reasoning
-    motivation = Column(Text, nullable=False)    # Why we're conducting this experiment (provided by AI)
-    expectations = Column(Text, nullable=False)  # What we expect to learn/achieve from this experiment
+    motivation = Column(Text, nullable=True)    # Why we're conducting this experiment (provided by AI)
+    expectations = Column(Text, nullable=True)  # What we expect to learn/achieve from this experiment
     
     # Current state of the experiment
     status = Column(

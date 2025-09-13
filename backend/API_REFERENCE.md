@@ -6,6 +6,27 @@
 http://127.0.0.1:8000
 ```
 
+## Error Handling
+
+All endpoints follow a consistent error response format:
+
+```json
+{
+  "detail": {
+    "error": "Short error description",
+    "message": "Detailed explanation of what went wrong",
+    "action_required": "What action should be taken to fix the error"
+  }
+}
+```
+
+Common error scenarios:
+
+- 400: Bad Request (invalid input data)
+- 404: Resource not found
+- 422: Validation error (missing/invalid fields)
+- 500: Server error
+
 ## Experiment Nodes
 
 ### Create Node
@@ -15,13 +36,14 @@ POST /nodes
 
 Request Body:
 {
-    "title": "PCR Optimization",
-    "description": "Optimizing PCR conditions for DNA amplification",
-    "motivation": "Improve amplification efficiency",
-    "expectations": "Find optimal temperature and primer conditions"
+    "title": "PCR Optimization",              # Required
+    "description": "Optimizing PCR...",       # Optional
+    "motivation": "Improve efficiency...",     # Optional
+    "expectations": "Find optimal...",         # Optional
+    "status": "planned"                       # Optional, defaults to "planned"
 }
 
-Response:
+Success Response (200):
 {
     "id": 1,
     "title": "PCR Optimization",
@@ -35,6 +57,15 @@ Response:
     "created_at": "2025-09-13T04:57:49",
     "updated_at": "2025-09-13T04:57:49"
 }
+
+Error Response (422):
+{
+    "detail": {
+        "error": "Missing required field",
+        "message": "Title is required",
+        "action_required": "Please provide a title for the experiment"
+    }
+}
 ```
 
 ### Get Node Info
@@ -42,12 +73,14 @@ Response:
 ```http
 GET /nodes/{node_id}?with_parents=true&with_children=true
 
-Response:
+Success Response (200):
 {
     "node": {
         "id": 2,
         "title": "DNA Sequencing",
         "description": "Sequencing amplified DNA samples",
+        "status": "planned",
+        "type": "experiment",
         ...
     },
     "parents": [
@@ -60,14 +93,23 @@ Response:
     ],
     "children": []
 }
+
+Error Response (404):
+{
+    "detail": {
+        "error": "Node not found",
+        "message": "No node exists with ID {node_id}",
+        "action_required": "Please verify the node ID"
+    }
+}
 ```
 
-### Get All Nodes (Concise)
+### Get All Nodes
 
 ```http
 GET /nodes?concise=true
 
-Response:
+Success Response (200):
 [
     {
         "id": 1,
@@ -80,30 +122,56 @@ Response:
 ]
 ```
 
-## Relationships (Edges)
-
-### Create Edge
+### Update Node
 
 ```http
-POST /edges
+PATCH /nodes/{node_id}
 
 Request Body:
 {
-    "from_experiment_id": 1,
-    "to_experiment_id": 2,
-    "relationship_type": "leads_to",
-    "label": "PCR products for sequencing"
+    "title": "Updated Title",            # Optional
+    "description": "Updated desc",       # Optional
+    "extra_data": {                      # Optional
+        "node_type": "experiment",
+        "completion_status": "done"
+    }
 }
 
-Response:
+Success Response (200):
 {
     "id": 1,
-    "from_experiment_id": 1,
-    "to_experiment_id": 2,
-    "relationship_type": "leads_to",
-    "label": "PCR products for sequencing",
-    "extra_data": null,
-    "created_at": "2025-09-13T04:58:00"
+    "title": "Updated Title",
+    ...
+}
+
+Error Response (404):
+{
+    "detail": {
+        "error": "Node not found",
+        "message": "No node exists with ID {node_id}",
+        "action_required": "Please verify the node ID"
+    }
+}
+```
+
+### Delete Node
+
+```http
+DELETE /nodes/{node_id}?force_delete=true
+
+Success Response (200):
+{
+    "success": true,
+    "deleted_node_id": 1
+}
+
+Error Response (400):
+{
+    "detail": {
+        "error": "Node has children",
+        "message": "Cannot delete node with children without force_delete=true",
+        "action_required": "Set force_delete=true to delete node and its subgraph"
+    }
 }
 ```
 
@@ -114,7 +182,7 @@ Response:
 ```http
 GET /graph/overview
 
-Response:
+Success Response (200):
 {
     "nodes": [
         {
@@ -122,14 +190,7 @@ Response:
             "title": "PCR Optimization",
             "status": "planned",
             "type": "experiment",
-            "description": "Optimizing PCR conditions for DNA amplification"
-        },
-        {
-            "id": 2,
-            "title": "DNA Sequencing",
-            "status": "planned",
-            "type": "experiment",
-            "description": "Sequencing amplified DNA samples"
+            "description": "Optimizing PCR conditions..."
         }
     ],
     "edges": [
@@ -151,9 +212,18 @@ Response:
 ```http
 POST /context-keywords?keyword=PCR optimization
 
-Response:
+Success Response (200):
 {
     "success": true
+}
+
+Error Response (400):
+{
+    "detail": {
+        "error": "Duplicate keyword",
+        "message": "This keyword already exists",
+        "action_required": "Use a different keyword or update existing one"
+    }
 }
 ```
 
@@ -174,9 +244,18 @@ Response:
 ```http
 DELETE /context-keywords/{keyword}
 
-Response:
+Success Response (200):
 {
     "success": true
+}
+
+Error Response (404):
+{
+    "detail": {
+        "error": "Keyword not found",
+        "message": "The specified keyword does not exist",
+        "action_required": "Verify the keyword exists before deletion"
+    }
 }
 ```
 
@@ -187,9 +266,18 @@ Response:
 ```http
 POST /nodes/{node_id}/literature?link=https://doi.org/10.1000/pcr123
 
-Response:
+Success Response (200):
 {
     "success": true
+}
+
+Error Response (404):
+{
+    "detail": {
+        "error": "Node not found",
+        "message": "No node exists with ID {node_id}",
+        "action_required": "Please verify the node ID"
+    }
 }
 ```
 
@@ -198,7 +286,7 @@ Response:
 ```http
 GET /nodes/{node_id}/literature
 
-Response:
+Success Response (200):
 [
     "https://doi.org/10.1000/pcr123"
 ]
@@ -209,52 +297,39 @@ Response:
 ```http
 DELETE /nodes/{node_id}/literature/{encoded_link}
 
-Response:
+Success Response (200):
 {
     "success": true
 }
 ```
 
-## Additional Operations
-
-### Update Node
-
-```http
-PATCH /nodes/{node_id}
-
-Request Body:
-{
-    "description": "Updated description",
-    "extra_data": {
-        "node_type": "experiment",
-        "completion_status": "done"
-    }
-}
-```
-
-### Delete Node
-
-```http
-DELETE /nodes/{node_id}?force_delete=true
-
-Response:
-{
-    "success": true
-}
-```
-
-Note: `force_delete=true` will delete the node and all its descendants in the graph.
-
-## Status Codes
+## Response Status Codes
 
 - 200: Success
-- 400: Bad Request (e.g., duplicate entry, invalid data)
-- 404: Not Found
-- 500: Server Error
+- 400: Bad Request (e.g., invalid input, constraint violation)
+- 404: Not Found (resource doesn't exist)
+- 422: Validation Error (missing/invalid fields)
+- 500: Server Error (unexpected issues)
+
+## Error Handling Best Practices
+
+1. **Always check error responses** for the `action_required` field which provides guidance on how to fix the error.
+
+2. **Common error scenarios**:
+
+   - Missing required fields
+   - Invalid data formats
+   - Resource not found
+   - Constraint violations (e.g., unique fields)
+   - Parent/child relationship conflicts
+
+3. **Retry strategy**:
+   - For 5xx errors: Retry with exponential backoff
+   - For 4xx errors: Fix the request based on `action_required` before retrying
 
 ## Interactive Documentation
 
-Full API documentation is available at:
+Full API documentation with interactive testing is available at:
 
 ```
 http://127.0.0.1:8000/docs

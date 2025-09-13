@@ -1,4 +1,4 @@
-    )
+  
 fastapi.exceptions.ResponseValidationError: 4 validation errors:
   {'type': 'missing', 'loc': ('response', 0, 'created_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'display_text': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
   {'type': 'missing', 'loc': ('response', 0, 'updated_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'display_text': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}

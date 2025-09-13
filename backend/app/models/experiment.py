@@ -20,6 +20,7 @@ class Experiment(Base, TimestampMixin):
     Core experiment model representing a research experiment node.
     Each experiment captures its motivation, expectations, hypothesis, and results.
     Experiments are connected through ExperimentRelationship to form a DAG.
+    Each experiment can have associated literature references.
     """
     __tablename__ = "experiments"
 
@@ -46,6 +47,9 @@ class Experiment(Base, TimestampMixin):
     # Flexible storage for additional properties
     # Stores any extra metadata that doesn't fit in the standard fields
     extra_data = Column(JSON, nullable=True)
+
+    # Literature references associated with this experiment
+    literature = relationship("Literature", back_populates="experiment", cascade="all, delete-orphan")
 
 class ExperimentRelationship(Base, TimestampMixin):
     """

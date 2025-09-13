@@ -1,43 +1,27 @@
-<<<<<<< HEAD
 import React, { useState } from 'react';
 import { ExternalLink, Book, GitBranch, Loader } from 'lucide-react';
 import Modal from '../Common/Modal';
 import Button from '../Common/Button';
 import ResizableHorizontalDivider from '../Common/ResizableHorizontalDivider';
 import { ResearchNode, RelatedPaper, NodeDetails, NodeStatus } from '../../types/research';
-=======
-import React, { useState } from "react";
-import { ExternalLink, Book, GitBranch, Loader } from "lucide-react";
-import Modal from "../Common/Modal";
-import Button from "../Common/Button";
-import { ResearchNode, RelatedPaper, NodeDetails } from "../../types/research";
->>>>>>> 94ab65b3108eae1268cbac40c6502603c29242f7
 
 interface NodeDetailsModalProps {
   node: ResearchNode;
   isOpen: boolean;
   onClose: () => void;
-<<<<<<< HEAD
   onStatusChange: (nodeId: string, status: NodeStatus) => void;
-=======
-  onStatusChange: (
-    nodeId: string,
-    status: "accepted" | "pending" | "rejected"
-  ) => void;
->>>>>>> 94ab65b3108eae1268cbac40c6502603c29242f7
   onCreateBranch: (nodeId: string) => void;
   nodeDetails: NodeDetails;
 }
 
-const NodeDetailsModal = ({
+const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
   node,
   isOpen,
   onClose,
   onStatusChange,
   onCreateBranch,
   nodeDetails,
-<<<<<<< HEAD
-}: NodeDetailsModalProps) => {
+}) => {
   const [activeTab, setActiveTab] = useState<'info' | 'papers' | 'solutions'>('info');
   const [topSectionHeight, setTopSectionHeight] = useState(200); // Default height for the top section
 
@@ -46,17 +30,6 @@ const NodeDetailsModal = ({
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     rejected: 'bg-red-100 text-red-800 border-red-200',
     planned: 'bg-purple-100 text-purple-800 border-purple-200',
-=======
-}) => {
-  const [activeTab, setActiveTab] = useState<"info" | "papers" | "solutions">(
-    "info"
-  );
-
-  const statusColors = {
-    accepted: "bg-green-100 text-green-800 border-green-200",
-    pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    rejected: "bg-red-100 text-red-800 border-red-200",
->>>>>>> 94ab65b3108eae1268cbac40c6502603c29242f7
   };
 
   const renderPaperList = (papers: RelatedPaper[]) => (
@@ -67,7 +40,7 @@ const NodeDetailsModal = ({
             <div className="flex-1">
               <h4 className="font-medium text-gray-900">{paper.title}</h4>
               <p className="text-sm text-gray-500 mt-1">
-                {paper.authors.join(", ")} • {paper.year}
+                {paper.authors.join(', ')} • {paper.year}
               </p>
             </div>
             <a
@@ -95,7 +68,9 @@ const NodeDetailsModal = ({
       {solutions.map((solution) => (
         <div
           key={solution.id}
-          className={`border rounded-lg p-4 ${statusColors[solution.status]}`}
+          className={`border rounded-lg p-4 ${
+            statusColors[solution.status]
+          }`}
         >
           <h4 className="font-medium text-gray-900">{solution.title}</h4>
           <p className="text-sm text-gray-600 mt-1">{solution.description}</p>
@@ -116,37 +91,37 @@ const NodeDetailsModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={node.title} size="lg">
-      <div className="space-y-6 modal-content">
+      <div className="space-y-6">
         {/* Tabs */}
         <div className="border-b">
           <div className="flex space-x-4">
             <button
               className={`py-2 px-4 border-b-2 text-sm font-medium ${
-                activeTab === "info"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                activeTab === 'info'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
-              onClick={() => setActiveTab("info")}
+              onClick={() => setActiveTab('info')}
             >
               Information
             </button>
             <button
               className={`py-2 px-4 border-b-2 text-sm font-medium ${
-                activeTab === "papers"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                activeTab === 'papers'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
-              onClick={() => setActiveTab("papers")}
+              onClick={() => setActiveTab('papers')}
             >
               Related Papers
             </button>
             <button
               className={`py-2 px-4 border-b-2 text-sm font-medium ${
-                activeTab === "solutions"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                activeTab === 'solutions'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
-              onClick={() => setActiveTab("solutions")}
+              onClick={() => setActiveTab('solutions')}
             >
               AI Solutions
             </button>
@@ -155,9 +130,8 @@ const NodeDetailsModal = ({
 
         {/* Content */}
         <div>
-          {activeTab === "info" && (
+          {activeTab === 'info' && (
             <div className="space-y-4">
-<<<<<<< HEAD
               {/* Top Section with fixed height */}
               <div style={{ height: topSectionHeight }} className="overflow-y-auto">
                 <div>
@@ -188,36 +162,6 @@ const NodeDetailsModal = ({
                     <p className="mt-1 text-sm text-gray-600">{node.expectations}</p>
                   </div>
                 )}
-=======
-              <div>
-                <h4 className="text-sm font-medium text-gray-700">
-                  Description
-                </h4>
-                <p className="mt-1 text-sm text-gray-600">{node.description}</p>
-              </div>
-
-              {node.motivation && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700">
-                    Motivation
-                  </h4>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {node.motivation}
-                  </p>
-                </div>
-              )}
-
-              {node.expectations && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700">
-                    Expected Outcomes
-                  </h4>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {node.expectations}
-                  </p>
-                </div>
-              )}
->>>>>>> 94ab65b3108eae1268cbac40c6502603c29242f7
 
                 <div>
                   <h4 className="text-sm font-medium text-gray-700">Keywords</h4>
@@ -263,7 +207,7 @@ const NodeDetailsModal = ({
             </div>
           )}
 
-          {activeTab === "papers" && (
+          {activeTab === 'papers' && (
             <div>
               {nodeDetails.isLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -280,7 +224,7 @@ const NodeDetailsModal = ({
             </div>
           )}
 
-          {activeTab === "solutions" && (
+          {activeTab === 'solutions' && (
             <div>
               {nodeDetails.isLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -300,10 +244,15 @@ const NodeDetailsModal = ({
 
         {/* Actions */}
         <div className="flex justify-between pt-4 border-t">
-          <Button variant="secondary" onClick={onClose}>
+          <Button
+            variant="secondary"
+            onClick={onClose}
+          >
             Close
           </Button>
-          <Button onClick={() => onCreateBranch(node.id)}>
+          <Button
+            onClick={() => onCreateBranch(node.id)}
+          >
             Create New Branch
           </Button>
         </div>

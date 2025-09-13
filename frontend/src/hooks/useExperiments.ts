@@ -1,53 +1,96 @@
-import { useState, useCallback } from 'react';
-import { Experiment, ExperimentSuggestion, NodeStatus } from '../types/research';
-import { mockExperiments, mockRelationships } from '../services/mockData';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Experiment, NodeStatus } from '../types/research';
+import experimentService from '../services/experimentService';
 
-export function useExperiments() {
-  const [experiments, setExperiments] = useState<Experiment[]>(mockExperiments);
-  const [relationships] = useState(mockRelationships);
+export const useExperiments = () => {
+  const [experiments, setExperiments] = useState<Experiment[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
-  const addExperiment = useCallback((suggestion: ExperimentSuggestion, status: NodeStatus) => {
-    const newExperiment: Experiment = {
-      id: Date.now().toString(),
-      title: suggestion.title,
-      description: suggestion.description,
-      type: suggestion.type,
-      status: status,
-      level: experiments.length > 0 ? Math.max(...experiments.map(e => e.level)) + 1 : 0,
-      motivation: suggestion.motivation,
-      expectations: suggestion.expectations,
-      reasoning: suggestion.reasoning,
-      keywords: suggestion.keywords,
-      createdAt: new Date().toISOString(),
-      aiGenerated: true,
+  // Cache experiments by status
+  const experimentsByStatus = useMemo(() => {
+    const cache = {
+      all: experiments,
+      past: experiments.filter(e => e.status === 'accepted'),
+      planned: experiments.filter(e => e.status === 'planned'),
+      deferred: experiments.filter(e => e.status === 'rejected')
     };
-
-    setExperiments((prev) => [...prev, newExperiment]);
-    return newExperiment;
+    return cache;
   }, [experiments]);
 
-  const updateExperiment = useCallback((id: string, updates: Partial<Experiment>) => {
-    setExperiments((prev) =>
-      prev.map((exp) => (exp.id === id ? { ...exp, ...updates } : exp))
-    );
+  // Fetch all experiments only if needed
+  const fetchAllExperiments = useCallback(async () => {
+    const now = Date.now();
+    // Only fetch if it's been more than 5 seconds since last fetch
+    if (now - lastFetchTime < 5000) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const fetchedExperiments = await experimentService.getAllExperiments();
+      setExperiments(fetchedExperiments);
+      setLastFetchTime(now);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch experiments');
+    } finally {
+      setLoading(false);
+    }
+  }, [lastFetchTime]);
+
+  // Fetch experiments based on active tab
+  const fetchExperiments = useCallback(async (tab: 'all' | 'past' | 'planned' | 'deferred') => {
+    await fetchAllExperiments();
+    return experimentsByStatus[tab];
+  }, [fetchAllExperiments, experimentsByStatus]);
+
+  // Update experiment status
+  const updateExperimentStatus = useCallback(async (experimentId: string, status: NodeStatus) => {
+    try {
+      const updatedExperiment = await experimentService.updateExperimentStatus(experimentId, status);
+      setExperiments(prevExperiments =>
+        prevExperiments.map(exp =>
+          exp.id === experimentId ? updatedExperiment : exp
+        )
+      );
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update experiment status');
+      return false;
+    }
   }, []);
 
-  const deleteExperiment = useCallback((id: string) => {
-    setExperiments((prev) => prev.filter((exp) => exp.id !== id));
-  }, []);
-
+  // Get experiments by status
   const getExperimentsByStatus = useCallback((status: NodeStatus) => {
-    return experiments.filter((exp) => exp.status === status);
+    return experiments.filter(exp => exp.status === status);
   }, [experiments]);
+
+  // Get counts
+  const getCounts = useCallback(() => {
+    return {
+      total: experiments.length,
+      accepted: experiments.filter(e => e.status === 'accepted').length,
+      planned: experiments.filter(e => e.status === 'planned').length,
+      deferred: experiments.filter(e => e.status === 'rejected').length,
+    };
+  }, [experiments]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchAllExperiments();
+  }, [fetchAllExperiments]);
 
   return {
     experiments,
-    relationships,
-    addExperiment,
-    updateExperiment,
-    deleteExperiment,
+    loading,
+    error,
+    fetchExperiments,
+    updateExperimentStatus,
     getExperimentsByStatus,
+    getCounts,
   };
-}
+};
 
 export default useExperiments;

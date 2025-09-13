@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowLeft } from 'lucide-react';
 import ChatPanel from './Chat/ChatPanel';
 import GraphPanel from './Graph/GraphPanel';
 import { useChat } from '../hooks/useChat';
@@ -8,10 +8,12 @@ import { ExperimentSuggestion } from '../types/research';
 
 interface AIChatResearchAssistantProps {
   initialSuggestions?: ExperimentSuggestion[];
+  onBackToDashboard: () => void;
 }
 
 const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   initialSuggestions = [],
+  onBackToDashboard,
 }) => {
   const { messages, isLoading, sendMessage } = useChat(initialSuggestions);
   const {
@@ -38,6 +40,13 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
       <header className="bg-white shadow-sm border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
+            <button
+              onClick={onBackToDashboard}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Back to Dashboard"
+            >
+              <ArrowLeft className="text-gray-600" size={20} />
+            </button>
             <Sparkles className="text-blue-600" size={24} />
             <h1 className="text-2xl font-bold text-gray-900">AI Research Assistant</h1>
           </div>

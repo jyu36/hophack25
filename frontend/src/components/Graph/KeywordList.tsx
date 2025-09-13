@@ -74,7 +74,7 @@ const KeywordList: React.FC<KeywordListProps> = ({
                   </span>
                 </div>
                 <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100">
-                  {new Date(keyword.timestamp).toLocaleTimeString([], {
+                  {new Date(keyword.timestamp).toLocaleTimeString('en-US', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}

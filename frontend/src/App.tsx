@@ -28,7 +28,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <div className="h-screen flex flex-col">
         {showChat ? (
-          <AIChatResearchAssistant initialSuggestions={initialSuggestions} />
+          <AIChatResearchAssistant
+            initialSuggestions={initialSuggestions}
+            onBackToDashboard={() => setShowChat(false)}
+          />
         ) : (
           <Dashboard
             experiments={experiments}

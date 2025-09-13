@@ -7,15 +7,9 @@ interface CustomNodeData extends ResearchNode {
 }
 
 const statusColors = {
-<<<<<<< HEAD
   completed: "bg-green-500 border-green-600",
   planned: "bg-yellow-500 border-yellow-600",
   postponed: "bg-red-500 border-red-600",
-=======
-  accepted: 'bg-green-500 border-green-600',
-  planned: 'bg-yellow-500 border-yellow-600',
-  rejected: 'bg-red-500 border-red-600',
->>>>>>> 3a6f514652a1181c48544e6025f8d41f8faed9d7
 };
 
 const typeIcons = {

@@ -9,11 +9,11 @@ class ExperimentStatus(str, enum.Enum):
     Represents the current state of an experiment
     - PLANNED: Experiment is defined but not started
     - COMPLETED: Experiment has been finished
-    - REJECTED: Experiment was rejected or cancelled
+    - POSTPONED: Experiment was postponed or cancelled
     """
     PLANNED = "planned"
     COMPLETED = "completed"
-    REJECTED = "rejected"
+    POSTPONED = "postponed"
 
 class Experiment(Base, TimestampMixin):
     """

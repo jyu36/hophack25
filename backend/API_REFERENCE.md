@@ -41,7 +41,7 @@ The API uses the following experiment status values:
 
 - `planned`: Experiment is defined but not started
 - `completed`: Experiment has been finished
-- `rejected`: Experiment was rejected or cancelled
+- `postponed`: Experiment was postponed or cancelled
 
 ## Experiment Nodes
 
@@ -163,7 +163,7 @@ Request Body:
     "description": "Updated desc",       # Optional
     "motivation": "New motivation",      # Optional
     "expectations": "New expectations",  # Optional
-    "status": "completed",               # Optional (planned|completed|rejected)
+    "status": "completed",               # Optional (planned|completed|postponed)
     "hypothesis": "Updated hypothesis",  # Optional
     "result": "Experiment results",      # Optional
     "extra_data": {                      # Optional
@@ -195,10 +195,10 @@ Error Response (422):
     "detail": {
         "error": "Invalid field values",
         "invalid_fields": {
-            "status": "Must be one of: planned, completed, rejected"
+            "status": "Must be one of: planned, completed, postponed"
         },
         "message": "Some fields contain invalid values",
-        "action_required": "Please correct the invalid fields. Valid status values are: planned, completed, rejected"
+        "action_required": "Please correct the invalid fields. Valid status values are: planned, completed, postponed"
     }
 }
 
@@ -589,7 +589,7 @@ Error Response (404):
 - `description`: Optional, detailed description (min 20 characters if provided)
 - `motivation`: Optional, reasoning for the experiment (min 20 characters if provided)
 - `expectations`: Optional, what you expect to learn
-- `status`: Enum (planned|completed|rejected), defaults to "planned"
+- `status`: Enum (planned|completed|postponed), defaults to "planned"
 - `hypothesis`: Optional, the hypothesis being tested
 - `result`: Optional, experiment outcomes
 - `extra_data`: Optional JSON object for additional metadata

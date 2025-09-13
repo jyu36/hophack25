@@ -58,6 +58,11 @@ export const SYSTEM_PROMPT = `You are a Research Assistant AI that helps researc
 - Suggest follow-up actions or experiments when appropriate
 - Use context keywords to remember important concepts for future conversations
 
+## Tool Call Guidelines:
+- **Check tool results**: Read the tool result messages to understand if operations were successful
+- **Don't repeat successful operations**: If a tool call succeeds, don't call the same tool again with the same parameters
+- **Provide final response**: After completing all necessary tool calls, give a clear summary of what was accomplished
+
 Remember: You're not just answering questions - you're actively managing a research graph to help researchers organize and advance their work.`;
 
 export const WELCOME_MESSAGE = "Hello! I'm your Research Assistant. I can help you manage your experimental work, answer questions about your research, and suggest new experiments. What would you like to work on today?";
@@ -202,7 +207,7 @@ No experiments currently in the graph.
 {% if graphContext.overview.edges and graphContext.overview.edges.length > 0 %}
 **Experiment Relationships:**
 {% for edge in graphContext.overview.edges %}
-- {{ edge.from.title }} → {{ edge.to.title }} ({{ edge.relationship_type }})
+- Experiment {{ edge.from }} → Experiment {{ edge.to }} ({{ edge.type }})
 {% endfor %}
 {% endif %}
 {% else %}
@@ -213,9 +218,7 @@ No experiments currently in the graph.
 {% if graphContext.keywords and graphContext.keywords.length > 0 %}
 **Important Concepts & Findings:**
 {% for keyword in graphContext.keywords %}
-- **{{ keyword.keyword }}**: {{ keyword.description }}
-  - Added: {{ keyword.created_at }}
-  - Context: {{ keyword.context }}
+- **{{ keyword }}**
 {% endfor %}
 {% else %}
 No context keywords have been saved yet.
@@ -236,7 +239,7 @@ export const MINIMAL_CONTEXT_TEMPLATE = `{{ systemPrompt }}
 
 **Research Status:** {{ graphContext.nodeCount }} experiment(s) in progress
 {% if graphContext.keywords and graphContext.keywords.length > 0 %}
-**Key Concepts:** {% for keyword in graphContext.keywords %}{{ keyword.keyword }}{% if not loop.last %}, {% endif %}{% endfor %}
+**Key Concepts:** {% for keyword in graphContext.keywords %}{{ keyword }}{% if not loop.last %}, {% endif %}{% endfor %}
 {% endif %}
 
 Use this context to provide informed guidance about your research work.`;

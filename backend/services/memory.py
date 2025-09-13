@@ -3,7 +3,10 @@ import os
 from typing import Dict, Any, Optional, List
 import httpx
 from sqlalchemy.orm import Session
-from backend.app.models.experiment import Experiment, ExperimentRelationship
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from app.models.experiment import Experiment, ExperimentRelationship
 
 RA_BASE_URL = os.getenv("RA_BASE_URL", "http://127.0.0.1:8000")
 

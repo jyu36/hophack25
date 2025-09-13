@@ -42,7 +42,9 @@ async def get_graph_overview(request: Request, db: Session = Depends(get_db)):
                 "title": exp.title,
                 "status": exp.status,
                 "type": "experiment",
-                "description": exp.description[:100] if exp.description else None
+                "description": exp.description[:100] if exp.description else None,
+                "created_at": exp.created_at.isoformat() if exp.created_at else None,
+                "updated_at": exp.updated_at.isoformat() if exp.updated_at else None
             }
             for exp in experiments
         ]
@@ -136,7 +138,9 @@ async def get_node_info(
                 "status": node.status,
                 "hypothesis": node.hypothesis,
                 "result": node.result,
-                "extra_data": node.extra_data
+                "extra_data": node.extra_data,
+                "created_at": node.created_at.isoformat() if node.created_at else None,
+                "updated_at": node.updated_at.isoformat() if node.updated_at else None
             },
             "parents": parent_nodes,
             "children": child_nodes

@@ -43,23 +43,23 @@ export const getNodeInfo = {
   }
 };
 
-export const getAllNodes = {
-  name: "get_all_nodes",
-  description: "Get all experiment nodes, optionally in concise format for quick overview",
-  schema: z.object({
-    concise: z.boolean().optional().default(false).describe("Return concise format with basic info only")
-  }),
-  run: async (args: unknown) => {
-    const { concise } = getAllNodes.schema.parse(args);
-    return apiCall(() => axios.get(`${BASE_URL}/nodes`, {
-      params: { concise }
-    }));
-  }
-};
+// export const getAllNodes = {
+//   name: "get_all_nodes",
+//   description: "Get all experiment nodes, optionally in concise format for quick overview",
+//   schema: z.object({
+//     concise: z.boolean().optional().default(false).describe("Return concise format with basic info only")
+//   }),
+//   run: async (args: unknown) => {
+//     const { concise } = getAllNodes.schema.parse(args);
+//     return apiCall(() => axios.get(`${BASE_URL}/nodes`, {
+//       params: { concise }
+//     }));
+//   }
+// };
 
 export const getNodeLiterature = {
   name: "get_node_literature",
-  description: "Get literature references for a specific experiment node",
+  description: "Get literature references for a specific experiment node, this will not generate new literature, it will only return the literature that has already been added to the graph, use get_suggested_literature to generate new literature",
   schema: z.object({
     node_id: z.number().describe("ID of the node to get literature for")
   }),
@@ -87,7 +87,7 @@ export const getSuggestedLiterature = {
 
 export const getAllLiterature = {
   name: "get_all_literature",
-  description: "Get all literature references across all nodes",
+  description: "Get all literature references across all nodes, this will not generate new literature, it will only return the literature that has already been added to the graph, use get_suggested_literature to generate new literature. You ONLY need to call this endpoint once.",
   schema: z.object({}),
   run: async () => apiCall(() => axios.get(`${BASE_URL}/literature`))
 };
@@ -277,7 +277,7 @@ export const tools = [
   // Graph Reading Tools
   getGraphOverview,
   getNodeInfo,
-  getAllNodes,
+  // getAllNodes,
   getNodeLiterature,
   getSuggestedLiterature,
   getAllLiterature,

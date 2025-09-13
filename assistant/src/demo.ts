@@ -1,10 +1,13 @@
 import dotenv from "dotenv";
 import { ResearchAssistant } from "./agent";
+import { createCategoryLogger } from "./logger";
+import { DEMO_SCENARIOS } from "./prompts";
 
 // Load environment variables
 dotenv.config();
 
 async function runDemo() {
+  const logger = createCategoryLogger("DEMO");
   console.log("🎬 Research Assistant Demo\n");
 
   // Validate environment
@@ -19,39 +22,13 @@ async function runDemo() {
   }
 
   const assistant = new ResearchAssistant({
-    model: process.env.ASSISTANT_MODEL || "gpt-4",
+    model: process.env.ASSISTANT_MODEL || "gpt-4o",
     maxIterations: 5,
     temperature: 0.7
   });
 
   // Demo scenarios
-  const scenarios = [
-    {
-      name: "New Researcher Onboarding",
-      message: "I'm new to this project. What should I work on?",
-      description: "Tests the assistant's ability to understand the current research landscape and provide guidance."
-    },
-    {
-      name: "Experiment Planning",
-      message: "I want to test if my hypothesis about protein folding is correct. Can you help me plan this experiment?",
-      description: "Tests the assistant's ability to create new experiments and provide planning guidance."
-    },
-    {
-      name: "Status Update",
-      message: "I completed the DNA extraction experiment and found that the new protocol works better than the old one. The yield increased by 30%.",
-      description: "Tests the assistant's ability to update existing experiments with results."
-    },
-    {
-      name: "Question Answering",
-      message: "What experiments are currently in progress in my research?",
-      description: "Tests the assistant's ability to query and understand the current state of experiments."
-    },
-    {
-      name: "Literature Management",
-      message: "I found a relevant paper about PCR optimization at https://doi.org/10.1000/pcr123. Can you add it to my current experiment?",
-      description: "Tests the assistant's ability to manage literature references."
-    }
-  ];
+  const scenarios = DEMO_SCENARIOS;
 
   let context = null;
 
@@ -65,6 +42,7 @@ async function runDemo() {
     console.log(`${"=".repeat(60)}\n`);
 
     try {
+      logger.info(`Running scenario: ${scenario.name}`);
       const { response, newContext, actions } = await assistant.processMessage(scenario.message, context || undefined);
       
       context = newContext;
@@ -83,6 +61,7 @@ async function runDemo() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
     } catch (error) {
+      logger.error(`Error in scenario ${i + 1}`, { error: error instanceof Error ? error.message : String(error) });
       console.error(`❌ Error in scenario ${i + 1}:`, error);
     }
   }

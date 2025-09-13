@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { ResearchAssistant } from "./agent";
 import { ConversationHandler } from "./conversation";
+import { logger, LogLevel } from "./logger";
 
 // Load environment variables
 dotenv.config();
@@ -19,17 +20,20 @@ async function main() {
     process.exit(1);
   }
 
+  logger.info('Starting Research Assistant');
   console.log("🚀 Starting Research Assistant...");
   console.log(`📡 Backend API: ${process.env.GRAPH_API_BASE}`);
-  console.log(`🤖 Model: ${process.env.ASSISTANT_MODEL || "gpt-4"}`);
+  console.log(`🤖 Model: ${process.env.ASSISTANT_MODEL || "gpt-4o"}`);
+  console.log(`📊 Log Level: ${LogLevel[parseInt(process.env.LOG_LEVEL || "1")]}`);
   console.log();
 
   try {
     // Initialize the assistant
     const assistant = new ResearchAssistant({
-      model: process.env.ASSISTANT_MODEL || "gpt-4",
+      model: process.env.ASSISTANT_MODEL || "gpt-4o",
       maxIterations: parseInt(process.env.MAX_ITERATIONS || "10"),
-      temperature: 0.7
+      temperature: 0.7,
+      logLevel: process.env.LOG_LEVEL ? parseInt(process.env.LOG_LEVEL) : LogLevel.INFO
     });
 
     // Start the conversation handler
@@ -37,6 +41,7 @@ async function main() {
     await conversationHandler.start();
 
   } catch (error) {
+    logger.error('Fatal error during startup', { error: error instanceof Error ? error.message : String(error) });
     console.error("❌ Fatal error:", error);
     process.exit(1);
   }

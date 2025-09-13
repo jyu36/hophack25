@@ -150,6 +150,10 @@ export class ResearchAssistant {
       contentLength: response.choices[0].message.content?.length || 0
     });
 
+    this.logger.debug('Response from OpenAI', {
+      response: response.choices[0].message.content
+    });
+
     return response;
   }
 

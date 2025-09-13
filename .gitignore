@@ -1,5 +1,6 @@
 .context
 .venv
+venv/
 
 # Node.js
 node_modules/

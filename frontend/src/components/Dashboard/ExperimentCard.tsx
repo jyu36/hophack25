@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Check, Clock, ChevronDown, ChevronUp } from 'lucide-react';
-import { Experiment } from '../../types/research';
-import { formatDate } from '../../utils/helpers';
+import React, { useState } from "react";
+import { Check, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Experiment } from "../../types/research";
+import { formatDate } from "../../utils/helpers";
 
 interface ExperimentCardProps {
   experiment: Experiment;
@@ -14,10 +14,14 @@ const ExperimentCard: React.FC<ExperimentCardProps> = ({ experiment }) => {
     <div className="rounded-lg border border-gray-200 hover:bg-gray-50">
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center space-x-3">
-          <div className={`rounded-full p-1 ${
-            experiment.status === 'accepted' ? 'bg-green-100' : 'bg-yellow-100'
-          }`}>
-            {experiment.status === 'accepted' ? (
+          <div
+            className={`rounded-full p-1 ${
+              experiment.status === "completed"
+                ? "bg-green-100"
+                : "bg-yellow-100"
+            }`}
+          >
+            {experiment.status === "completed" ? (
               <Check className="h-4 w-4 text-green-600" />
             ) : (
               <Clock className="h-4 w-4 text-yellow-600" />
@@ -47,11 +51,17 @@ const ExperimentCard: React.FC<ExperimentCardProps> = ({ experiment }) => {
           <div className="space-y-4">
             <div>
               <h5 className="text-sm font-medium text-gray-700">Motivation</h5>
-              <p className="mt-1 text-sm text-gray-600">{experiment.motivation || 'No motivation provided'}</p>
+              <p className="mt-1 text-sm text-gray-600">
+                {experiment.motivation || "No motivation provided"}
+              </p>
             </div>
             <div>
-              <h5 className="text-sm font-medium text-gray-700">Basic Results</h5>
-              <p className="mt-1 text-sm text-gray-600">{experiment.description}</p>
+              <h5 className="text-sm font-medium text-gray-700">
+                Basic Results
+              </h5>
+              <p className="mt-1 text-sm text-gray-600">
+                {experiment.description}
+              </p>
             </div>
             <div>
               <h5 className="text-sm font-medium text-gray-700">Keywords</h5>

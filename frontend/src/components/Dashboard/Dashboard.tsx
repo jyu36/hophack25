@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { LayoutGrid, Lightbulb, Network, Clock, GitBranch } from 'lucide-react';
-import StatsCard from './StatsCard';
-import RecentExperiments from './RecentExperiments';
-import TopicExtractor from '../TopicExtractor/TopicExtractor';
-import AllExperiments from '../Experiments/AllExperiments';
-import AllFutureExperiments from '../Experiments/AllFutureExperiments';
-import AISummary from './AISummary';
-import { Experiment, ExperimentSuggestion } from '../../types/research';
-import { useExperiments } from '../../hooks/useExperiments';
+import React, { useState, useEffect, useMemo } from "react";
+import { LayoutGrid, Lightbulb, Network, Clock, GitBranch } from "lucide-react";
+import StatsCard from "./StatsCard";
+import RecentExperiments from "./RecentExperiments";
+import TopicExtractor from "../TopicExtractor/TopicExtractor";
+import AllExperiments from "../Experiments/AllExperiments";
+import AllFutureExperiments from "../Experiments/AllFutureExperiments";
+import AISummary from "./AISummary";
+import { Experiment, ExperimentSuggestion } from "../../types/research";
+import { useExperiments } from "../../hooks/useExperiments";
 
 interface DashboardProps {
   onNewExperiment: () => void;
@@ -15,11 +15,7 @@ interface DashboardProps {
   onSuggestionsGenerated: (suggestions: ExperimentSuggestion[]) => void;
 }
 
-<<<<<<< Updated upstream
-type ExperimentTab = "all" | "completed" | "planned" | "rejected";
-=======
-type ExperimentTab = 'all' | 'past' | 'planned' | 'postponed';
->>>>>>> Stashed changes
+type ExperimentTab = "all" | "past" | "planned" | "postponed";
 
 const Dashboard: React.FC<DashboardProps> = ({
   onNewExperiment,
@@ -27,15 +23,17 @@ const Dashboard: React.FC<DashboardProps> = ({
   onSuggestionsGenerated,
 }) => {
   const [showTopicExtractor, setShowTopicExtractor] = useState(false);
-  const [activeTab, setActiveTab] = useState<ExperimentTab>('all');
-  const [view, setView] = useState<'dashboard' | 'allPast' | 'allFuture'>('dashboard');
+  const [activeTab, setActiveTab] = useState<ExperimentTab>("all");
+  const [view, setView] = useState<"dashboard" | "allPast" | "allFuture">(
+    "dashboard"
+  );
 
   const {
     experiments: filteredExperiments,
     loading,
     error,
     fetchExperiments,
-    getCounts
+    getCounts,
   } = useExperiments();
 
   // Fetch experiments when tab changes
@@ -46,33 +44,34 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Sort experiments by date
   const sortedExperiments = useMemo(() => {
     return [...filteredExperiments].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [filteredExperiments]);
 
   const counts = useMemo(() => getCounts(), [getCounts]);
 
   const tabs: { id: ExperimentTab; label: string; count: number }[] = [
-    { id: 'all', label: 'All', count: counts.total },
-    { id: 'past', label: 'Past', count: counts.past },
-    { id: 'planned', label: 'Planned', count: counts.planned },
-    { id: 'postponed', label: 'Postponed', count: counts.postponed },
+    { id: "all", label: "All", count: counts.total },
+    { id: "past", label: "Past", count: counts.past },
+    { id: "planned", label: "Planned", count: counts.planned },
+    { id: "postponed", label: "Postponed", count: counts.postponed },
   ];
 
-  if (view === 'allPast') {
+  if (view === "allPast") {
     return (
       <AllExperiments
         experiments={sortedExperiments}
-        onBack={() => setView('dashboard')}
+        onBack={() => setView("dashboard")}
       />
     );
   }
 
-  if (view === 'allFuture') {
+  if (view === "allFuture") {
     return (
       <AllFutureExperiments
-        experiments={sortedExperiments.filter(e => e.status === 'planned')}
-        onBack={() => setView('dashboard')}
+        experiments={sortedExperiments.filter((e) => e.status === "planned")}
+        onBack={() => setView("dashboard")}
         onNewExperiment={onNewExperiment}
       />
     );
@@ -120,7 +119,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               value={counts.planned}
               icon={Clock}
               description="Experiments for later consideration"
-              trend={{ value: counts.planned, label: 'planned' }}
+              trend={{ value: counts.planned, label: "planned" }}
             />
             <StatsCard
               title="Connected Ideas"
@@ -186,7 +185,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div className="h-[calc(100vh-32rem)] min-h-[400px] overflow-y-auto p-6">
               {loading ? (
                 <div className="flex h-full items-center justify-center">
-                  <div className="text-center text-gray-500">Loading experiments...</div>
+                  <div className="text-center text-gray-500">
+                    Loading experiments...
+                  </div>
                 </div>
               ) : error ? (
                 <div className="flex h-full items-center justify-center">

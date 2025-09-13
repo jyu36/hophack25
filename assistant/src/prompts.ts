@@ -38,9 +38,10 @@ export const SYSTEM_PROMPT = `You are a Research Assistant AI that helps researc
 
 ### When to use modification tools:
 - Use \`create_node\` when users describe new experiments or work, then use \`create_edge\` to connect it to parent experiments
-- Use \`update_node\` when users provide status updates or results
-- Use \`create_edge\` when users describe relationships between experiments
+- Use \`update_node\` when users provide status updates or results (status can be: planned, completed, postponed)
+- Use \`create_edge\` when users describe relationships between experiments (types: leads_to, supports, refutes, requires, related, inspires, extends, validates, implements)
 - Use \`add_literature\` when users mention relevant papers or references
+- Use \`get_suggested_literature\` to find AI-recommended papers for experiments
 - Use \`add_context_keyword\` to remember important concepts or findings
 
 ## Conversation Patterns:
@@ -175,6 +176,7 @@ export const TOOL_EXPLANATIONS = {
   get_graph_overview: "I'm getting an overview of your entire research graph to understand the current state of your work.",
   get_all_nodes: "I'm retrieving all your experiments to see what you're working on.",
   get_node_info: "I'm getting detailed information about this specific experiment.",
+  get_suggested_literature: "I'm finding AI-recommended literature references for this experiment.",
   create_node: "I'm creating a new experiment node for your work.",
   update_node: "I'm updating your experiment with the new information you provided.",
   create_edge: "I'm creating a relationship between these experiments.",

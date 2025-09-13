@@ -294,7 +294,16 @@ async def update_node(
     """
     Update an existing node (experiment).
     """
+    # Print the raw data before any processing
+    print("\n[DEBUG] Raw update_data:", update_data)
+    
+    # Print with and without exclude_unset to see the difference
+    full_dict = update_data.model_dump(exclude_unset=False)
     update_dict = update_data.model_dump(exclude_unset=True)
+    
+    print("\n[DEBUG] Full data dictionary (including unset fields):", full_dict)
+    print("[DEBUG] Update dictionary (only set fields):", update_dict)
+    
     print(f"\n[UPDATE NODE] Received request - Node ID: {node_id}")
     print(f"[UPDATE NODE] Update data received: {update_dict}")
     
@@ -316,6 +325,7 @@ async def update_node(
 
         # Validate update data
         update_dict = update_data.model_dump(exclude_unset=True)
+        
         if not update_dict:
             raise HTTPException(
                 status_code=422,

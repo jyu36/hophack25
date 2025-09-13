@@ -1,6 +1,11 @@
 import api from "../utils/api";
 import { APIExperiment, apiToUIExperiment } from "../types/api";
-import { Experiment, NodeStatus, NodeType } from "../types/research";
+import {
+  Experiment,
+  NodeStatus,
+  NodeType,
+  NodeDetails,
+} from "../types/research";
 
 // Debug logger
 const debug = {
@@ -234,6 +239,75 @@ export const experimentService = {
       return experiment;
     } catch (error) {
       debug.error("Error updating experiment status:", error);
+      throw error;
+    }
+  },
+
+  // Get node details (papers and solutions)
+  async getNodeDetails(nodeId: string): Promise<NodeDetails> {
+    try {
+      debug.log("Fetching node details:", nodeId);
+      const response = await api.get(`/nodes/${nodeId}`, {
+        params: { with_papers: true, with_solutions: true },
+      });
+      debug.log("Node details response:", response.data);
+
+      return {
+        papers: response.data.papers || [],
+        solutions: (response.data.solutions || []).map(convertToResearchNode),
+        isLoading: false,
+      };
+    } catch (error) {
+      debug.error("Error fetching node details:", error);
+      throw error;
+    }
+  },
+
+  // Create an edge between experiments
+  async createEdge(
+    fromId: number,
+    toId: number,
+    type: string,
+    label?: string
+  ): Promise<any> {
+    try {
+      debug.log("Creating edge:", { fromId, toId, type, label });
+      const response = await api.post("/edges", {
+        from_experiment_id: fromId,
+        to_experiment_id: toId,
+        relationship_type: type,
+        label,
+      });
+      debug.log("Edge creation response:", response.data);
+      return response.data;
+    } catch (error) {
+      debug.error("Error creating edge:", error);
+      throw error;
+    }
+  },
+
+  // Delete an edge
+  async deleteEdge(edgeId: number): Promise<boolean> {
+    try {
+      debug.log("Deleting edge:", edgeId);
+      const response = await api.delete(`/edges/${edgeId}`);
+      debug.log("Edge deletion response:", response.data);
+      return response.data.success;
+    } catch (error) {
+      debug.error("Error deleting edge:", error);
+      throw error;
+    }
+  },
+
+  // Create a branch from an existing experiment
+  async createBranch(nodeId: string): Promise<Experiment> {
+    try {
+      debug.log("Creating branch from node:", nodeId);
+      const response = await api.post(`/nodes/${nodeId}/branch`);
+      debug.log("Branch creation response:", response.data);
+      return convertToResearchNode(response.data);
+    } catch (error) {
+      debug.error("Error creating branch:", error);
       throw error;
     }
   },

@@ -15,9 +15,9 @@ import { ZoomIn, ZoomOut, Maximize2, RotateCcw, Hand } from "lucide-react";
 import dagre from "dagre";
 import "reactflow/dist/style.css";
 
-import CustomNode from './Node';
-import NodeDetailsModal from './NodeDetailsModal';
-import { ResearchNode, NodeDetails, NodeStatus } from '../../types/research';
+import CustomNode from "./Node";
+import NodeDetailsModal from "./NodeDetailsModal";
+import { ResearchNode, NodeDetails, NodeStatus } from "../../types/research";
 
 interface GraphViewProps {
   nodes: Node[];
@@ -27,6 +27,13 @@ interface GraphViewProps {
   onConnect?: OnConnect;
   onNodeStatusChange: (nodeId: string, status: NodeStatus) => void;
   onCreateBranch: (nodeId: string) => void;
+  onCreateEdge: (
+    fromId: string,
+    toId: string,
+    type: string,
+    label?: string
+  ) => void;
+  onDeleteEdge: (edgeId: string) => void;
   fetchNodeDetails: (nodeId: string) => Promise<NodeDetails>;
 }
 
@@ -35,7 +42,7 @@ const nodeTypes: NodeTypes = {
 };
 
 // Custom Zoom Controls Component
-const CustomZoomControls: React.FC<{ 
+const CustomZoomControls: React.FC<{
   reactFlowInstance: ReactFlowInstance | null;
   isPanMode: boolean;
   onPanModeToggle: () => void;
@@ -76,14 +83,17 @@ const CustomZoomControls: React.FC<{
     }
   }, [reactFlowInstance]);
 
-  const handleZoomSlider = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    if (reactFlowInstance) {
-      const newZoom = parseFloat(event.target.value);
-      const viewport = reactFlowInstance.getViewport();
-      reactFlowInstance.setViewport({ ...viewport, zoom: newZoom });
-      setZoomLevel(newZoom);
-    }
-  }, [reactFlowInstance]);
+  const handleZoomSlider = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (reactFlowInstance) {
+        const newZoom = parseFloat(event.target.value);
+        const viewport = reactFlowInstance.getViewport();
+        reactFlowInstance.setViewport({ ...viewport, zoom: newZoom });
+        setZoomLevel(newZoom);
+      }
+    },
+    [reactFlowInstance]
+  );
 
   const handlePanModeToggle = useCallback(() => {
     onPanModeToggle();
@@ -97,7 +107,10 @@ const CustomZoomControls: React.FC<{
   }, [reactFlowInstance, updateZoomLevel]);
 
   // Debug log to verify component is rendering
-  console.log('CustomZoomControls rendering, reactFlowInstance:', !!reactFlowInstance);
+  console.log(
+    "CustomZoomControls rendering, reactFlowInstance:",
+    !!reactFlowInstance
+  );
 
   return (
     <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 flex flex-col space-y-2 z-50">
@@ -133,7 +146,7 @@ const CustomZoomControls: React.FC<{
         <button
           onClick={handlePanModeToggle}
           className={`p-2 rounded transition-colors ${
-            isPanMode ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+            isPanMode ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
           }`}
           title="Toggle Pan Mode (Space)"
         >
@@ -214,14 +227,20 @@ const GraphView: React.FC<GraphViewProps> = ({
     solutions: [],
     isLoading: false,
   });
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance | null>(null);
   const [isPanMode, setIsPanMode] = useState(false);
 
   // Apply layout
   const { nodes, edges } = getLayoutedElements(initialNodes, initialEdges);
-  
+
   // Debug log to verify data
-  console.log('GraphView rendering with nodes:', nodes.length, 'edges:', edges.length);
+  console.log(
+    "GraphView rendering with nodes:",
+    nodes.length,
+    "edges:",
+    edges.length
+  );
 
   // Custom edge styles
   const edgesWithStyle = edges.map((edge) => ({
@@ -256,35 +275,38 @@ const GraphView: React.FC<GraphViewProps> = ({
   };
 
   // Keyboard shortcuts for zoom and pan
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (!reactFlowInstance) return;
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (!reactFlowInstance) return;
 
-    if (event.ctrlKey || event.metaKey) {
-      switch (event.key) {
-        case '=':
-        case '+':
-          event.preventDefault();
-          reactFlowInstance.zoomIn();
-          break;
-        case '-':
-          event.preventDefault();
-          reactFlowInstance.zoomOut();
-          break;
-        case '0':
-          event.preventDefault();
-          reactFlowInstance.fitView({ padding: 0.1 });
-          break;
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case "=":
+          case "+":
+            event.preventDefault();
+            reactFlowInstance.zoomIn();
+            break;
+          case "-":
+            event.preventDefault();
+            reactFlowInstance.zoomOut();
+            break;
+          case "0":
+            event.preventDefault();
+            reactFlowInstance.fitView({ padding: 0.1 });
+            break;
+        }
+      } else if (event.key === " ") {
+        event.preventDefault();
+        setIsPanMode(!isPanMode);
       }
-    } else if (event.key === ' ') {
-      event.preventDefault();
-      setIsPanMode(!isPanMode);
-    }
-  }, [reactFlowInstance, isPanMode]);
+    },
+    [reactFlowInstance, isPanMode]
+  );
 
   // Add keyboard event listeners
   React.useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
   // Add onNodeDoubleClick to node data
@@ -343,8 +365,8 @@ const GraphView: React.FC<GraphViewProps> = ({
         <Background />
         <Controls />
       </ReactFlow>
-      <CustomZoomControls 
-        reactFlowInstance={reactFlowInstance} 
+      <CustomZoomControls
+        reactFlowInstance={reactFlowInstance}
         isPanMode={isPanMode}
         onPanModeToggle={() => setIsPanMode(!isPanMode)}
       />

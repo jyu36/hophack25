@@ -1,17 +1,21 @@
-import React, { useState, useCallback } from 'react';
-import { Network } from 'lucide-react';
-import GraphView from './GraphView';
-import Legend from './Legend';
-import KeywordList from './KeywordList';
-import { Experiment, NodeDetails, NodeStatus } from '../../types/research';
-import { experimentsToNodes } from '../../utils/helpers';
+import React, { useState, useCallback } from "react";
+import { Network } from "lucide-react";
+import GraphView from "./GraphView";
+import Legend from "./Legend";
+import KeywordList from "./KeywordList";
+import { Experiment, NodeDetails, NodeStatus } from "../../types/research";
+import { useExperiments } from "../../hooks/useExperiments";
+import experimentService from "../../services/experimentService";
+import { experimentsToNodes } from "../../utils/helpers";
 
 interface GraphPanelProps {
   experiments: Experiment[];
   relationships?: Array<{
-    source: string;
-    target: string;
+    id: number;
+    from: number;
+    to: number;
     type: string;
+    label?: string;
   }>;
   extractedKeywords?: Array<{
     text: string;
@@ -32,32 +36,83 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
 
   const nodes = experimentsToNodes(experiments);
 
-  // Create edges
-  const edges = relationships.map((rel, index) => ({
-    id: `e${index}`,
-    source: rel.source,
-    target: rel.target,
-    label: rel.type,
-  }));
+  // Create edges from valid relationships
+  const edges = relationships
+    .filter((rel) => rel && rel.from && rel.to) // Filter out invalid relationships
+    .map((rel) => ({
+      id: String(rel.id || ""),
+      source: String(rel.from),
+      target: String(rel.to),
+      label: rel.type || "",
+      data: { label: rel.label || "" },
+    }));
 
-  const handleNodeStatusChange = useCallback((nodeId: string, status: NodeStatus) => {
-    // TODO: Implement status change logic
-    console.log('Change node status:', nodeId, status);
+  const { updateExperimentStatus } = useExperiments();
+
+  const handleNodeStatusChange = useCallback(
+    async (nodeId: string, status: NodeStatus) => {
+      try {
+        const success = await updateExperimentStatus(nodeId, status);
+        if (!success) {
+          console.error("Failed to update experiment status");
+        }
+      } catch (error) {
+        console.error("Error updating experiment status:", error);
+      }
+    },
+    [updateExperimentStatus]
+  );
+
+  const handleCreateEdge = useCallback(
+    async (fromId: string, toId: string, type: string, label?: string) => {
+      try {
+        const edge = await experimentService.createEdge(
+          parseInt(fromId),
+          parseInt(toId),
+          type,
+          label
+        );
+        console.log("Created edge:", edge);
+      } catch (error) {
+        console.error("Error creating edge:", error);
+      }
+    },
+    []
+  );
+
+  const handleDeleteEdge = useCallback(async (edgeId: string) => {
+    try {
+      const success = await experimentService.deleteEdge(parseInt(edgeId));
+      if (success) {
+        console.log("Edge deleted successfully");
+      }
+    } catch (error) {
+      console.error("Error deleting edge:", error);
+    }
   }, []);
 
-  const handleCreateBranch = useCallback((nodeId: string) => {
-    // TODO: Implement branch creation logic
-    console.log("Create branch from node:", nodeId);
+  const handleCreateBranch = useCallback(async (nodeId: string) => {
+    try {
+      const newExperiment = await experimentService.createBranch(nodeId);
+      console.log("Created branch experiment:", newExperiment);
+    } catch (error) {
+      console.error("Error creating branch:", error);
+    }
   }, []);
 
   const fetchNodeDetails = useCallback(
     async (nodeId: string): Promise<NodeDetails> => {
-      // TODO: Implement actual API call
-      return {
-        papers: [],
-        solutions: [],
-        isLoading: false,
-      };
+      try {
+        return await experimentService.getNodeDetails(nodeId);
+      } catch (error) {
+        console.error("Error fetching node details:", error);
+        return {
+          papers: [],
+          solutions: [],
+          isLoading: false,
+          error: "Failed to load node details",
+        };
+      }
     },
     []
   );
@@ -91,6 +146,8 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
             edges={edges}
             onNodeStatusChange={handleNodeStatusChange}
             onCreateBranch={handleCreateBranch}
+            onCreateEdge={handleCreateEdge}
+            onDeleteEdge={handleDeleteEdge}
             fetchNodeDetails={fetchNodeDetails}
           />
           <Legend

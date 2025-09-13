@@ -10,7 +10,7 @@ class ExperimentBase(BaseModel):
     """
     Base Pydantic model for experiments with all fields except title being optional
     """
-    title: str
+    title: Optional[str] = None
     description: Optional[str] = None
     motivation: Optional[str] = None
     expectations: Optional[str] = None

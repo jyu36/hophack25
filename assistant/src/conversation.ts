@@ -1,10 +1,13 @@
 import { ResearchAssistant, AgentContext } from "./agent";
+import { createCategoryLogger } from "./logger";
+import { HELP_MESSAGE, CONTEXT_MESSAGES } from "./prompts";
 import * as readline from "readline";
 
 export class ConversationHandler {
   private assistant: ResearchAssistant;
   private context: AgentContext | null = null;
   private rl: readline.Interface;
+  private logger = createCategoryLogger("CONVERSATION");
 
   constructor(assistant: ResearchAssistant) {
     this.assistant = assistant;
@@ -15,6 +18,7 @@ export class ConversationHandler {
   }
 
   async start(): Promise<void> {
+    this.logger.info('Starting conversation handler');
     console.log("🤖 Research Assistant - Starting conversation...\n");
     
     try {
@@ -24,6 +28,7 @@ export class ConversationHandler {
       
       await this.conversationLoop();
     } catch (error) {
+      this.logger.error('Error starting conversation', { error: error instanceof Error ? error.message : String(error) });
       console.error("Error starting conversation:", error);
     }
   }
@@ -58,7 +63,8 @@ export class ConversationHandler {
 
         if (userInput.toLowerCase() === "clear") {
           this.context = null;
-          console.log("🧹 Context cleared. Starting fresh conversation.");
+          this.logger.info('Context cleared by user');
+          console.log(CONTEXT_MESSAGES.CONTEXT_CLEARED);
           continue;
         }
 
@@ -67,6 +73,8 @@ export class ConversationHandler {
         }
 
         console.log("\n🤔 Thinking...");
+        this.logger.info('Processing user message');
+        
         const { response, newContext, actions } = await this.assistant.processMessage(userInput, this.context || undefined);
         
         this.context = newContext;
@@ -81,60 +89,30 @@ export class ConversationHandler {
         
         console.log(`Assistant: ${response}\n`);
         
-      } catch (error) {
-        console.error("Error in conversation:", error);
-        console.log("Please try again or type 'help' for assistance.\n");
-      }
+        } catch (error) {
+          this.logger.error('Error processing message', { error: error instanceof Error ? error.message : String(error) });
+          console.error("Error in conversation:", error);
+          console.log("Please try again or type 'help' for assistance.\n");
+        }
     }
 
     this.rl.close();
   }
 
   private showHelp(): void {
-    console.log(`
-📚 Research Assistant Help
-
-Available commands:
-  help     - Show this help message
-  context  - Show current conversation context
-  clear    - Clear conversation context and start fresh
-  exit     - Exit the assistant
-
-What I can help you with:
-  • Answer questions about your experiments
-  • Create and manage experiment nodes
-  • Update experiment status and results
-  • Create relationships between experiments
-  • Manage literature references
-  • Suggest new experiments
-  • Provide research guidance
-
-Example interactions:
-  • "I'm working on PCR optimization for DNA amplification"
-  • "What experiments led to my current sequencing work?"
-  • "I completed the DNA extraction experiment and found that the new protocol works better"
-  • "Create a new experiment for testing protein folding hypothesis"
-  • "Show me all my current experiments"
-`);
+    console.log(HELP_MESSAGE);
   }
 
   private showContext(): void {
     if (!this.context) {
-      console.log("No conversation context available.");
+      console.log(CONTEXT_MESSAGES.NO_CONTEXT);
       return;
     }
 
-    console.log("\n📊 Current Context:");
-    console.log(`  Iterations: ${this.context.currentIteration}`);
-    console.log(`  Messages: ${this.context.messages.length}`);
-    
-    if (this.context.lastToolCalls.length > 0) {
-      console.log("  Last tool calls:");
-      this.context.lastToolCalls.forEach((call, index) => {
-        console.log(`    ${index + 1}. ${call.function.name}`);
-      });
-    }
-    
-    console.log();
+    console.log(CONTEXT_MESSAGES.CONTEXT_INFO(
+      this.context.currentIteration,
+      this.context.messages.length,
+      this.context.lastToolCalls
+    ));
   }
 }

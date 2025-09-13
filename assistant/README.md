@@ -59,8 +59,14 @@ OPENAI_API_KEY=your_openai_api_key_here
 GRAPH_API_BASE=http://127.0.0.1:8000
 
 # Optional
-ASSISTANT_MODEL=gpt-4
+ASSISTANT_MODEL=gpt-4o
 MAX_ITERATIONS=10
+
+# Logging Configuration
+LOG_LEVEL=1                    # 0=DEBUG, 1=INFO, 2=WARN, 3=ERROR
+LOG_CONSOLE=true              # Enable console logging
+LOG_FILE=false                # Enable file logging
+LOG_FILE_PATH=./logs/assistant.log
 ```
 
 ## How It Works
@@ -156,9 +162,35 @@ src/
 2. **OpenAI API Error**: Check your API key and billing status
 3. **Tool Execution Error**: Verify the backend API endpoints are working
 
-### Debug Mode
+### Logging System
 
-Set `DEBUG=true` in your environment to see detailed tool execution logs.
+The assistant uses Winston for logging, similar to Python's logging library. You can control logging behavior through environment variables:
+
+#### Log Levels
+- **DEBUG (0)**: Detailed internal information, tool calls, and agent thoughts
+- **INFO (1)**: General information about conversations and actions
+- **WARN (2)**: Warning messages for non-critical issues
+- **ERROR (3)**: Error messages for failures and exceptions
+
+#### Logging Configuration
+```bash
+# Enable debug logging to see agent's internal thoughts
+LOG_LEVEL=0 npm run dev
+
+# Enable file logging
+LOG_FILE=true LOG_FILE_PATH=./logs/assistant.log npm run dev
+
+# Disable console logging (file only)
+LOG_CONSOLE=false LOG_FILE=true npm run dev
+```
+
+#### Logging Categories
+The logger provides different categories for easy filtering:
+- **AGENT**: General agent operations and initialization
+- **TOOL**: Tool execution and results
+- **CONVERSATION**: User messages and assistant responses
+- **DEMO**: Demo script execution
+- **STARTUP**: Application startup and configuration
 
 ## License
 

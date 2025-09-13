@@ -513,3 +513,215 @@ async def delete_node(
                 "action_required": "Please try again or check input parameters"
             }
         )
+
+@router.post("/edges", response_model=schemas.ExperimentRelationship)
+async def create_edge(
+    edge: schemas.ExperimentRelationshipCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Create a new edge between experiments"""
+    await log_request(request, "CREATE_EDGE", edge.model_dump())
+    try:
+        # Verify both nodes exist
+        from_node = db.query(models.Experiment).filter(models.Experiment.id == edge.from_experiment_id).first()
+        to_node = db.query(models.Experiment).filter(models.Experiment.id == edge.to_experiment_id).first()
+
+        if not from_node or not to_node:
+            missing_nodes = []
+            if not from_node:
+                missing_nodes.append(f"from_experiment_id: {edge.from_experiment_id}")
+            if not to_node:
+                missing_nodes.append(f"to_experiment_id: {edge.to_experiment_id}")
+                
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Node(s) not found",
+                    "message": f"The following nodes do not exist: {', '.join(missing_nodes)}",
+                    "action_required": "Please verify both node IDs exist"
+                }
+            )
+
+        # Prevent self-loops
+        if edge.from_experiment_id == edge.to_experiment_id:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Invalid edge",
+                    "message": "Cannot create an edge from a node to itself",
+                    "action_required": "Please provide different from_experiment_id and to_experiment_id"
+                }
+            )
+
+        # Create edge
+        db_edge = models.ExperimentRelationship(**edge.model_dump())
+        db.add(db_edge)
+        db.commit()
+        db.refresh(db_edge)
+        
+        response = schemas.ExperimentRelationship.model_validate(db_edge)
+        await log_response("CREATE_EDGE", response.model_dump())
+        return response
+
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Invalid edge data",
+                "message": str(e),
+                "action_required": "Please check node IDs and relationship type"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in create_edge: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to create edge",
+                "message": str(e),
+                "action_required": "Please try again"
+            }
+        )
+
+@router.patch("/edges/{edge_id}", response_model=schemas.ExperimentRelationship)
+async def update_edge(
+    edge_id: int,
+    edge_update: schemas.ExperimentRelationshipCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Update an edge's properties"""
+    await log_request(request, "UPDATE_EDGE", {"edge_id": edge_id, "data": edge_update.model_dump()})
+    try:
+        edge = db.query(models.ExperimentRelationship).filter(
+            models.ExperimentRelationship.id == edge_id
+        ).first()
+        
+        if not edge:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Edge not found",
+                    "message": f"No edge exists with ID {edge_id}",
+                    "action_required": "Please verify the edge ID"
+                }
+            )
+
+        # If updating node connections, verify the nodes exist
+        update_data = edge_update.model_dump(exclude_unset=True)
+        if 'from_experiment_id' in update_data or 'to_experiment_id' in update_data:
+            from_id = update_data.get('from_experiment_id', edge.from_experiment_id)
+            to_id = update_data.get('to_experiment_id', edge.to_experiment_id)
+            
+            # Check nodes exist
+            nodes = db.query(models.Experiment).filter(
+                models.Experiment.id.in_([from_id, to_id])
+            ).all()
+            existing_ids = {node.id for node in nodes}
+            
+            missing_nodes = []
+            if from_id not in existing_ids:
+                missing_nodes.append(f"from_experiment_id: {from_id}")
+            if to_id not in existing_ids:
+                missing_nodes.append(f"to_experiment_id: {to_id}")
+            
+            if missing_nodes:
+                raise HTTPException(
+                    status_code=404,
+                    detail={
+                        "error": "Node(s) not found",
+                        "message": f"The following nodes do not exist: {', '.join(missing_nodes)}",
+                        "action_required": "Please verify node IDs"
+                    }
+                )
+            
+            # Prevent self-loops
+            if from_id == to_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "error": "Invalid edge",
+                        "message": "Cannot create an edge from a node to itself",
+                        "action_required": "Please provide different from_experiment_id and to_experiment_id"
+                    }
+                )
+
+        # Update edge properties
+        for field, value in update_data.items():
+            setattr(edge, field, value)
+
+        db.commit()
+        db.refresh(edge)
+        
+        response = schemas.ExperimentRelationship.model_validate(edge)
+        await log_response("UPDATE_EDGE", response.model_dump())
+        return response
+
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Invalid edge update",
+                "message": str(e),
+                "action_required": "Please check node IDs and relationship type"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in update_edge: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to update edge",
+                "message": str(e),
+                "action_required": "Please try again"
+            }
+        )
+
+@router.delete("/edges/{edge_id}")
+async def delete_edge(
+    edge_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Delete an edge between experiments"""
+    await log_request(request, "DELETE_EDGE", {"edge_id": edge_id})
+    try:
+        result = db.query(models.ExperimentRelationship).filter(
+            models.ExperimentRelationship.id == edge_id
+        ).delete()
+        
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Edge not found",
+                    "message": f"No edge exists with ID {edge_id}",
+                    "action_required": "Please verify the edge ID"
+                }
+            )
+        
+        db.commit()
+        return {"success": True, "deleted_edge_id": edge_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in delete_edge: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to delete edge",
+                "message": str(e),
+                "action_required": "Please try again"
+            }
+        )

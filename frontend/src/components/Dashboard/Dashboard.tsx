@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { LayoutGrid, Lightbulb, Network, Clock, GitBranch } from 'lucide-react';
-import StatsCard from './StatsCard';
-import RecentExperiments from './RecentExperiments';
-import TopicExtractor from '../TopicExtractor/TopicExtractor';
-import AllExperiments from '../Experiments/AllExperiments';
-import AllFutureExperiments from '../Experiments/AllFutureExperiments';
-import AISummary from './AISummary';
-import { Experiment, ExperimentSuggestion } from '../../types/research';
+import React, { useState } from "react";
+import { LayoutGrid, Lightbulb, Network, Clock, GitBranch } from "lucide-react";
+import StatsCard from "./StatsCard";
+import RecentExperiments from "./RecentExperiments";
+import TopicExtractor from "../TopicExtractor/TopicExtractor";
+import AllExperiments from "../Experiments/AllExperiments";
+import AllFutureExperiments from "../Experiments/AllFutureExperiments";
+import AISummary from "./AISummary";
+import { Experiment, ExperimentSuggestion } from "../../types/research";
 
 interface DashboardProps {
   experiments: Experiment[];
@@ -15,7 +15,7 @@ interface DashboardProps {
   onSuggestionsGenerated: (suggestions: ExperimentSuggestion[]) => void;
 }
 
-type ExperimentTab = 'all' | 'past' | 'planned' | 'deferred';
+type ExperimentTab = "all" | "completed" | "planned" | "rejected";
 
 const Dashboard: React.FC<DashboardProps> = ({
   experiments,
@@ -24,37 +24,42 @@ const Dashboard: React.FC<DashboardProps> = ({
   onSuggestionsGenerated,
 }) => {
   const [showTopicExtractor, setShowTopicExtractor] = useState(false);
-  const [activeTab, setActiveTab] = useState<ExperimentTab>('all');
+  const [activeTab, setActiveTab] = useState<ExperimentTab>("all");
 
-  const acceptedCount = experiments.filter(e => e.status === 'accepted').length;
-  const pendingCount = experiments.filter(e => e.status === 'pending').length;
-  const plannedCount = experiments.filter(e => e.status === 'planned').length;
+  const completedCount = experiments.filter(
+    (e) => e.status === "completed"
+  ).length;
+  const plannedCount = experiments.filter((e) => e.status === "planned").length;
+  const rejectedCount = experiments.filter(
+    (e) => e.status === "rejected"
+  ).length;
   const totalCount = experiments.length;
 
   const getFilteredExperiments = () => {
     const sortedExperiments = [...experiments].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     switch (activeTab) {
-      case 'all':
+      case "all":
         return sortedExperiments;
-      case 'past':
-        return sortedExperiments.filter(e => e.status === 'accepted');
-      case 'planned':
-        return sortedExperiments.filter(e => e.status === 'planned');
-      case 'deferred':
-        return sortedExperiments.filter(e => e.status === 'pending');
+      case "completed":
+        return sortedExperiments.filter((e) => e.status === "completed");
+      case "planned":
+        return sortedExperiments.filter((e) => e.status === "planned");
+      case "rejected":
+        return sortedExperiments.filter((e) => e.status === "rejected");
       default:
         return sortedExperiments;
     }
   };
 
   const tabs: { id: ExperimentTab; label: string; count: number }[] = [
-    { id: 'all', label: 'All', count: totalCount },
-    { id: 'past', label: 'Past', count: acceptedCount },
-    { id: 'planned', label: 'Planned', count: plannedCount },
-    { id: 'deferred', label: 'Deferred', count: pendingCount },
+    { id: "all", label: "All", count: totalCount },
+    { id: "completed", label: "Completed", count: completedCount },
+    { id: "planned", label: "Planned", count: plannedCount },
+    { id: "rejected", label: "Rejected", count: rejectedCount },
   ];
 
   return (
@@ -62,7 +67,9 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Research Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Research Dashboard
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
             Overview of your research experiments and progress
           </p>
@@ -70,35 +77,41 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Stats Overview Module */}
         <div className="mb-8 rounded-xl bg-white p-8 shadow-xl">
-          <h2 className="mb-6 text-2xl font-bold text-gray-900">Research Statistics Overview</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900">
+            Research Statistics Overview
+          </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
             <StatsCard
               title="Total Experiments"
               value={totalCount}
               icon={LayoutGrid}
               description="All research experiments"
-              trend={{ value: totalCount, label: 'total' }}
+              trend={{ value: totalCount, label: "total" }}
             />
             <StatsCard
-              title="Accepted Experiments"
-              value={acceptedCount}
+              title="Completed Experiments"
+              value={completedCount}
               icon={Lightbulb}
-              description="Successfully validated experiments"
-              trend={{ value: acceptedCount, label: 'accepted', positive: true }}
+              description="Successfully completed experiments"
+              trend={{
+                value: completedCount,
+                label: "completed",
+                positive: true,
+              }}
             />
             <StatsCard
-              title="Pending Review"
-              value={pendingCount}
+              title="Rejected Experiments"
+              value={rejectedCount}
               icon={Clock}
-              description="Experiments for later consideration"
-              trend={{ value: pendingCount, label: 'pending' }}
+              description="Experiments that were rejected"
+              trend={{ value: rejectedCount, label: "rejected" }}
             />
             <StatsCard
               title="Connected Ideas"
               value={experiments.length > 1 ? experiments.length - 1 : 0}
               icon={GitBranch}
               description="Relationships between experiments"
-              trend={{ value: experiments.length - 1, label: 'connections' }}
+              trend={{ value: experiments.length - 1, label: "connections" }}
             />
             <button
               onClick={onViewGraph}
@@ -117,7 +130,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Tabs Header */}
             <div className="border-b border-gray-200">
               <div className="flex items-center justify-between px-6 pt-6">
-                <h2 className="text-lg font-medium text-gray-900">Experiments</h2>
+                <h2 className="text-lg font-medium text-gray-900">
+                  Experiments
+                </h2>
               </div>
               <div className="mt-4 flex space-x-1 px-6">
                 {tabs.map((tab) => (
@@ -126,17 +141,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                     onClick={() => setActiveTab(tab.id)}
                     className={`relative min-w-[100px] px-3 py-2 text-sm font-medium transition-colors ${
                       activeTab === tab.id
-                        ? 'text-blue-600'
-                        : 'text-gray-500 hover:text-gray-700'
+                        ? "text-blue-600"
+                        : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
                     <span className="flex items-center justify-center">
                       {tab.label}
-                      <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
-                        activeTab === tab.id
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
+                      <span
+                        className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
+                          activeTab === tab.id
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
                         {tab.count}
                       </span>
                     </span>
@@ -152,14 +169,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Scrollable Content Area */}
             <div className="h-[calc(100vh-32rem)] min-h-[400px] overflow-y-auto p-6">
               {getFilteredExperiments().length > 0 ? (
-                <RecentExperiments
-                  experiments={getFilteredExperiments()}
-                />
+                <RecentExperiments experiments={getFilteredExperiments()} />
               ) : (
                 <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
                   <div className="text-center">
-                    <p className="text-sm text-gray-500">No experiments found in this category.</p>
-                    {activeTab === 'planned' && (
+                    <p className="text-sm text-gray-500">
+                      No experiments found in this category.
+                    </p>
+                    {activeTab === "planned" && (
                       <button
                         onClick={onNewExperiment}
                         className="mt-2 text-sm text-blue-600 hover:text-blue-800"

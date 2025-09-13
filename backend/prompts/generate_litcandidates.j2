@@ -1,0 +1,24 @@
+You are a research assistant. Given the experiment node context below, propose up to {{ k }} high-quality, relevant papers.
+
+Node context:
+- Topic/Problem: {{ problem }}
+- Description: {{ description }}
+- Motivation: {{ motivation }}
+- Expectations: {{ expectations }}
+- Hypothesis: {{ hypothesis }}
+- Parent Experiments: {{ parents }}
+- Child Experiments: {{ children }}
+- Methods/Keywords (with aliases): {{ methods_aliases }}
+- Datasets/Metrics: {{ datasets_metrics }}
+
+Relationship hint (optional): {{ relationship }}  # e.g., similar | survey | background
+
+Output STRICT MINIFIED JSON only:
+{"papers":[
+  {"title":"...", "doi":"...", "relationship":"similar|background|method|dataset", "why":"<=20 words"},
+  {"title":"...", "doi":"...", "relationship":"...", "why":"..."}
+]}
+Rules:
+- Include only papers you are ≥70% confident about. Do NOT fabricate DOIs.
+- If DOI is unknown, set "doi": null.
+- No extra text outside JSON.

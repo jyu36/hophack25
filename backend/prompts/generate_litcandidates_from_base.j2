@@ -1,0 +1,29 @@
+You are a research assistant. Given the experiment node context and a base paper, propose up to {{ k }} high-quality papers directly related to the base paper and useful for the node.
+
+Node context:
+- Topic/Problem: {{ problem }}
+- Description: {{ description }}
+- Motivation: {{ motivation }}
+- Expectations: {{ expectations }}
+- Hypothesis: {{ hypothesis }}
+- Parent Experiments: {{ parents }}
+- Child Experiments: {{ children }}
+- Methods/Keywords (with aliases): {{ methods_aliases }}
+- Datasets/Metrics: {{ datasets_metrics }}
+
+Base paper:
+- Title: {{ base_title }}
+- DOI: {{ base_doi }}
+- OpenAlex ID/URL: {{ base_id }}
+
+Relationship hint (optional): {{ relationship }}  # e.g., similar | background | method | dataset | extends | contrasts
+
+Output STRICT MINIFIED JSON only:
+{"papers":[
+  {"title":"...", "doi":"...", "relationship":"similar|background|method|dataset|extends|contrasts", "why":"<=20 words"},
+  {"title":"...", "doi":"...", "relationship":"...", "why":"..."}
+]}
+Rules:
+- Include only papers you are ≥70% confident about. Do NOT fabricate DOIs.
+- If DOI is unknown, set "doi": null.
+- No extra text outside JSON.

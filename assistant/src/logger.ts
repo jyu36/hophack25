@@ -42,8 +42,15 @@ const createWinstonLogger = (): winston.Logger => {
           winston.format.timestamp({ format: 'HH:mm:ss' }),
           winston.format.printf(({ timestamp, level, message, category, ...meta }: any) => {
             const categoryStr = category ? `[${category}] ` : '';
-            const metaStr = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : '';
-            return `${timestamp} ${level} ${categoryStr}${message}${metaStr}`;
+            
+            // Enhanced formatting for debug logs
+            if (level.includes('debug') && Object.keys(meta).length > 0) {
+              const metaStr = JSON.stringify(meta, null, 2);
+              return `${timestamp} ${level} ${categoryStr}${message}\n${metaStr}`;
+            } else {
+              const metaStr = Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : '';
+              return `${timestamp} ${level} ${categoryStr}${message}${metaStr}`;
+            }
           })
         )
       })

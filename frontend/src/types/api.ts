@@ -1,3 +1,5 @@
+import { ResearchNode } from './research';
+
 // Backend API Types - These match exactly with the backend schema
 
 export enum ExperimentStatus {

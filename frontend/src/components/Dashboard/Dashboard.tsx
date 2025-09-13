@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { LayoutGrid, Lightbulb, Network, Clock, GitBranch } from 'lucide-react';
 import StatsCard from './StatsCard';
 import RecentExperiments from './RecentExperiments';
@@ -7,9 +7,9 @@ import AllExperiments from '../Experiments/AllExperiments';
 import AllFutureExperiments from '../Experiments/AllFutureExperiments';
 import AISummary from './AISummary';
 import { Experiment, ExperimentSuggestion } from '../../types/research';
+import { useExperiments } from '../../hooks/useExperiments';
 
 interface DashboardProps {
-  experiments: Experiment[];
   onNewExperiment: () => void;
   onViewGraph: () => void;
   onSuggestionsGenerated: (suggestions: ExperimentSuggestion[]) => void;
@@ -18,44 +18,61 @@ interface DashboardProps {
 type ExperimentTab = 'all' | 'past' | 'planned' | 'deferred';
 
 const Dashboard: React.FC<DashboardProps> = ({
-  experiments,
   onNewExperiment,
   onViewGraph,
   onSuggestionsGenerated,
 }) => {
   const [showTopicExtractor, setShowTopicExtractor] = useState(false);
   const [activeTab, setActiveTab] = useState<ExperimentTab>('all');
+  const [view, setView] = useState<'dashboard' | 'allPast' | 'allFuture'>('dashboard');
 
-  const acceptedCount = experiments.filter(e => e.status === 'accepted').length;
-  const pendingCount = experiments.filter(e => e.status === 'pending').length;
-  const plannedCount = experiments.filter(e => e.status === 'planned').length;
-  const totalCount = experiments.length;
+  const {
+    experiments: filteredExperiments,
+    loading,
+    error,
+    fetchExperiments,
+    getCounts
+  } = useExperiments();
 
-  const getFilteredExperiments = () => {
-    const sortedExperiments = [...experiments].sort(
+  // Fetch experiments when tab changes
+  useEffect(() => {
+    fetchExperiments(activeTab);
+  }, [activeTab, fetchExperiments]);
+
+  // Sort experiments by date
+  const sortedExperiments = useMemo(() => {
+    return [...filteredExperiments].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
+  }, [filteredExperiments]);
 
-    switch (activeTab) {
-      case 'all':
-        return sortedExperiments;
-      case 'past':
-        return sortedExperiments.filter(e => e.status === 'accepted');
-      case 'planned':
-        return sortedExperiments.filter(e => e.status === 'planned');
-      case 'deferred':
-        return sortedExperiments.filter(e => e.status === 'pending');
-      default:
-        return sortedExperiments;
-    }
-  };
+  const counts = useMemo(() => getCounts(), [getCounts]);
 
   const tabs: { id: ExperimentTab; label: string; count: number }[] = [
-    { id: 'all', label: 'All', count: totalCount },
-    { id: 'past', label: 'Past', count: acceptedCount },
-    { id: 'planned', label: 'Planned', count: plannedCount },
-    { id: 'deferred', label: 'Deferred', count: pendingCount },
+    { id: 'all', label: 'All', count: counts.total },
+    { id: 'past', label: 'Past', count: counts.accepted },
+    { id: 'planned', label: 'Planned', count: counts.planned },
+    { id: 'deferred', label: 'Deferred', count: counts.deferred },
   ];
+
+  if (view === 'allPast') {
+    return (
+      <AllExperiments
+        experiments={sortedExperiments}
+        onBack={() => setView('dashboard')}
+      />
+    );
+  }
+
+  if (view === 'allFuture') {
+    return (
+      <AllFutureExperiments
+        experiments={sortedExperiments.filter(e => e.status === 'planned')}
+        onBack={() => setView('dashboard')}
+        onNewExperiment={onNewExperiment}
+      />
+    );
+  }
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50 p-6">
@@ -74,31 +91,31 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
             <StatsCard
               title="Total Experiments"
-              value={totalCount}
+              value={counts.total}
               icon={LayoutGrid}
               description="All research experiments"
-              trend={{ value: totalCount, label: 'total' }}
+              trend={{ value: counts.total, label: 'total' }}
             />
             <StatsCard
               title="Accepted Experiments"
-              value={acceptedCount}
+              value={counts.accepted}
               icon={Lightbulb}
               description="Successfully validated experiments"
-              trend={{ value: acceptedCount, label: 'accepted', positive: true }}
+              trend={{ value: counts.accepted, label: 'accepted', positive: true }}
             />
             <StatsCard
               title="Pending Review"
-              value={pendingCount}
+              value={counts.deferred}
               icon={Clock}
               description="Experiments for later consideration"
-              trend={{ value: pendingCount, label: 'pending' }}
+              trend={{ value: counts.deferred, label: 'pending' }}
             />
             <StatsCard
               title="Connected Ideas"
-              value={experiments.length > 1 ? experiments.length - 1 : 0}
+              value={counts.total > 1 ? counts.total - 1 : 0}
               icon={GitBranch}
               description="Relationships between experiments"
-              trend={{ value: experiments.length - 1, label: 'connections' }}
+              trend={{ value: counts.total - 1, label: 'connections' }}
             />
             <button
               onClick={onViewGraph}
@@ -151,10 +168,16 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Scrollable Content Area */}
             <div className="h-[calc(100vh-32rem)] min-h-[400px] overflow-y-auto p-6">
-              {getFilteredExperiments().length > 0 ? (
-                <RecentExperiments
-                  experiments={getFilteredExperiments()}
-                />
+              {loading ? (
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-center text-gray-500">Loading experiments...</div>
+                </div>
+              ) : error ? (
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-center text-red-500">{error}</div>
+                </div>
+              ) : sortedExperiments.length > 0 ? (
+                <RecentExperiments experiments={sortedExperiments} />
               ) : (
                 <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
                   <div className="text-center">

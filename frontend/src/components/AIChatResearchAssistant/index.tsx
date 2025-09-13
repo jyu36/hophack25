@@ -1,10 +1,10 @@
 import React from 'react';
 import { Sparkles, ArrowLeft } from 'lucide-react';
-import ChatPanel from './Chat/ChatPanel';
-import GraphPanel from './Graph/GraphPanel';
-import { useChat } from '../hooks/useChat';
-import { useExperiments } from '../hooks/useExperiments';
-import { ExperimentSuggestion, NodeStatus } from '../types/research';
+import ChatPanel from '../Chat/ChatPanel';
+import GraphPanel from '../Graph/GraphPanel';
+import { useChat } from '../../hooks/useChat';
+import { useExperiments } from '../../hooks/useExperiments';
+import { ExperimentSuggestion, NodeStatus } from '../../types/research';
 
 interface AIChatResearchAssistantProps {
   initialSuggestions?: ExperimentSuggestion[];

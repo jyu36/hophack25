@@ -15,15 +15,20 @@ Base paper:
 - Title: {{ base_title }}
 - DOI: {{ base_doi }}
 - OpenAlex ID/URL: {{ base_id }}
+- Year: {{ base_year }}
 
-Relationship hint (optional): {{ relationship }}  # e.g., similar | background | method | dataset | extends | contrasts
+Relationship type to target: {{ relationship }}  # one of: similar | builds_on | prior | contrast | auto
 
 Output STRICT MINIFIED JSON only:
 {"papers":[
-  {"title":"...", "doi":"...", "relationship":"similar|background|method|dataset|extends|contrasts", "why":"<=20 words"},
-  {"title":"...", "doi":"...", "relationship":"...", "why":"..."}
+  {"title":"...", "doi":"...", "relationship":"similar|builds_on|prior|contrast", "why":"<=20 words"},
+  {"title":"...", "doi":"...", "relationship":"similar|builds_on|prior|contrast", "why":"..."}
 ]}
 Rules:
+- Match the requested relationship when possible; if {{ relationship }} == "auto", pick the most relevant mix.
+- Temporal constraints relative to base paper year ({{ base_year }}):
+  - If relationship is "prior": the paper MUST be earlier than the base (publication year < {{ base_year }}).
+  - If relationship is "builds_on": the paper MUST be same year or later (publication year ≥ {{ base_year }}).
 - Include only papers you are ≥70% confident about. Do NOT fabricate DOIs.
 - If DOI is unknown, set "doi": null.
 - No extra text outside JSON.

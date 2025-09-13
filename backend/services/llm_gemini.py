@@ -129,6 +129,7 @@ async def generate_candidates_from_base(ctx: Dict[str, Any], base_work: Dict[str
         base_title=base_work.get("title",""),
         base_doi=base_work.get("doi",""),
         base_id=base_work.get("id",""),
+        base_year=base_work.get("year") or "unknown",
         relationship=relationship,
         k=k,
     )

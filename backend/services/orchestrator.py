@@ -151,6 +151,19 @@ async def suggest_one_from_literature(
             continue
 
         cand_rel = c.get("relationship", relationship)
+        # Enforce temporal constraints w.r.t base paper when possible
+        try:
+            base_year = int((base_work.get("year") or 0))
+            cand_year = int((work.get("year") or 0))
+        except Exception:
+            base_year, cand_year = 0, 0
+        if base_year and cand_year:
+            if cand_rel == "prior" and not (cand_year < base_year):
+                print(f"[orch] (from_base) cand[{idx}] violates prior year constraint: cand {cand_year} !< base {base_year}")
+                continue
+            if cand_rel == "builds_on" and not (cand_year >= base_year):
+                print(f"[orch] (from_base) cand[{idx}] violates builds_on year constraint: cand {cand_year} !>= base {base_year}")
+                continue
         rel_score = await llm.relevance_score(ctx, work)
         print(f"[orch] (from_base) cand[{idx}] rel_score={rel_score:.3f} verify_strength={vrf['strength']}")
         score = scorer.mix(rel_llm=rel_score, verify_strength=vrf["strength"],

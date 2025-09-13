@@ -47,17 +47,20 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
 
   const handleCreateBranch = useCallback((nodeId: string) => {
     // TODO: Implement branch creation logic
-    console.log('Create branch from node:', nodeId);
+    console.log("Create branch from node:", nodeId);
   }, []);
 
-  const fetchNodeDetails = useCallback(async (nodeId: string): Promise<NodeDetails> => {
-    // TODO: Implement actual API call
-    return {
-      papers: [],
-      solutions: [],
-      isLoading: false,
-    };
-  }, []);
+  const fetchNodeDetails = useCallback(
+    async (nodeId: string): Promise<NodeDetails> => {
+      // TODO: Implement actual API call
+      return {
+        papers: [],
+        solutions: [],
+        isLoading: false,
+      };
+    },
+    []
+  );
 
   return (
     <div className="flex-1 flex flex-col">
@@ -76,7 +79,9 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
           <div className="text-center">
             <Network size={64} className="mx-auto mb-4 text-gray-400" />
             <h3 className="text-lg font-medium mb-2">No experiments yet</h3>
-            <p className="text-sm">Start a conversation to get AI-suggested experiments!</p>
+            <p className="text-sm">
+              Start a conversation to get AI-suggested experiments!
+            </p>
           </div>
         </div>
       ) : (

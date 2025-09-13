@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 
 from ...database import get_db
+from ...models.experiment import ExperimentStatus
 from ...models import experiment as models
 from ...schemas import experiment as schemas
 
@@ -42,7 +43,9 @@ async def get_graph_overview(request: Request, db: Session = Depends(get_db)):
                 "title": exp.title,
                 "status": exp.status,
                 "type": "experiment",
-                "description": exp.description[:100] if exp.description else None
+                "description": exp.description[:100] if exp.description else None,
+                "created_at": exp.created_at.isoformat() if exp.created_at else None,
+                "updated_at": exp.updated_at.isoformat() if exp.updated_at else None
             }
             for exp in experiments
         ]
@@ -101,30 +104,50 @@ async def get_node_info(
         child_nodes = []
         
         if with_parents:
-            incoming_rels = db.query(models.ExperimentRelationship).filter(
+            # Get parent relationships and nodes in one query
+            parent_rels = db.query(
+                models.ExperimentRelationship,
+                models.Experiment
+            ).join(
+                models.Experiment,
+                models.ExperimentRelationship.from_experiment_id == models.Experiment.id
+            ).filter(
                 models.ExperimentRelationship.to_experiment_id == node_id
             ).all()
-            parent_ids = [rel.from_experiment_id for rel in incoming_rels]
-            parents = db.query(models.Experiment).filter(models.Experiment.id.in_(parent_ids)).all()
-            parent_nodes = [{
-                "id": p.id,
-                "title": p.title,
-                "description": p.description[:100] if p.description else None,
-                "relationship": next(r.relationship_type for r in incoming_rels if r.from_experiment_id == p.id)
-            } for p in parents]
+            
+            parent_nodes = [
+                schemas.RelatedNode(
+                    id=parent.id,
+                    title=parent.title,
+                    description=parent.description[:100] if parent.description else None,
+                    relationship_type=rel.relationship_type,
+                    relationship_id=rel.id
+                )
+                for rel, parent in parent_rels
+            ]
 
         if with_children:
-            outgoing_rels = db.query(models.ExperimentRelationship).filter(
+            # Get child relationships and nodes in one query
+            child_rels = db.query(
+                models.ExperimentRelationship,
+                models.Experiment
+            ).join(
+                models.Experiment,
+                models.ExperimentRelationship.to_experiment_id == models.Experiment.id
+            ).filter(
                 models.ExperimentRelationship.from_experiment_id == node_id
             ).all()
-            child_ids = [rel.to_experiment_id for rel in outgoing_rels]
-            children = db.query(models.Experiment).filter(models.Experiment.id.in_(child_ids)).all()
-            child_nodes = [{
-                "id": c.id,
-                "title": c.title,
-                "description": c.description[:100] if c.description else None,
-                "relationship": next(r.relationship_type for r in outgoing_rels if r.to_experiment_id == c.id)
-            } for c in children]
+            
+            child_nodes = [
+                schemas.RelatedNode(
+                    id=child.id,
+                    title=child.title,
+                    description=child.description[:100] if child.description else None,
+                    relationship_type=rel.relationship_type,
+                    relationship_id=rel.id
+                )
+                for rel, child in child_rels
+            ]
 
         response = {
             "node": {
@@ -136,7 +159,9 @@ async def get_node_info(
                 "status": node.status,
                 "hypothesis": node.hypothesis,
                 "result": node.result,
-                "extra_data": node.extra_data
+                "extra_data": node.extra_data,
+                "created_at": node.created_at.isoformat() if node.created_at else None,
+                "updated_at": node.updated_at.isoformat() if node.updated_at else None
             },
             "parents": parent_nodes,
             "children": child_nodes
@@ -290,10 +315,26 @@ async def update_node(
     """
     Update an existing node (experiment).
     """
-    await log_request(request, "UPDATE_NODE", {"node_id": node_id, "data": update_data.model_dump()})
+    # Print the raw data before any processing
+    print("\n[DEBUG] Raw update_data:", update_data)
+    
+    # Print with and without exclude_unset to see the difference
+    full_dict = update_data.model_dump(exclude_unset=False)
+    update_dict = update_data.model_dump(exclude_unset=True)
+    
+    print("\n[DEBUG] Full data dictionary (including unset fields):", full_dict)
+    print("[DEBUG] Update dictionary (only set fields):", update_dict)
+    
+    print(f"\n[UPDATE NODE] Received request - Node ID: {node_id}")
+    print(f"[UPDATE NODE] Update data received: {update_dict}")
+    
+    await log_request(request, "UPDATE_NODE", {"node_id": node_id, "data": update_dict})
     try:
         experiment = db.query(models.Experiment).filter(models.Experiment.id == node_id).first()
+        print(f"[UPDATE NODE] Found experiment: {experiment.title if experiment else 'Not found'}")
+        
         if not experiment:
+            print(f"[UPDATE NODE ERROR] Node {node_id} not found")
             raise HTTPException(
                 status_code=404,
                 detail={
@@ -305,6 +346,7 @@ async def update_node(
 
         # Validate update data
         update_dict = update_data.model_dump(exclude_unset=True)
+        
         if not update_dict:
             raise HTTPException(
                 status_code=422,
@@ -317,28 +359,58 @@ async def update_node(
             )
 
         # Validate specific fields
+        print("\n[VALIDATION] Starting field validation...")
         invalid_fields = []
-        if 'status' in update_dict and update_dict['status'] not in [s.value for s in ExperimentStatus]:
-            invalid_fields.append(('status', f"Must be one of: {', '.join([s.value for s in ExperimentStatus])}"))
+        if 'status' in update_dict:
+            print(f"[VALIDATION] Checking status field: {update_dict['status']}")
+            # Convert status to lowercase for case-insensitive comparison
+            status_value = update_dict['status'].lower() if isinstance(update_dict['status'], str) else update_dict['status']
+            valid_statuses = [s.value for s in ExperimentStatus]
+            print(f"[VALIDATION] Valid status values: {valid_statuses}")
+            print(f"[VALIDATION] Received status (lowercase): {status_value}")
+            
+            print(f"[DEBUG] Comparing '{status_value}' with valid statuses: {valid_statuses}")
+            if status_value not in valid_statuses:
+                print(f"[VALIDATION ERROR] Invalid status value: {status_value}")
+                invalid_fields.append(('status', f"Must be one of: {', '.join(valid_statuses)}"))
+            else:
+                # Ensure correct case is used
+                print(f"[DEBUG] Finding matching status enum for value: {status_value}")
+                matching_status = next(s for s in ExperimentStatus if s.value == status_value)
+                update_dict['status'] = matching_status
+                print(f"[DEBUG] Set status to enum value: {matching_status}")
+                print(f"[VALIDATION] Status value accepted and normalized to: {update_dict['status']}")
+
         if 'title' in update_dict and not update_dict['title'].strip():
             invalid_fields.append(('title', "Cannot be empty"))
 
         if invalid_fields:
+            error_response = {
+                "error": "Invalid field values",
+                "invalid_fields": dict(invalid_fields),
+                "message": "Some fields contain invalid values",
+                "action_required": f"Please correct the invalid fields. Valid status values are: {', '.join([s.value for s in ExperimentStatus])}",
+                "debug_info": {
+                    "received_value": update_dict.get('status'),
+                    "valid_values": [s.value for s in ExperimentStatus],
+                    "validation_errors": invalid_fields
+                }
+            }
+            logger.error(f"Validation error in update_node: {error_response}")
             raise HTTPException(
                 status_code=422,
-                detail={
-                    "error": "Invalid field values",
-                    "invalid_fields": dict(invalid_fields),
-                    "message": "Some fields contain invalid values",
-                    "action_required": "Please correct the invalid fields"
-                }
+                detail=error_response
             )
 
         # Apply updates
+        print("\n[UPDATE] Applying field updates...")
         for field, value in update_dict.items():
+            print(f"[UPDATE] Setting field '{field}' to value: {value}")
             if field == 'extra_data' and value and experiment.extra_data:
+                print(f"[UPDATE] Merging extra_data: {value}")
                 experiment.extra_data.update(value)
             else:
+                print(f"[UPDATE] Setting attribute {field}={value}")
                 setattr(experiment, field, value)
 
         try:
@@ -459,5 +531,223 @@ async def delete_node(
                 "error": "Failed to delete node",
                 "message": str(e),
                 "action_required": "Please try again or check input parameters"
+            }
+        )
+
+@router.post("/edges", response_model=schemas.ExperimentRelationship)
+async def create_edge(
+    edge: schemas.ExperimentRelationshipCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Create a new edge between experiments"""
+    await log_request(request, "CREATE_EDGE", edge.model_dump())
+    try:
+        # Verify both nodes exist
+        from_node = db.query(models.Experiment).filter(models.Experiment.id == edge.from_experiment_id).first()
+        to_node = db.query(models.Experiment).filter(models.Experiment.id == edge.to_experiment_id).first()
+
+        if not from_node or not to_node:
+            missing_nodes = []
+            if not from_node:
+                missing_nodes.append(f"from_experiment_id: {edge.from_experiment_id}")
+            if not to_node:
+                missing_nodes.append(f"to_experiment_id: {edge.to_experiment_id}")
+                
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Node(s) not found",
+                    "message": f"The following nodes do not exist: {', '.join(missing_nodes)}",
+                    "action_required": "Please verify both node IDs exist"
+                }
+            )
+
+        # Prevent self-loops
+        if edge.from_experiment_id == edge.to_experiment_id:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Invalid edge",
+                    "message": "Cannot create an edge from a node to itself",
+                    "action_required": "Please provide different from_experiment_id and to_experiment_id"
+                }
+            )
+
+        # Normalize relationship type
+        edge_data = edge.model_dump()
+        edge_data['relationship_type'] = models.RelationshipType.normalize(edge_data['relationship_type'])
+        
+        # Create edge
+        db_edge = models.ExperimentRelationship(**edge_data)
+        db.add(db_edge)
+        db.commit()
+        db.refresh(db_edge)
+        
+        response = schemas.ExperimentRelationship.model_validate(db_edge)
+        await log_response("CREATE_EDGE", response.model_dump())
+        return response
+
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Invalid edge data",
+                "message": str(e),
+                "action_required": "Please check node IDs and relationship type"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in create_edge: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to create edge",
+                "message": str(e),
+                "action_required": "Please try again"
+            }
+        )
+
+@router.patch("/edges/{edge_id}", response_model=schemas.ExperimentRelationship)
+async def update_edge(
+    edge_id: int,
+    edge_update: schemas.ExperimentRelationshipCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Update an edge's properties"""
+    await log_request(request, "UPDATE_EDGE", {"edge_id": edge_id, "data": edge_update.model_dump()})
+    try:
+        edge = db.query(models.ExperimentRelationship).filter(
+            models.ExperimentRelationship.id == edge_id
+        ).first()
+        
+        if not edge:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Edge not found",
+                    "message": f"No edge exists with ID {edge_id}",
+                    "action_required": "Please verify the edge ID"
+                }
+            )
+
+        # If updating node connections, verify the nodes exist
+        update_data = edge_update.model_dump(exclude_unset=True)
+        if 'from_experiment_id' in update_data or 'to_experiment_id' in update_data:
+            from_id = update_data.get('from_experiment_id', edge.from_experiment_id)
+            to_id = update_data.get('to_experiment_id', edge.to_experiment_id)
+            
+            # Check nodes exist
+            nodes = db.query(models.Experiment).filter(
+                models.Experiment.id.in_([from_id, to_id])
+            ).all()
+            existing_ids = {node.id for node in nodes}
+            
+            missing_nodes = []
+            if from_id not in existing_ids:
+                missing_nodes.append(f"from_experiment_id: {from_id}")
+            if to_id not in existing_ids:
+                missing_nodes.append(f"to_experiment_id: {to_id}")
+            
+            if missing_nodes:
+                raise HTTPException(
+                    status_code=404,
+                    detail={
+                        "error": "Node(s) not found",
+                        "message": f"The following nodes do not exist: {', '.join(missing_nodes)}",
+                        "action_required": "Please verify node IDs"
+                    }
+                )
+            
+            # Prevent self-loops
+            if from_id == to_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "error": "Invalid edge",
+                        "message": "Cannot create an edge from a node to itself",
+                        "action_required": "Please provide different from_experiment_id and to_experiment_id"
+                    }
+                )
+
+        # Update edge properties
+        for field, value in update_data.items():
+            if field == 'relationship_type':
+                value = models.RelationshipType.normalize(value)
+            setattr(edge, field, value)
+
+        db.commit()
+        db.refresh(edge)
+        
+        response = schemas.ExperimentRelationship.model_validate(edge)
+        await log_response("UPDATE_EDGE", response.model_dump())
+        return response
+
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Invalid edge update",
+                "message": str(e),
+                "action_required": "Please check node IDs and relationship type"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in update_edge: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to update edge",
+                "message": str(e),
+                "action_required": "Please try again"
+            }
+        )
+
+@router.delete("/edges/{edge_id}")
+async def delete_edge(
+    edge_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Delete an edge between experiments"""
+    await log_request(request, "DELETE_EDGE", {"edge_id": edge_id})
+    try:
+        result = db.query(models.ExperimentRelationship).filter(
+            models.ExperimentRelationship.id == edge_id
+        ).delete()
+        
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Edge not found",
+                    "message": f"No edge exists with ID {edge_id}",
+                    "action_required": "Please verify the edge ID"
+                }
+            )
+        
+        db.commit()
+        return {"success": True, "deleted_edge_id": edge_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in delete_edge: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to delete edge",
+                "message": str(e),
+                "action_required": "Please try again"
             }
         )

@@ -39,6 +39,16 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
     setChatPanelWidth(newWidth);
   };
 
+  const handleFileUpload = (file: File) => {
+    console.log("File uploaded:", file.name, file.type, file.size);
+    // TODO: Implement file processing logic
+    // This could include:
+    // 1. Upload file to backend
+    // 2. Extract text content
+    // 3. Generate research suggestions based on content
+    // 4. Add file info to chat messages
+  };
+
   const acceptedCount = getExperimentsByStatus("completed").length;
   const pendingCount = getExperimentsByStatus("planned").length;
 
@@ -47,7 +57,7 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
     id: index + 1,
     from: parseInt(exp.id),
     to: parseInt(experiments[(index + 1) % experiments.length].id),
-    type: "related",
+    type: "leads_to",
     label: `Relationship ${index + 1}`,
   }));
 
@@ -88,6 +98,7 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
             messages={messages}
             isLoading={isLoading}
             onSendMessage={sendMessage}
+            onFileUpload={handleFileUpload}
             onAcceptSuggestion={handleAcceptSuggestion}
             onDeclineSuggestion={handleDeclineSuggestion}
           />

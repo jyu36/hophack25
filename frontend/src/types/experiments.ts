@@ -1,4 +1,4 @@
-export type NodeStatus = "accepted" | "pending" | "rejected";
+export type NodeStatus = "accepted" | "rejected" | "planned";
 export type NodeType = "hypothesis" | "experiment" | "result" | "analysis";
 
 export interface RelatedPaper {

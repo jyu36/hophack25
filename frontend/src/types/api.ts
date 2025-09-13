@@ -78,7 +78,7 @@ export function apiToUIExperiment(apiExp: APIExperiment): ResearchNode {
     title: apiExp.title,
     description: apiExp.description || "",
     type: "experiment",
-    status: "pending", // Map status appropriately
+    status: "planned", // Map status appropriately
     level: 0,
     motivation: apiExp.motivation,
     expectations: apiExp.expectations,

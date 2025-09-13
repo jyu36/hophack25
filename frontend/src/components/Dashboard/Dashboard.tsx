@@ -15,7 +15,11 @@ interface DashboardProps {
   onSuggestionsGenerated: (suggestions: ExperimentSuggestion[]) => void;
 }
 
+<<<<<<< Updated upstream
 type ExperimentTab = "all" | "completed" | "planned" | "rejected";
+=======
+type ExperimentTab = 'all' | 'past' | 'planned' | 'postponed';
+>>>>>>> Stashed changes
 
 const Dashboard: React.FC<DashboardProps> = ({
   onNewExperiment,
@@ -50,9 +54,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const tabs: { id: ExperimentTab; label: string; count: number }[] = [
     { id: 'all', label: 'All', count: counts.total },
-    { id: 'past', label: 'Past', count: counts.accepted },
+    { id: 'past', label: 'Past', count: counts.past },
     { id: 'planned', label: 'Planned', count: counts.planned },
-    { id: 'deferred', label: 'Deferred', count: counts.deferred },
+    { id: 'postponed', label: 'Postponed', count: counts.postponed },
   ];
 
   if (view === 'allPast') {
@@ -113,10 +117,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             />
             <StatsCard
               title="Pending Review"
-              value={counts.deferred}
+              value={counts.planned}
               icon={Clock}
               description="Experiments for later consideration"
-              trend={{ value: counts.deferred, label: 'pending' }}
+              trend={{ value: counts.planned, label: 'planned' }}
             />
             <StatsCard
               title="Connected Ideas"

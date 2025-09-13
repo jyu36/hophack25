@@ -4,6 +4,7 @@ import experimentService from '../services/experimentService';
 
 export const useExperiments = () => {
   const [experiments, setExperiments] = useState<Experiment[]>([]);
+  const [filteredExperiments, setFilteredExperiments] = useState<Experiment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
@@ -11,13 +12,14 @@ export const useExperiments = () => {
   // Cache experiments by status
   const experimentsByStatus = useMemo(() => {
     const cache = {
+      // 所有实验
       all: experiments,
-      // past 只包含 accepted 和 rejected 的实验
+      // past 只显示已完成（绿色）和已推迟（红色）的实验
       past: experiments.filter(e => e.status === 'accepted' || e.status === 'rejected'),
-      // planned 只包含 planned 状态的实验
+      // planned 只显示计划中（黄色）的实验
       planned: experiments.filter(e => e.status === 'planned'),
-      // deferred 只包含 rejected 状态的实验
-      deferred: experiments.filter(e => e.status === 'rejected')
+      // postponed 只显示已推迟（红色）的实验
+      postponed: experiments.filter(e => e.status === 'rejected')
     };
     console.log('Experiments by status:', cache);
     return cache;
@@ -46,11 +48,12 @@ export const useExperiments = () => {
   }, [lastFetchTime]);
 
   // Fetch experiments based on active tab
-  const fetchExperiments = useCallback(async (tab: 'all' | 'past' | 'planned' | 'deferred') => {
+  const fetchExperiments = useCallback(async (tab: 'all' | 'past' | 'planned' | 'postponed') => {
     await fetchAllExperiments();
-    const filteredExperiments = experimentsByStatus[tab];
-    console.log(`Filtered experiments for ${tab}:`, filteredExperiments);
-    return filteredExperiments;
+    const filtered = experimentsByStatus[tab];
+    setFilteredExperiments(filtered);
+    console.log(`Filtered experiments for ${tab}:`, filtered);
+    return filtered;
   }, [fetchAllExperiments, experimentsByStatus]);
 
   // Update experiment status
@@ -80,13 +83,13 @@ export const useExperiments = () => {
   const getCounts = useCallback(() => {
     const counts = {
       total: experiments.length,
-      // 已完成的实验（accepted）
+      // 已完成的实验（绿色）
       accepted: experiments.filter(e => e.status === 'accepted').length,
-      // 计划中的实验（planned）
+      // 计划中的实验（黄色）
       planned: experiments.filter(e => e.status === 'planned').length,
-      // 已拒绝的实验（rejected）
-      deferred: experiments.filter(e => e.status === 'rejected').length,
-      // 过去的实验（accepted + rejected）
+      // 已推迟的实验（红色）
+      postponed: experiments.filter(e => e.status === 'rejected').length,
+      // 过去的实验（绿色 + 红色）
       past: experiments.filter(e => e.status === 'accepted' || e.status === 'rejected').length
     };
     console.log('Experiment counts:', counts);
@@ -98,8 +101,13 @@ export const useExperiments = () => {
     fetchAllExperiments();
   }, [fetchAllExperiments]);
 
+  // Update filtered experiments when experiments change
+  useEffect(() => {
+    setFilteredExperiments(experiments);
+  }, [experiments]);
+
   return {
-    experiments,
+    experiments: filteredExperiments,
     loading,
     error,
     fetchExperiments,

@@ -14,7 +14,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex">
+    <div className="h-screen">
       {showChat ? (
         <AIChatResearchAssistant
           initialSuggestions={suggestions}

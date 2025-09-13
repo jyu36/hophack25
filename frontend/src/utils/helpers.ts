@@ -42,7 +42,7 @@ export function getStatusColor(status: string) {
   switch (status) {
     case 'accepted':
       return 'bg-green-500 text-white';
-    case 'pending':
+    case 'planned':
       return 'bg-yellow-500 text-white';
     case 'rejected':
       return 'bg-red-500 text-white';

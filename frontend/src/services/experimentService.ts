@@ -69,7 +69,7 @@ const mapUIStatusToAPIStatus = (uiStatus: NodeStatus): string => {
       apiStatus = 'rejected';   // rejected -> rejected
       break;
     default:
-      apiStatus = 'in_progress';
+      apiStatus = 'planned';    // default to planned for yellow experiments
   }
 
   debug.log('Mapped UI status:', uiStatus, 'to API status:', apiStatus);
@@ -89,12 +89,15 @@ const mapAPIStatusToUIStatus = (apiStatus: any): NodeStatus => {
     case 'planned':
       uiStatus = 'planned';   // planned -> planned
       break;
+    case 'in_progress':
+      uiStatus = 'planned';   // in_progress -> planned (both are yellow experiments)
+      break;
     case 'rejected':
       uiStatus = 'rejected';  // rejected -> rejected
       break;
     default:
       debug.warn('Unknown status:', status);
-      uiStatus = 'pending';
+      uiStatus = 'planned';   // default to planned for yellow experiments
   }
 
   debug.log('Mapped API status:', status, 'to UI status:', uiStatus);
@@ -184,10 +187,10 @@ export const experimentService = {
     }
   },
 
-  // Get deferred (rejected) experiments
-  async getDeferredExperiments(): Promise<Experiment[]> {
+  // Get postponed (rejected) experiments
+  async getPostponedExperiments(): Promise<Experiment[]> {
     try {
-      debug.log('Fetching deferred experiments...');
+      debug.log('Fetching postponed experiments...');
       const { nodes } = await api.get('/graph/overview').then(res => res.data);
       const experiments = nodes
         .filter((node: any) => {
@@ -198,10 +201,10 @@ export const experimentService = {
           return isRejected;
         })
         .map(convertToResearchNode);
-      debug.log('Deferred experiments:', experiments);
+      debug.log('Postponed experiments:', experiments);
       return experiments;
     } catch (error) {
-      debug.error('Error fetching deferred experiments:', error);
+      debug.error('Error fetching postponed experiments:', error);
       throw error;
     }
   },

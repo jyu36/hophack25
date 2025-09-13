@@ -27,9 +27,8 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
 
   const statusColors = {
     accepted: 'bg-green-100 text-green-800 border-green-200',
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    planned: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     rejected: 'bg-red-100 text-red-800 border-red-200',
-    planned: 'bg-purple-100 text-purple-800 border-purple-200',
   };
 
   const renderPaperList = (papers: RelatedPaper[]) => (
@@ -189,10 +188,10 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                     </Button>
                     <Button
                       size="sm"
-                      variant={node.status === 'pending' ? 'primary' : 'secondary'}
-                      onClick={() => onStatusChange(node.id, 'pending')}
+                      variant={node.status === 'planned' ? 'primary' : 'secondary'}
+                      onClick={() => onStatusChange(node.id, 'planned')}
                     >
-                      Keep Pending
+                      Keep Planned
                     </Button>
                     <Button
                       size="sm"

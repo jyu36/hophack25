@@ -104,30 +104,50 @@ async def get_node_info(
         child_nodes = []
         
         if with_parents:
-            incoming_rels = db.query(models.ExperimentRelationship).filter(
+            # Get parent relationships and nodes in one query
+            parent_rels = db.query(
+                models.ExperimentRelationship,
+                models.Experiment
+            ).join(
+                models.Experiment,
+                models.ExperimentRelationship.from_experiment_id == models.Experiment.id
+            ).filter(
                 models.ExperimentRelationship.to_experiment_id == node_id
             ).all()
-            parent_ids = [rel.from_experiment_id for rel in incoming_rels]
-            parents = db.query(models.Experiment).filter(models.Experiment.id.in_(parent_ids)).all()
-            parent_nodes = [{
-                "id": p.id,
-                "title": p.title,
-                "description": p.description[:100] if p.description else None,
-                "relationship": next(r.relationship_type for r in incoming_rels if r.from_experiment_id == p.id)
-            } for p in parents]
+            
+            parent_nodes = [
+                schemas.RelatedNode(
+                    id=parent.id,
+                    title=parent.title,
+                    description=parent.description[:100] if parent.description else None,
+                    relationship_type=rel.relationship_type,
+                    relationship_id=rel.id
+                )
+                for rel, parent in parent_rels
+            ]
 
         if with_children:
-            outgoing_rels = db.query(models.ExperimentRelationship).filter(
+            # Get child relationships and nodes in one query
+            child_rels = db.query(
+                models.ExperimentRelationship,
+                models.Experiment
+            ).join(
+                models.Experiment,
+                models.ExperimentRelationship.to_experiment_id == models.Experiment.id
+            ).filter(
                 models.ExperimentRelationship.from_experiment_id == node_id
             ).all()
-            child_ids = [rel.to_experiment_id for rel in outgoing_rels]
-            children = db.query(models.Experiment).filter(models.Experiment.id.in_(child_ids)).all()
-            child_nodes = [{
-                "id": c.id,
-                "title": c.title,
-                "description": c.description[:100] if c.description else None,
-                "relationship": next(r.relationship_type for r in outgoing_rels if r.to_experiment_id == c.id)
-            } for c in children]
+            
+            child_nodes = [
+                schemas.RelatedNode(
+                    id=child.id,
+                    title=child.title,
+                    description=child.description[:100] if child.description else None,
+                    relationship_type=rel.relationship_type,
+                    relationship_id=rel.id
+                )
+                for rel, child in child_rels
+            ]
 
         response = {
             "node": {

@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 
 # Import the enum from SQLAlchemy model to avoid duplication
-from ..models.experiment import ExperimentStatus
+from ..models.experiment import ExperimentStatus, RelationshipType
 
 class ExperimentBase(BaseModel):
     """
@@ -44,7 +44,7 @@ class ExperimentRelationshipBase(BaseModel):
     """
     from_experiment_id: int
     to_experiment_id: int
-    relationship_type: str
+    relationship_type: RelationshipType
     label: Optional[str] = None
     extra_data: Optional[Dict[str, Any]] = None
 
@@ -71,10 +71,20 @@ class GraphOverview(BaseModel):
     nodes: List[Dict[str, Any]]
     edges: List[Dict[str, Any]]
 
+class RelatedNode(BaseModel):
+    """
+    Schema for a node summary with its relationship to another node
+    """
+    id: int
+    title: str
+    description: Optional[str] = None
+    relationship_type: RelationshipType
+    relationship_id: int
+
 class NodeInfo(BaseModel):
     """
     Schema for returning detailed node information
     """
     node: Experiment
-    incoming_relationships: List[ExperimentRelationship] = []
-    outgoing_relationships: List[ExperimentRelationship] = []
+    parents: List[RelatedNode] = []
+    children: List[RelatedNode] = []

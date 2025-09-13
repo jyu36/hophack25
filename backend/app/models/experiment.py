@@ -51,17 +51,20 @@ class Experiment(Base, TimestampMixin):
     # Literature references associated with this experiment
     literature = relationship("Literature", back_populates="experiment", cascade="all, delete-orphan")
 
+class RelationshipType(str, enum.Enum):
+    """
+    Valid types of relationships between experiments
+    """
+    LEADS_TO = "leads_to"      # This experiment led to the creation of another
+    SUPPORTS = "supports"      # Results support another experiment's hypothesis
+    REFUTES = "refutes"       # Results contradict another experiment's hypothesis
+    REQUIRES = "requires"      # This experiment depends on another's completion
+    RELATED_TO = "related_to"  # General relationship between experiments
+
 class ExperimentRelationship(Base, TimestampMixin):
     """
     Represents directed edges between experiments in the research DAG.
     Each relationship has a type that describes how experiments are connected.
-    
-    Common relationship_types:
-    - "leads_to": This experiment led to the creation of another
-    - "supports": Results support another experiment's hypothesis
-    - "refutes": Results contradict another experiment's hypothesis
-    - "requires": This experiment depends on another's completion
-    - "related_to": General relationship between experiments
     """
     __tablename__ = "experiment_relationships"
 
@@ -72,7 +75,7 @@ class ExperimentRelationship(Base, TimestampMixin):
     to_experiment_id = Column(Integer, ForeignKey('experiments.id'), nullable=False)
     
     # Type and description of the relationship
-    relationship_type = Column(String(100), nullable=False)
+    relationship_type = Column(Enum(RelationshipType), nullable=False)
     label = Column(Text, nullable=True)  # Optional description of the relationship
     
     # Additional properties specific to this relationship

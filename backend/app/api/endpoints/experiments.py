@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 
 from ...database import get_db
+from ...models.experiment import ExperimentStatus
 from ...models import experiment as models
 from ...schemas import experiment as schemas
 
@@ -348,12 +349,16 @@ async def update_node(
             print(f"[VALIDATION] Valid status values: {valid_statuses}")
             print(f"[VALIDATION] Received status (lowercase): {status_value}")
             
+            print(f"[DEBUG] Comparing '{status_value}' with valid statuses: {valid_statuses}")
             if status_value not in valid_statuses:
                 print(f"[VALIDATION ERROR] Invalid status value: {status_value}")
                 invalid_fields.append(('status', f"Must be one of: {', '.join(valid_statuses)}"))
             else:
                 # Ensure correct case is used
-                update_dict['status'] = next(s.value for s in ExperimentStatus if s.value == status_value)
+                print(f"[DEBUG] Finding matching status enum for value: {status_value}")
+                matching_status = next(s for s in ExperimentStatus if s.value == status_value)
+                update_dict['status'] = matching_status
+                print(f"[DEBUG] Set status to enum value: {matching_status}")
                 print(f"[VALIDATION] Status value accepted and normalized to: {update_dict['status']}")
 
         if 'title' in update_dict and not update_dict['title'].strip():

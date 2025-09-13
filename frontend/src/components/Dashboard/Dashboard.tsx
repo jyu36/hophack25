@@ -15,7 +15,7 @@ interface DashboardProps {
   onSuggestionsGenerated: (suggestions: ExperimentSuggestion[]) => void;
 }
 
-type ExperimentTab = 'all' | 'past' | 'planned' | 'deferred';
+type ExperimentTab = "all" | "completed" | "planned" | "rejected";
 
 const Dashboard: React.FC<DashboardProps> = ({
   onNewExperiment,
@@ -79,7 +79,9 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Research Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Research Dashboard
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
             Overview of your research experiments and progress
           </p>
@@ -87,21 +89,27 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Stats Overview Module */}
         <div className="mb-8 rounded-xl bg-white p-8 shadow-xl">
-          <h2 className="mb-6 text-2xl font-bold text-gray-900">Research Statistics Overview</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900">
+            Research Statistics Overview
+          </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
             <StatsCard
               title="Total Experiments"
               value={counts.total}
               icon={LayoutGrid}
               description="All research experiments"
-              trend={{ value: counts.total, label: 'total' }}
+              trend={{ value: counts.total, label: "total" }}
             />
             <StatsCard
-              title="Accepted Experiments"
-              value={counts.accepted}
+              title="Completed Experiments"
+              value={counts.completed}
               icon={Lightbulb}
-              description="Successfully validated experiments"
-              trend={{ value: counts.accepted, label: 'accepted', positive: true }}
+              description="Successfully completed experiments"
+              trend={{
+                value: counts.completed,
+                label: "completed",
+                positive: true,
+              }}
             />
             <StatsCard
               title="Pending Review"
@@ -115,7 +123,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               value={counts.total > 1 ? counts.total - 1 : 0}
               icon={GitBranch}
               description="Relationships between experiments"
-              trend={{ value: counts.total - 1, label: 'connections' }}
+              trend={{ value: counts.total - 1, label: "connections" }}
             />
             <button
               onClick={onViewGraph}
@@ -134,7 +142,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Tabs Header */}
             <div className="border-b border-gray-200">
               <div className="flex items-center justify-between px-6 pt-6">
-                <h2 className="text-lg font-medium text-gray-900">Experiments</h2>
+                <h2 className="text-lg font-medium text-gray-900">
+                  Experiments
+                </h2>
               </div>
               <div className="mt-4 flex space-x-1 px-6">
                 {tabs.map((tab) => (
@@ -143,17 +153,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                     onClick={() => setActiveTab(tab.id)}
                     className={`relative min-w-[100px] px-3 py-2 text-sm font-medium transition-colors ${
                       activeTab === tab.id
-                        ? 'text-blue-600'
-                        : 'text-gray-500 hover:text-gray-700'
+                        ? "text-blue-600"
+                        : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
                     <span className="flex items-center justify-center">
                       {tab.label}
-                      <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
-                        activeTab === tab.id
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
+                      <span
+                        className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
+                          activeTab === tab.id
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
                         {tab.count}
                       </span>
                     </span>
@@ -181,8 +193,10 @@ const Dashboard: React.FC<DashboardProps> = ({
               ) : (
                 <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
                   <div className="text-center">
-                    <p className="text-sm text-gray-500">No experiments found in this category.</p>
-                    {activeTab === 'planned' && (
+                    <p className="text-sm text-gray-500">
+                      No experiments found in this category.
+                    </p>
+                    {activeTab === "planned" && (
                       <button
                         onClick={onNewExperiment}
                         className="mt-2 text-sm text-blue-600 hover:text-blue-800"

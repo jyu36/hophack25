@@ -1,23 +1,22 @@
-import React, { memo } from 'react';
-import { Handle, Position, NodeProps } from 'reactflow';
-import { ResearchNode } from '../../types/research';
+import React, { memo } from "react";
+import { Handle, Position, NodeProps } from "reactflow";
+import { ResearchNode } from "../../types/research";
 
 interface CustomNodeData extends ResearchNode {
   onNodeDoubleClick: (node: ResearchNode) => void;
 }
 
 const statusColors = {
-  accepted: 'bg-green-500 border-green-600',
-  pending: 'bg-yellow-500 border-yellow-600',
-  rejected: 'bg-red-500 border-red-600',
-  planned: 'bg-purple-500 border-purple-600',
+  completed: "bg-green-500 border-green-600",
+  planned: "bg-purple-500 border-purple-600",
+  rejected: "bg-red-500 border-red-600",
 };
 
 const typeIcons = {
-  hypothesis: '🤔',
-  experiment: '🧪',
-  result: '📊',
-  analysis: '📝',
+  hypothesis: "🤔",
+  experiment: "🧪",
+  result: "📊",
+  analysis: "📝",
 };
 
 const CustomNode = ({ data }: NodeProps<CustomNodeData>) => {
@@ -27,7 +26,9 @@ const CustomNode = ({ data }: NodeProps<CustomNodeData>) => {
 
   return (
     <div
-      className={`relative rounded-lg border-2 ${statusColors[data.status]} p-3 shadow-lg cursor-pointer
+      className={`relative rounded-lg border-2 ${
+        statusColors[data.status]
+      } p-3 shadow-lg cursor-pointer
         transition-all duration-200 hover:shadow-xl hover:scale-105`}
       onDoubleClick={handleDoubleClick}
     >
@@ -61,12 +62,17 @@ const CustomNode = ({ data }: NodeProps<CustomNodeData>) => {
 
         {data.solutions && data.solutions.length > 0 && (
           <div className="mt-2 text-[10px] text-white/80">
-            {data.solutions.length} solution{data.solutions.length > 1 ? 's' : ''}
+            {data.solutions.length} solution
+            {data.solutions.length > 1 ? "s" : ""}
           </div>
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="!bg-gray-400" />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!bg-gray-400"
+      />
     </div>
   );
 };

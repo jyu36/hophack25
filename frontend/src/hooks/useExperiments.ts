@@ -12,10 +12,14 @@ export const useExperiments = () => {
   const experimentsByStatus = useMemo(() => {
     const cache = {
       all: experiments,
-      past: experiments.filter(e => e.status === 'accepted'),
+      // past 只包含 accepted 和 rejected 的实验
+      past: experiments.filter(e => e.status === 'accepted' || e.status === 'rejected'),
+      // planned 只包含 planned 状态的实验
       planned: experiments.filter(e => e.status === 'planned'),
+      // deferred 只包含 rejected 状态的实验
       deferred: experiments.filter(e => e.status === 'rejected')
     };
+    console.log('Experiments by status:', cache);
     return cache;
   }, [experiments]);
 
@@ -31,6 +35,7 @@ export const useExperiments = () => {
     setError(null);
     try {
       const fetchedExperiments = await experimentService.getAllExperiments();
+      console.log('Fetched experiments:', fetchedExperiments);
       setExperiments(fetchedExperiments);
       setLastFetchTime(now);
     } catch (err) {
@@ -43,7 +48,9 @@ export const useExperiments = () => {
   // Fetch experiments based on active tab
   const fetchExperiments = useCallback(async (tab: 'all' | 'past' | 'planned' | 'deferred') => {
     await fetchAllExperiments();
-    return experimentsByStatus[tab];
+    const filteredExperiments = experimentsByStatus[tab];
+    console.log(`Filtered experiments for ${tab}:`, filteredExperiments);
+    return filteredExperiments;
   }, [fetchAllExperiments, experimentsByStatus]);
 
   // Update experiment status
@@ -64,17 +71,26 @@ export const useExperiments = () => {
 
   // Get experiments by status
   const getExperimentsByStatus = useCallback((status: NodeStatus) => {
-    return experiments.filter(exp => exp.status === status);
+    const filtered = experiments.filter(exp => exp.status === status);
+    console.log(`Experiments with status ${status}:`, filtered);
+    return filtered;
   }, [experiments]);
 
   // Get counts
   const getCounts = useCallback(() => {
-    return {
+    const counts = {
       total: experiments.length,
+      // 已完成的实验（accepted）
       accepted: experiments.filter(e => e.status === 'accepted').length,
+      // 计划中的实验（planned）
       planned: experiments.filter(e => e.status === 'planned').length,
+      // 已拒绝的实验（rejected）
       deferred: experiments.filter(e => e.status === 'rejected').length,
+      // 过去的实验（accepted + rejected）
+      past: experiments.filter(e => e.status === 'accepted' || e.status === 'rejected').length
     };
+    console.log('Experiment counts:', counts);
+    return counts;
   }, [experiments]);
 
   // Initial fetch

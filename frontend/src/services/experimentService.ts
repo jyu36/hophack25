@@ -41,13 +41,11 @@ const extractStatusValue = (status: any): string => {
       debug.log('Extracted status from object.value:', status.value);
       return status.value;
     }
-    if ('toString' in status) {
-      const str = status.toString();
-      const match = str.match(/[A-Z_]+:\s*'([^']+)'/);
-      if (match) {
-        debug.log('Extracted status from object.toString:', match[1]);
-        return match[1];
-      }
+    const str = status.toString();
+    const match = str.match(/[A-Z_]+:\s*'([^']+)'/);
+    if (match) {
+      debug.log('Extracted status from object.toString:', match[1]);
+      return match[1];
     }
   }
 
@@ -62,13 +60,13 @@ const mapUIStatusToAPIStatus = (uiStatus: NodeStatus): string => {
 
   switch (uiStatus) {
     case 'accepted':
-      apiStatus = 'completed';
+      apiStatus = 'completed';  // accepted -> completed
       break;
     case 'planned':
-      apiStatus = 'planned';
+      apiStatus = 'planned';    // planned -> planned
       break;
     case 'rejected':
-      apiStatus = 'rejected';
+      apiStatus = 'rejected';   // rejected -> rejected
       break;
     default:
       apiStatus = 'in_progress';
@@ -86,16 +84,13 @@ const mapAPIStatusToUIStatus = (apiStatus: any): NodeStatus => {
   let uiStatus: NodeStatus;
   switch (status) {
     case 'completed':
-      uiStatus = 'accepted';
+      uiStatus = 'accepted';  // completed -> accepted
       break;
     case 'planned':
-      uiStatus = 'planned';
+      uiStatus = 'planned';   // planned -> planned
       break;
     case 'rejected':
-      uiStatus = 'rejected';
-      break;
-    case 'in_progress':
-      uiStatus = 'pending';
+      uiStatus = 'rejected';  // rejected -> rejected
       break;
     default:
       debug.warn('Unknown status:', status);

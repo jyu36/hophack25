@@ -6,6 +6,18 @@ export enum ExperimentStatus {
   COMPLETED = "completed",
 }
 
+export enum RelationshipType {
+  LEADS_TO = "leads_to",
+  SUPPORTS = "supports",
+  REFUTES = "refutes",
+  REQUIRES = "requires",
+  RELATED_TO = "related",
+  INSPIRES = "inspires",
+  EXTENDS = "extends",
+  VALIDATES = "validates",
+  IMPLEMENTS = "implements",
+}
+
 export interface APIExperiment {
   id: number;
   title: string;
@@ -24,7 +36,7 @@ export interface APIExperimentRelationship {
   id: number;
   from_experiment_id: number;
   to_experiment_id: number;
-  relationship_type: string;
+  relationship_type: RelationshipType;
   label?: string;
   extra_data?: Record<string, any>;
   created_at: string;

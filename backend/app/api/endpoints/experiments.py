@@ -574,8 +574,12 @@ async def create_edge(
                 }
             )
 
+        # Normalize relationship type
+        edge_data = edge.model_dump()
+        edge_data['relationship_type'] = models.RelationshipType.normalize(edge_data['relationship_type'])
+        
         # Create edge
-        db_edge = models.ExperimentRelationship(**edge.model_dump())
+        db_edge = models.ExperimentRelationship(**edge_data)
         db.add(db_edge)
         db.commit()
         db.refresh(db_edge)
@@ -673,6 +677,8 @@ async def update_edge(
 
         # Update edge properties
         for field, value in update_data.items():
+            if field == 'relationship_type':
+                value = models.RelationshipType.normalize(value)
             setattr(edge, field, value)
 
         db.commit()

@@ -164,17 +164,62 @@ async def create_node(
 ):
     """
     Create a new node (experiment).
+    Validates input and provides specific guidance for AI agent reprompting.
     """
     await log_request(request, "CREATE_NODE", experiment.model_dump())
     try:
-        # Validate required fields
+        # Comprehensive input validation
+        validation_errors = {
+            "missing_fields": [],
+            "invalid_fields": {},
+            "suggestions": {}
+        }
+
+        # Check required fields
         if not experiment.title:
+            validation_errors["missing_fields"].append("title")
+            validation_errors["suggestions"]["title"] = "Provide a clear, descriptive title for the experiment"
+        elif len(experiment.title.strip()) < 5:
+            validation_errors["invalid_fields"]["title"] = "Title is too short"
+            validation_errors["suggestions"]["title"] = "Title should be at least 5 characters long and descriptive"
+
+        if experiment.status is None:
+            validation_errors["missing_fields"].append("status")
+            validation_errors["suggestions"]["status"] = f"Must be one of: {', '.join([s.value for s in ExperimentStatus])}"
+
+        # Validate content quality
+        if experiment.description and len(experiment.description.strip()) < 20:
+            validation_errors["invalid_fields"]["description"] = "Description is too brief"
+            validation_errors["suggestions"]["description"] = "Provide a more detailed description (at least 20 characters)"
+
+        if experiment.motivation and len(experiment.motivation.strip()) < 20:
+            validation_errors["invalid_fields"]["motivation"] = "Motivation is too brief"
+            validation_errors["suggestions"]["motivation"] = "Explain the motivation more thoroughly"
+
+        # Check for logical consistency
+        if experiment.result and experiment.status != ExperimentStatus.COMPLETED:
+            validation_errors["invalid_fields"]["status"] = "Experiment has results but status is not COMPLETED"
+            validation_errors["suggestions"]["status"] = "Set status to COMPLETED or remove results"
+
+        # If any validation errors found, return detailed feedback
+        if validation_errors["missing_fields"] or validation_errors["invalid_fields"]:
             raise HTTPException(
                 status_code=422,
                 detail={
-                    "error": "Missing required field",
-                    "message": "Title is required",
-                    "action_required": "Please provide a title for the experiment"
+                    "error": "Invalid experiment data",
+                    "validation_errors": validation_errors,
+                    "message": "The provided experiment data needs improvement",
+                    "action_required": "Please address the following issues:",
+                    "reprompt_guidance": {
+                        "missing_fields": "You must provide values for all required fields",
+                        "invalid_fields": "Some fields need to be improved",
+                        "suggestions": "Follow the suggestions to improve the data quality",
+                        "examples": {
+                            "title": "PCR Optimization for DNA Amplification",
+                            "description": "A detailed study to optimize PCR conditions for improved DNA amplification efficiency",
+                            "motivation": "Current PCR protocols show inconsistent results. This experiment aims to identify optimal conditions."
+                        }
+                    }
                 }
             )
 
@@ -189,14 +234,40 @@ async def create_node(
     except IntegrityError as e:
         db.rollback()
         logger.error(f"Database integrity error in create_node: {str(e)}")
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": "Database constraint violation",
-                "message": str(e),
-                "action_required": "Please check your input data and try again"
-            }
-        )
+        
+        # Extract specific constraint violation details
+        error_msg = str(e)
+        if "NOT NULL constraint failed" in error_msg:
+            field = error_msg.split(".")[-1].strip()
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Missing required field",
+                    "field": field,
+                    "message": f"The field '{field}' cannot be null",
+                    "action_required": f"Please provide a value for '{field}'"
+                }
+            )
+        elif "UNIQUE constraint failed" in error_msg:
+            field = error_msg.split(".")[-1].strip()
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Duplicate value",
+                    "field": field,
+                    "message": f"The value for '{field}' already exists",
+                    "action_required": f"Please provide a unique value for '{field}'"
+                }
+            )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Database constraint violation",
+                    "message": str(e),
+                    "action_required": "Please check your input data and try again"
+                }
+            )
     except Exception as e:
         db.rollback()
         logger.error(f"Error in create_node: {str(e)}")
@@ -232,7 +303,38 @@ async def update_node(
                 }
             )
 
+        # Validate update data
         update_dict = update_data.model_dump(exclude_unset=True)
+        if not update_dict:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "error": "No update data provided",
+                    "message": "At least one field must be provided for update",
+                    "action_required": "Please provide at least one field to update",
+                    "available_fields": ["title", "description", "motivation", "expectations", "status", "hypothesis", "result", "extra_data"]
+                }
+            )
+
+        # Validate specific fields
+        invalid_fields = []
+        if 'status' in update_dict and update_dict['status'] not in [s.value for s in ExperimentStatus]:
+            invalid_fields.append(('status', f"Must be one of: {', '.join([s.value for s in ExperimentStatus])}"))
+        if 'title' in update_dict and not update_dict['title'].strip():
+            invalid_fields.append(('title', "Cannot be empty"))
+
+        if invalid_fields:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "error": "Invalid field values",
+                    "invalid_fields": dict(invalid_fields),
+                    "message": "Some fields contain invalid values",
+                    "action_required": "Please correct the invalid fields"
+                }
+            )
+
+        # Apply updates
         for field, value in update_dict.items():
             if field == 'extra_data' and value and experiment.extra_data:
                 experiment.extra_data.update(value)

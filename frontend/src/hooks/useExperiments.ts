@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Experiment, NodeStatus } from '../types/research';
 import experimentService from '../services/experimentService';
 
@@ -6,36 +6,45 @@ export const useExperiments = () => {
   const [experiments, setExperiments] = useState<Experiment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
-  // Fetch experiments based on active tab
-  const fetchExperiments = useCallback(async (tab: 'all' | 'past' | 'planned' | 'deferred') => {
+  // Cache experiments by status
+  const experimentsByStatus = useMemo(() => {
+    const cache = {
+      all: experiments,
+      past: experiments.filter(e => e.status === 'accepted'),
+      planned: experiments.filter(e => e.status === 'planned'),
+      deferred: experiments.filter(e => e.status === 'rejected')
+    };
+    return cache;
+  }, [experiments]);
+
+  // Fetch all experiments only if needed
+  const fetchAllExperiments = useCallback(async () => {
+    const now = Date.now();
+    // Only fetch if it's been more than 5 seconds since last fetch
+    if (now - lastFetchTime < 5000) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      let fetchedExperiments: Experiment[];
-      switch (tab) {
-        case 'all':
-          fetchedExperiments = await experimentService.getAllExperiments();
-          break;
-        case 'past':
-          fetchedExperiments = await experimentService.getPastExperiments();
-          break;
-        case 'planned':
-          fetchedExperiments = await experimentService.getPlannedExperiments();
-          break;
-        case 'deferred':
-          fetchedExperiments = await experimentService.getDeferredExperiments();
-          break;
-        default:
-          fetchedExperiments = await experimentService.getAllExperiments();
-      }
+      const fetchedExperiments = await experimentService.getAllExperiments();
       setExperiments(fetchedExperiments);
+      setLastFetchTime(now);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch experiments');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [lastFetchTime]);
+
+  // Fetch experiments based on active tab
+  const fetchExperiments = useCallback(async (tab: 'all' | 'past' | 'planned' | 'deferred') => {
+    await fetchAllExperiments();
+    return experimentsByStatus[tab];
+  }, [fetchAllExperiments, experimentsByStatus]);
 
   // Update experiment status
   const updateExperimentStatus = useCallback(async (experimentId: string, status: NodeStatus) => {
@@ -67,6 +76,11 @@ export const useExperiments = () => {
       deferred: experiments.filter(e => e.status === 'rejected').length,
     };
   }, [experiments]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchAllExperiments();
+  }, [fetchAllExperiments]);
 
   return {
     experiments,

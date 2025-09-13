@@ -1,0 +1,786 @@
+    )
+fastapi.exceptions.ResponseValidationError: 4 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'created_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'display_text': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 0, 'updated_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'display_text': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 1, 'created_at'), 'msg': 'Field required', 'input': {'id': 2, 'title': 'DNA Sequencing', 'display_text': 'Sequencing amplified DNA samples', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 1, 'updated_at'), 'msg': 'Field required', 'input': {'id': 2, 'title': 'DNA Sequencing', 'display_text': 'Sequencing amplified DNA samples', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [11104]
+zsh: terminated  python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+hophack25/backend on  assistant ✘!?via 🐍 v3.13.3 (.venv) took 1m19s 
+02:48 ❯ python3 -m uvicorn app.main:app --host 127.0.0.1 --port 8000                                           
+INFO:     Started server process [80278]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:51639 - "GET /graph/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51640 - "POST /nodes HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: NOT NULL constraint failed: experiments.expectations
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/h11_impl.py", line 403, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 215, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2476, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/Users/xhwang/programming/projects/hophack25/backend/app/api/endpoints/experiments.py", line 144, in create_node
+    db.commit()
+    ~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 1313, in commit
+    self._prepare_impl()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "<string>", line 2, in _prepare_impl
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 1288, in _prepare_impl
+    self.session.flush()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4345, in flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4480, in _flush
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4441, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+        statement,
+        params,
+        execution_options=execution_options,
+    )
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: experiments.expectations
+[SQL: INSERT INTO experiments (title, description, motivation, expectations, status, hypothesis, result, extra_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at]
+[parameters: ('Protein Folding Hypothesis Test', None, "To validate the researcher's hypothesis about protein folding", None, 'PLANNED', None, None, 'null')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+INFO:     127.0.0.1:51641 - "GET /nodes?concise=true HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/h11_impl.py", line 403, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 328, in app
+    content = await serialize_response(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 177, in serialize_response
+    raise ResponseValidationError(
+        errors=_normalize_errors(errors), body=response_content
+    )
+fastapi.exceptions.ResponseValidationError: 4 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'created_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'display_text': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 0, 'updated_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'display_text': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 1, 'created_at'), 'msg': 'Field required', 'input': {'id': 2, 'title': 'DNA Sequencing', 'display_text': 'Sequencing amplified DNA samples', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 1, 'updated_at'), 'msg': 'Field required', 'input': {'id': 2, 'title': 'DNA Sequencing', 'display_text': 'Sequencing amplified DNA samples', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+
+INFO:     127.0.0.1:51642 - "GET /nodes?concise=true HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/h11_impl.py", line 403, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 328, in app
+    content = await serialize_response(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 177, in serialize_response
+    raise ResponseValidationError(
+        errors=_normalize_errors(errors), body=response_content
+    )
+fastapi.exceptions.ResponseValidationError: 4 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'created_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'display_text': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 0, 'updated_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'display_text': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 1, 'created_at'), 'msg': 'Field required', 'input': {'id': 2, 'title': 'DNA Sequencing', 'display_text': 'Sequencing amplified DNA samples', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 1, 'updated_at'), 'msg': 'Field required', 'input': {'id': 2, 'title': 'DNA Sequencing', 'display_text': 'Sequencing amplified DNA samples', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+
+INFO:     127.0.0.1:51648 - "POST /nodes/1/literature?link=https:%2F%2Fdoi.org%2F10.1000%2Fpcr123 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:52023 - "GET /graph/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52093 - "GET /graph/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52141 - "PATCH /nodes/1 HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:52141 - "PATCH /nodes/2 HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:52141 - "PATCH /nodes/1 HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:52141 - "PATCH /nodes/2 HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:52141 - "PATCH /nodes/1 HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:52141 - "PATCH /nodes/2 HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:52141 - "GET /context-keywords HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52141 - "GET /nodes/1?with_parents=true&with_children=true HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/h11_impl.py", line 403, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 328, in app
+    content = await serialize_response(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 177, in serialize_response
+    raise ResponseValidationError(
+        errors=_normalize_errors(errors), body=response_content
+    )
+fastapi.exceptions.ResponseValidationError: 2 validation errors:
+  {'type': 'missing', 'loc': ('response', 'node', 'created_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'description': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+  {'type': 'missing', 'loc': ('response', 'node', 'updated_at'), 'msg': 'Field required', 'input': {'id': 1, 'title': 'PCR Optimization', 'description': 'Optimizing PCR conditions for DNA amplification', 'status': <ExperimentStatus.PLANNED: 'planned'>, 'type': 'experiment'}}
+
+INFO:     127.0.0.1:53523 - "GET /graph/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53555 - "POST /nodes HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: NOT NULL constraint failed: experiments.expectations
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/h11_impl.py", line 403, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 215, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2476, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/Users/xhwang/programming/projects/hophack25/backend/app/api/endpoints/experiments.py", line 144, in create_node
+    db.commit()
+    ~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 1313, in commit
+    self._prepare_impl()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "<string>", line 2, in _prepare_impl
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 1288, in _prepare_impl
+    self.session.flush()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4345, in flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4480, in _flush
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4441, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+        statement,
+        params,
+        execution_options=execution_options,
+    )
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: experiments.expectations
+[SQL: INSERT INTO experiments (title, description, motivation, expectations, status, hypothesis, result, extra_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at]
+[parameters: ('PCR Error Rate Analysis', 'Investigate the error rates of different PCR conditions to ensure high fidelity in DNA amplification.', 'Identify conditions that minimize errors and maximize accuracy in PCR.', None, 'PLANNED', None, None, 'null')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+INFO:     127.0.0.1:53556 - "POST /nodes HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: NOT NULL constraint failed: experiments.expectations
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/h11_impl.py", line 403, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 215, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2476, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/Users/xhwang/programming/projects/hophack25/backend/app/api/endpoints/experiments.py", line 144, in create_node
+    db.commit()
+    ~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<string>", line 2, in commit
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 1313, in commit
+    self._prepare_impl()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "<string>", line 2, in _prepare_impl
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 1288, in _prepare_impl
+    self.session.flush()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4345, in flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4480, in _flush
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4441, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+    result = connection.execute(
+        statement,
+        params,
+        execution_options=execution_options,
+    )
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/xhwang/programming/projects/hophack25/.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: experiments.expectations
+[SQL: INSERT INTO experiments (title, description, motivation, expectations, status, hypothesis, result, extra_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at]
+[parameters: ('PCR Error Rate Analysis', 'Investigate the error rates of different PCR conditions to ensure high fidelity in DNA amplification.', 'Minimize errors and maximize accuracy in PCR products.', None, 'PLANNED', None, None, 'null')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+INFO:     127.0.0.1:54548 - "GET /graph/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54562 - "PATCH /nodes/1 HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:54562 - "PATCH /nodes/1 HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:54562 - "PATCH /nodes/1 HTTP/1.1" 422 Unprocessable Content

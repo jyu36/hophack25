@@ -1,5 +1,5 @@
-export type NodeStatus = "accepted" | "pending" | "rejected";
-export type NodeType = "hypothesis" | "experiment" | "result" | "analysis";
+export type NodeStatus = 'accepted' | 'pending' | 'rejected' | 'planned';
+export type NodeType = 'hypothesis' | 'experiment' | 'result' | 'analysis';
 
 export interface RelatedPaper {
   id: string;
@@ -27,6 +27,11 @@ export interface ResearchNode {
   createdAt: string;
   aiGenerated: boolean;
   solutions?: ResearchNode[]; // Child nodes/solutions proposed by AI
+  plannedDate?: string;
+  priority?: number;
+  goals?: string;
+  methodology?: string;
+  resources?: string;
 }
 
 // 为了保持兼容性，我们将 Experiment 定义为 ResearchNode 的别名

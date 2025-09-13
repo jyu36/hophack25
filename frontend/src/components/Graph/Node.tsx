@@ -10,6 +10,7 @@ const statusColors = {
   accepted: 'bg-green-500 border-green-600',
   pending: 'bg-yellow-500 border-yellow-600',
   rejected: 'bg-red-500 border-red-600',
+  planned: 'bg-purple-500 border-purple-600',
 };
 
 const typeIcons = {

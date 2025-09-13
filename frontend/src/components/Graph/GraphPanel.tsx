@@ -1,10 +1,10 @@
-import React, { useState, useCallback } from "react";
-import { Network } from "lucide-react";
-import GraphView from "./GraphView";
-import Legend from "./Legend";
-import KeywordList from "./KeywordList";
-import { Experiment, NodeDetails } from "../../types/research";
-import { experimentsToNodes } from "../../utils/helpers";
+import React, { useState, useCallback } from 'react';
+import { Network } from 'lucide-react';
+import GraphView from './GraphView';
+import Legend from './Legend';
+import KeywordList from './KeywordList';
+import { Experiment, NodeDetails, NodeStatus } from '../../types/research';
+import { experimentsToNodes } from '../../utils/helpers';
 
 interface GraphPanelProps {
   experiments: Experiment[];
@@ -40,13 +40,10 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
     label: rel.type,
   }));
 
-  const handleNodeStatusChange = useCallback(
-    (nodeId: string, status: "accepted" | "pending" | "rejected") => {
-      // TODO: Implement status change logic
-      console.log("Change node status:", nodeId, status);
-    },
-    []
-  );
+  const handleNodeStatusChange = useCallback((nodeId: string, status: NodeStatus) => {
+    // TODO: Implement status change logic
+    console.log('Change node status:', nodeId, status);
+  }, []);
 
   const handleCreateBranch = useCallback((nodeId: string) => {
     // TODO: Implement branch creation logic
@@ -111,4 +108,5 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
     </div>
   );
 };
+
 export default GraphPanel;

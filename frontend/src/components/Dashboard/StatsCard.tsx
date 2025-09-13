@@ -21,23 +21,18 @@ const StatsCard: React.FC<StatsCardProps> = ({
   trend,
 }) => {
   return (
-    <div className="rounded-lg bg-white p-6 shadow">
+    <div className="rounded-lg bg-gray-50 p-4 shadow">
       <div className="flex items-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
-          <Icon className="h-6 w-6 text-blue-600" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
+          <Icon className="h-5 w-5 text-blue-600" />
         </div>
-        <div className="ml-4">
-          <h3 className="text-sm font-medium text-gray-900">{title}</h3>
-          <p className="text-2xl font-semibold text-gray-900">{value}</p>
-        </div>
-      </div>
-      <div className="mt-4">
-        <div className="flex items-center">
-          <span className={`text-sm ${trend.positive ? 'text-green-600' : 'text-gray-500'}`}>
+        <div className="ml-3">
+          <h3 className="text-xs font-medium text-gray-900">{title}</h3>
+          <p className="text-xl font-semibold text-gray-900">{value}</p>
+          <span className={`text-xs ${trend.positive ? 'text-green-600' : 'text-gray-500'}`}>
             {trend.value} {trend.label}
           </span>
         </div>
-        <p className="mt-1 text-sm text-gray-500">{description}</p>
       </div>
     </div>
   );

@@ -15,11 +15,7 @@ interface DashboardProps {
   onSuggestionsGenerated: (suggestions: ExperimentSuggestion[]) => void;
 }
 
-<<<<<<< Updated upstream
-type ExperimentTab = "all" | "completed" | "planned" | "rejected";
-=======
 type ExperimentTab = 'all' | 'past' | 'planned' | 'postponed';
->>>>>>> Stashed changes
 
 const Dashboard: React.FC<DashboardProps> = ({
   onNewExperiment,
@@ -106,11 +102,11 @@ const Dashboard: React.FC<DashboardProps> = ({
             />
             <StatsCard
               title="Completed Experiments"
-              value={counts.completed}
+              value={counts.accepted}
               icon={Lightbulb}
               description="Successfully completed experiments"
               trend={{
-                value: counts.completed,
+                value: counts.accepted,
                 label: "completed",
                 positive: true,
               }}

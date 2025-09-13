@@ -1,6 +1,6 @@
 import { ResearchAssistant, AgentContext } from "./agent";
 import { createCategoryLogger } from "./logger";
-import { HELP_MESSAGE, CONTEXT_MESSAGES } from "./prompts";
+import { HELP_MESSAGE, CONTEXT_MESSAGES, CONTEXT_REFRESH_MESSAGES } from "./prompts";
 import * as readline from "readline";
 
 export class ConversationHandler {
@@ -62,9 +62,12 @@ export class ConversationHandler {
         }
 
         if (userInput.toLowerCase() === "clear") {
-          this.context = null;
-          this.logger.info('Context cleared by user');
-          console.log(CONTEXT_MESSAGES.CONTEXT_CLEARED);
+          await this.clearAndRefreshContext();
+          continue;
+        }
+
+        if (userInput.toLowerCase() === "refresh") {
+          await this.refreshContext();
           continue;
         }
 
@@ -114,5 +117,53 @@ export class ConversationHandler {
       this.context.messages.length,
       this.context.lastToolCalls
     ));
+  }
+
+  private async refreshContext(): Promise<void> {
+    try {
+      console.log(CONTEXT_REFRESH_MESSAGES.REFRESHING);
+      
+      // Get refreshed context
+      const refreshedPrompt = await this.assistant.refreshContext();
+      
+      if (refreshedPrompt === CONTEXT_REFRESH_MESSAGES.REFRESH_ERROR) {
+        console.log(CONTEXT_REFRESH_MESSAGES.REFRESH_ERROR);
+        return;
+      }
+
+      // Update the system message in the context
+      if (this.context && this.context.messages.length > 0) {
+        this.context.messages[0].content = refreshedPrompt;
+        this.logger.info('Context refreshed successfully');
+        console.log(CONTEXT_REFRESH_MESSAGES.REFRESHED);
+      } else {
+        // If no context exists, start a new conversation with refreshed context
+        const { response, context } = await this.assistant.startConversation(true);
+        this.context = context;
+        console.log(`Assistant: ${response}`);
+        console.log(CONTEXT_REFRESH_MESSAGES.REFRESHED);
+      }
+    } catch (error) {
+      this.logger.error('Error refreshing context', { error: error instanceof Error ? error.message : String(error) });
+      console.log(CONTEXT_REFRESH_MESSAGES.REFRESH_ERROR);
+    }
+  }
+
+  private async clearAndRefreshContext(): Promise<void> {
+    try {
+      console.log(CONTEXT_MESSAGES.CONTEXT_CLEARED);
+      console.log(CONTEXT_REFRESH_MESSAGES.REFRESHING);
+      
+      // Clear existing context and start fresh with updated context
+      const { response, context } = await this.assistant.startConversation(true);
+      this.context = context;
+      
+      this.logger.info('Context cleared and refreshed with latest graph information');
+      console.log(`Assistant: ${response}`);
+      console.log(CONTEXT_REFRESH_MESSAGES.REFRESHED);
+    } catch (error) {
+      this.logger.error('Error clearing and refreshing context', { error: error instanceof Error ? error.message : String(error) });
+      console.log(CONTEXT_REFRESH_MESSAGES.REFRESH_ERROR);
+    }
   }
 }

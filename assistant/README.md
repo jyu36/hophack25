@@ -8,6 +8,8 @@ An AI-powered tool-use agent that helps researchers manage their experimental wo
 - **Active Graph Management**: Automatically create, update, and manage experiment nodes and relationships
 - **Literature Integration**: Manage research references and context
 - **Context Awareness**: Maintain persistent research context through keywords and experiment metadata
+- **Dynamic Context Initialization**: Automatically loads current graph state and context keywords when starting conversations
+- **Template System**: Uses Jinja-style templates for dynamic context generation
 
 ## Quick Start
 
@@ -49,6 +51,12 @@ Run the demo to see the assistant in action:
 npm run demo
 ```
 
+#### Context Demo
+Test the new context initialization system:
+```bash
+npm run context-demo
+```
+
 ## Configuration
 
 Environment variables in `.env`:
@@ -73,10 +81,12 @@ LOG_FILE_PATH=./logs/assistant.log
 
 The Research Assistant is a tool-use agent that:
 
-1. **Receives user input** through a conversational interface
-2. **Analyzes intent** and determines what tools to use
-3. **Calls backend API tools** to read or modify the experiment graph
-4. **Provides intelligent responses** based on the graph state and user needs
+1. **Initializes with context** by fetching current graph state and context keywords
+2. **Receives user input** through a conversational interface
+3. **Analyzes intent** and determines what tools to use
+4. **Calls backend API tools** to read or modify the experiment graph
+5. **Provides intelligent responses** based on the graph state and user needs
+6. **Maintains context** through dynamic template-based system prompts
 
 ### Available Tools
 
@@ -96,6 +106,55 @@ The assistant has access to all backend API endpoints as tools:
 - `create_edge` - Create relationships between experiments
 - `add_literature` - Add research references
 - `add_context_keyword` - Store important concepts
+
+## Context System
+
+The Research Assistant features a sophisticated context initialization system that provides up-to-date information about your research graph when starting conversations.
+
+### How Context Initialization Works
+
+1. **Graph Overview**: Fetches current experiment nodes, their status, and relationships
+2. **Context Keywords**: Retrieves stored research concepts and findings
+3. **Template Rendering**: Uses Jinja-style templates to generate dynamic system prompts
+4. **Context Refresh**: Allows updating context during conversations
+
+### Context Templates
+
+The system uses two main templates:
+
+- **Full Context Template**: Comprehensive overview with detailed experiment information
+- **Minimal Context Template**: Lightweight version for quick context updates
+
+### Available Commands
+
+- `refresh` - Refresh context with latest graph information
+- `context` - Show current conversation context
+- `clear` - Clear conversation and refresh with latest context
+
+### Example Context Output
+
+```
+## Current Research Context (Updated: 2024-01-15T10:30:00Z)
+
+### Research Graph Overview
+**Total Experiments:** 3
+**Active Experiments:**
+- **DNA Extraction Optimization** (in_progress)
+  - Type: experiment
+  - Description: Testing new extraction protocol for higher yield
+  - Dependencies: None
+
+- **PCR Amplification** (planned)
+  - Type: experiment
+  - Description: Amplify extracted DNA samples
+  - Dependencies: DNA Extraction Optimization
+
+### Research Context Keywords
+**Important Concepts & Findings:**
+- **High Yield Protocol**: New extraction method shows 30% improvement
+  - Added: 2024-01-14T15:20:00Z
+  - Context: DNA extraction optimization
+```
 
 ## Example Interactions
 
@@ -138,8 +197,11 @@ src/
 ├── agent.ts          # Core agent with ReAct loop
 ├── tools.ts          # API tool wrappers
 ├── conversation.ts   # Chat interface handler
+├── template.ts       # Context template system
+├── prompts.ts        # System prompts and templates
 ├── index.ts          # Main entry point
-└── demo.ts           # Demo script
+├── demo.ts           # Demo script
+└── context-demo.ts   # Context system demo
 ```
 
 ### Adding New Tools

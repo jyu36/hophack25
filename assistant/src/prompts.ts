@@ -5,6 +5,8 @@
  * Prompts can be easily modified here for optimization and experimentation.
  */
 
+import { templateEngine, GraphContext } from './template';
+
 export const SYSTEM_PROMPT = `You are a Research Assistant AI that helps researchers manage their experimental work through an experiment graph. You have access to tools that let you read and modify the experiment graph.
 
 ## Your Capabilities:
@@ -66,7 +68,8 @@ export const HELP_MESSAGE = `
 Available commands:
   help     - Show this help message
   context  - Show current conversation context
-  clear    - Clear conversation context and start fresh
+  refresh  - Refresh context with latest graph information
+  clear    - Clear conversation and refresh with latest context
   exit     - Exit the assistant
 
 What I can help you with:
@@ -172,4 +175,109 @@ export const TOOL_EXPLANATIONS = {
   create_edge: "I'm creating a relationship between these experiments.",
   add_literature: "I'm adding this literature reference to your experiment.",
   add_context_keyword: "I'm saving this important concept for future reference."
+};
+
+// Context initialization templates
+export const CONTEXT_TEMPLATE = `{{ systemPrompt }}
+
+## Current Research Context (Updated: {{ timestamp }})
+
+### Research Graph Overview
+{% if graphContext.overview %}
+**Total Experiments:** {{ graphContext.nodeCount }}
+{% if graphContext.overview.nodes and graphContext.overview.nodes.length > 0 %}
+**Active Experiments:**
+{% for node in graphContext.overview.nodes %}
+- **{{ node.title }}** ({{ node.status }})
+  - Type: {{ node.type }}
+  - Description: {{ node.description }}
+  {% if node.parents and node.parents.length > 0 %}
+  - Dependencies: {% for parent in node.parents %}{{ parent.title }}{% if not loop.last %}, {% endif %}{% endfor %}
+  {% endif %}
+{% endfor %}
+{% else %}
+No experiments currently in the graph.
+{% endif %}
+
+{% if graphContext.overview.edges and graphContext.overview.edges.length > 0 %}
+**Experiment Relationships:**
+{% for edge in graphContext.overview.edges %}
+- {{ edge.from.title }} → {{ edge.to.title }} ({{ edge.relationship_type }})
+{% endfor %}
+{% endif %}
+{% else %}
+**Graph Status:** Unable to retrieve current graph overview. The graph may be empty or there may be a connection issue.
+{% endif %}
+
+### Research Context Keywords
+{% if graphContext.keywords and graphContext.keywords.length > 0 %}
+**Important Concepts & Findings:**
+{% for keyword in graphContext.keywords %}
+- **{{ keyword.keyword }}**: {{ keyword.description }}
+  - Added: {{ keyword.created_at }}
+  - Context: {{ keyword.context }}
+{% endfor %}
+{% else %}
+No context keywords have been saved yet.
+{% endif %}
+
+### Current Research Status
+Based on the current graph state, you have {{ graphContext.nodeCount }} experiment(s) in your research pipeline. Use this context to provide informed guidance and suggestions for new experiments or improvements to existing work.
+
+Remember to:
+- Reference existing experiments when suggesting new work
+- Build upon previous findings and context keywords
+- Maintain awareness of experiment dependencies and relationships
+- Update context keywords as new important concepts emerge`;
+
+export const MINIMAL_CONTEXT_TEMPLATE = `{{ systemPrompt }}
+
+## Current Research Context (Updated: {{ timestamp }})
+
+**Research Status:** {{ graphContext.nodeCount }} experiment(s) in progress
+{% if graphContext.keywords and graphContext.keywords.length > 0 %}
+**Key Concepts:** {% for keyword in graphContext.keywords %}{{ keyword.keyword }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
+
+Use this context to provide informed guidance about your research work.`;
+
+// Context initialization functions
+export async function generateInitialContext(): Promise<string> {
+  try {
+    return await templateEngine.renderContextTemplate(CONTEXT_TEMPLATE, {
+      systemPrompt: SYSTEM_PROMPT
+    });
+  } catch (error) {
+    console.error('Error generating initial context:', error);
+    return SYSTEM_PROMPT; // Fallback to basic system prompt
+  }
+}
+
+export async function generateMinimalContext(): Promise<string> {
+  try {
+    return await templateEngine.renderContextTemplate(MINIMAL_CONTEXT_TEMPLATE, {
+      systemPrompt: SYSTEM_PROMPT
+    });
+  } catch (error) {
+    console.error('Error generating minimal context:', error);
+    return SYSTEM_PROMPT; // Fallback to basic system prompt
+  }
+}
+
+export async function refreshContext(): Promise<string> {
+  try {
+    return await templateEngine.renderContextTemplate(CONTEXT_TEMPLATE, {
+      systemPrompt: SYSTEM_PROMPT
+    });
+  } catch (error) {
+    console.error('Error refreshing context:', error);
+    return SYSTEM_PROMPT; // Fallback to basic system prompt
+  }
+}
+
+// Context refresh messages
+export const CONTEXT_REFRESH_MESSAGES = {
+  REFRESHING: "🔄 Refreshing context with latest graph information...",
+  REFRESHED: "✅ Context refreshed with current research state.",
+  REFRESH_ERROR: "⚠️ Could not refresh context, using cached information."
 };

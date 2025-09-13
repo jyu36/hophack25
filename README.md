@@ -76,3 +76,7 @@
 ## Common Issues
 - If the database doesn't exist, it will be created automatically on first run
 - Make sure both frontend and backend servers are running simultaneously
+
+
+# DEMO cases
+- try: I'm doing an research on finetuning llm using head tuning. Here are the experiments I done so far: - I have a FT dataset that maps from math word problem to the actual answer. collected from the internet and cleaned by mechanical turk. I also finetune the llama-3b model using head tuning.

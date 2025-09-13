@@ -30,7 +30,12 @@ async function runDemo() {
   // Demo scenarios
   const scenarios = DEMO_SCENARIOS;
 
-  let context = null;
+  // Start with contextual conversation
+  console.log("🚀 Starting conversation with contextual system prompt...");
+  const { response: welcomeResponse, context: initialContext } = await assistant.startConversation(true);
+  console.log(`🤖 Assistant: ${welcomeResponse}\n`);
+  
+  let context = initialContext;
 
   for (let i = 0; i < scenarios.length; i++) {
     const scenario = scenarios[i];
@@ -67,12 +72,15 @@ async function runDemo() {
   }
 
   console.log("\n🎉 Demo completed! The assistant has demonstrated its ability to:");
+  console.log("  • Initialize with contextual system prompts containing current graph state");
   console.log("  • Understand and query the experiment graph");
   console.log("  • Create and update experiment nodes");
   console.log("  • Manage relationships between experiments");
   console.log("  • Handle literature references");
   console.log("  • Provide research guidance and suggestions");
+  console.log("  • Refresh context with latest graph information");
   console.log("\nTo start an interactive session, run: npm run dev");
+  console.log("To test context system, run: npm run context-demo");
 }
 
 // Run the demo

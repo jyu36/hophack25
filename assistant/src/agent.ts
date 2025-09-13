@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { tools, openaiToolSpecs } from "./tools";
 import { logger, createCategoryLogger } from "./logger";
-import { SYSTEM_PROMPT, WELCOME_MESSAGE, ERROR_MESSAGES } from "./prompts";
+import { SYSTEM_PROMPT, WELCOME_MESSAGE, ERROR_MESSAGES, generateInitialContext, refreshContext, CONTEXT_REFRESH_MESSAGES } from "./prompts";
 
 export interface AgentConfig {
   model: string;
@@ -241,6 +241,25 @@ export class ResearchAssistant {
     return SYSTEM_PROMPT;
   }
 
+  private async buildContextualSystemPrompt(): Promise<string> {
+    try {
+      return await generateInitialContext();
+    } catch (error) {
+      this.logger.error('Error building contextual system prompt', { error: error instanceof Error ? error.message : String(error) });
+      return SYSTEM_PROMPT; // Fallback to basic system prompt
+    }
+  }
+
+  async refreshContext(): Promise<string> {
+    try {
+      this.logger.info('Refreshing context with latest graph information');
+      return await refreshContext();
+    } catch (error) {
+      this.logger.error('Error refreshing context', { error: error instanceof Error ? error.message : String(error) });
+      return CONTEXT_REFRESH_MESSAGES.REFRESH_ERROR;
+    }
+  }
+
   async processMessage(userMessage: string, context?: AgentContext): Promise<{
     response: string;
     newContext: AgentContext;
@@ -368,17 +387,25 @@ export class ResearchAssistant {
     };
   }
 
-  async startConversation(): Promise<{
+  async startConversation(useContext: boolean = true): Promise<{
     response: string;
     context: AgentContext;
   }> {
     this.logger.agent("Starting new conversation");
     
+    let systemPrompt: string;
+    if (useContext) {
+      this.logger.info("Building contextual system prompt with current graph state");
+      systemPrompt = await this.buildContextualSystemPrompt();
+    } else {
+      systemPrompt = this.buildSystemPrompt();
+    }
+    
     const context: AgentContext = {
       messages: [
         {
           role: "system",
-          content: this.buildSystemPrompt()
+          content: systemPrompt
         }
       ],
       currentIteration: 0,

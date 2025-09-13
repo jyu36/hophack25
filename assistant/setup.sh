@@ -44,6 +44,16 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Test context system
+echo "🧪 Testing context template system..."
+npm run context-demo > /dev/null 2>&1
+
+if [ $? -eq 0 ]; then
+    echo "✅ Context system working properly"
+else
+    echo "⚠️  Context system test failed (this is normal if backend is not running)"
+fi
+
 echo ""
 echo "🎉 Setup complete!"
 echo ""
@@ -51,7 +61,21 @@ echo "Next steps:"
 echo "1. Edit .env file with your OpenAI API key and backend URL"
 echo "2. Make sure the backend API is running"
 echo "3. Run the assistant:"
-echo "   npm run dev     # Interactive mode"
-echo "   npm run demo    # Demo mode"
+echo "   npm run dev         # Interactive mode with context initialization"
+echo "   npm run demo        # Demo mode with context awareness"
+echo "   npm run context-demo # Test the context template system"
+echo ""
+echo "New Features:"
+echo "• Dynamic context initialization with current graph state"
+echo "• Template-based system prompts with Jinja-style rendering"
+echo "• Context refresh commands (refresh, clear)"
+echo "• Automatic loading of experiment overview and context keywords"
+echo ""
+echo "Available Commands:"
+echo "• help     - Show help message"
+echo "• context  - Show current conversation context"
+echo "• refresh  - Refresh context with latest graph information"
+echo "• clear    - Clear conversation and refresh with latest context"
+echo "• exit     - Exit the assistant"
 echo ""
 echo "For more information, see README.md"

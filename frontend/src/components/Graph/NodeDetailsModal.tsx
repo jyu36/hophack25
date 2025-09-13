@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
-import { ExternalLink, Book, GitBranch, Loader } from 'lucide-react';
-import Modal from '../Common/Modal';
-import Button from '../Common/Button';
-import ResizableHorizontalDivider from '../Common/ResizableHorizontalDivider';
-import { ResearchNode, RelatedPaper, NodeDetails, NodeStatus } from '../../types/research';
+import React, { useState } from "react";
+import { ExternalLink, Book, GitBranch, Loader } from "lucide-react";
+import Modal from "../Common/Modal";
+import Button from "../Common/Button";
+import ResizableHorizontalDivider from "../Common/ResizableHorizontalDivider";
+import {
+  ResearchNode,
+  RelatedPaper,
+  NodeDetails,
+  NodeStatus,
+} from "../../types/research";
 
 interface NodeDetailsModalProps {
   node: ResearchNode;
@@ -22,13 +27,15 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
   onCreateBranch,
   nodeDetails,
 }) => {
-  const [activeTab, setActiveTab] = useState<'info' | 'papers' | 'solutions'>('info');
+  const [activeTab, setActiveTab] = useState<"info" | "papers" | "solutions">(
+    "info"
+  );
   const [topSectionHeight, setTopSectionHeight] = useState(200); // Default height for the top section
 
   const statusColors = {
-    accepted: 'bg-green-100 text-green-800 border-green-200',
-    planned: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    rejected: 'bg-red-100 text-red-800 border-red-200',
+    completed: "bg-green-100 text-green-800 border-green-200",
+    planned: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    postponed: "bg-red-100 text-red-800 border-red-200",
   };
 
   const renderPaperList = (papers: RelatedPaper[]) => (
@@ -39,7 +46,7 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
             <div className="flex-1">
               <h4 className="font-medium text-gray-900">{paper.title}</h4>
               <p className="text-sm text-gray-500 mt-1">
-                {paper.authors.join(', ')} • {paper.year}
+                {paper.authors.join(", ")} • {paper.year}
               </p>
             </div>
             <a
@@ -67,9 +74,7 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
       {solutions.map((solution) => (
         <div
           key={solution.id}
-          className={`border rounded-lg p-4 ${
-            statusColors[solution.status]
-          }`}
+          className={`border rounded-lg p-4 ${statusColors[solution.status]}`}
         >
           <h4 className="font-medium text-gray-900">{solution.title}</h4>
           <p className="text-sm text-gray-600 mt-1">{solution.description}</p>
@@ -96,31 +101,31 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
           <div className="flex space-x-4">
             <button
               className={`py-2 px-4 border-b-2 text-sm font-medium ${
-                activeTab === 'info'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === "info"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
-              onClick={() => setActiveTab('info')}
+              onClick={() => setActiveTab("info")}
             >
               Information
             </button>
             <button
               className={`py-2 px-4 border-b-2 text-sm font-medium ${
-                activeTab === 'papers'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === "papers"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
-              onClick={() => setActiveTab('papers')}
+              onClick={() => setActiveTab("papers")}
             >
               Related Papers
             </button>
             <button
               className={`py-2 px-4 border-b-2 text-sm font-medium ${
-                activeTab === 'solutions'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === "solutions"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
-              onClick={() => setActiveTab('solutions')}
+              onClick={() => setActiveTab("solutions")}
             >
               AI Solutions
             </button>
@@ -129,19 +134,30 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
 
         {/* Content */}
         <div>
-          {activeTab === 'info' && (
+          {activeTab === "info" && (
             <div className="space-y-4">
               {/* Top Section with fixed height */}
-              <div style={{ height: topSectionHeight }} className="overflow-y-auto">
+              <div
+                style={{ height: topSectionHeight }}
+                className="overflow-y-auto"
+              >
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700">Description</h4>
-                  <p className="mt-1 text-sm text-gray-600">{node.description}</p>
+                  <h4 className="text-sm font-medium text-gray-700">
+                    Description
+                  </h4>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {node.description}
+                  </p>
                 </div>
 
                 {node.motivation && (
                   <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-700">Motivation</h4>
-                    <p className="mt-1 text-sm text-gray-600">{node.motivation}</p>
+                    <h4 className="text-sm font-medium text-gray-700">
+                      Motivation
+                    </h4>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {node.motivation}
+                    </p>
                   </div>
                 )}
               </div>
@@ -157,13 +173,19 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
               <div className="space-y-4">
                 {node.expectations && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-700">Expected Outcomes</h4>
-                    <p className="mt-1 text-sm text-gray-600">{node.expectations}</p>
+                    <h4 className="text-sm font-medium text-gray-700">
+                      Expected Outcomes
+                    </h4>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {node.expectations}
+                    </p>
                   </div>
                 )}
 
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700">Keywords</h4>
+                  <h4 className="text-sm font-medium text-gray-700">
+                    Keywords
+                  </h4>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {node.keywords.map((keyword) => (
                       <span
@@ -181,22 +203,28 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                   <div className="mt-2 flex space-x-2">
                     <Button
                       size="sm"
-                      variant={node.status === 'accepted' ? 'success' : 'secondary'}
-                      onClick={() => onStatusChange(node.id, 'accepted')}
+                      variant={
+                        node.status === "completed" ? "success" : "secondary"
+                      }
+                      onClick={() => onStatusChange(node.id, "completed")}
                     >
                       Accept
                     </Button>
                     <Button
                       size="sm"
-                      variant={node.status === 'planned' ? 'primary' : 'secondary'}
-                      onClick={() => onStatusChange(node.id, 'planned')}
+                      variant={
+                        node.status === "planned" ? "primary" : "secondary"
+                      }
+                      onClick={() => onStatusChange(node.id, "planned")}
                     >
                       Keep Planned
                     </Button>
                     <Button
                       size="sm"
-                      variant={node.status === 'rejected' ? 'danger' : 'secondary'}
-                      onClick={() => onStatusChange(node.id, 'rejected')}
+                      variant={
+                        node.status === "postponed" ? "danger" : "secondary"
+                      }
+                      onClick={() => onStatusChange(node.id, "postponed")}
                     >
                       Reject
                     </Button>
@@ -206,7 +234,7 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
             </div>
           )}
 
-          {activeTab === 'papers' && (
+          {activeTab === "papers" && (
             <div>
               {nodeDetails.isLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -223,7 +251,7 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
             </div>
           )}
 
-          {activeTab === 'solutions' && (
+          {activeTab === "solutions" && (
             <div>
               {nodeDetails.isLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -243,15 +271,10 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
 
         {/* Actions */}
         <div className="flex justify-between pt-4 border-t">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-          >
+          <Button variant="secondary" onClick={onClose}>
             Close
           </Button>
-          <Button
-            onClick={() => onCreateBranch(node.id)}
-          >
+          <Button onClick={() => onCreateBranch(node.id)}>
             Create New Branch
           </Button>
         </div>

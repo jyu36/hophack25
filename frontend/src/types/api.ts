@@ -1,4 +1,4 @@
-import { ResearchNode } from "./research";
+import { ResearchNode, NodeStatus } from "./research";
 
 // Backend API Types - These match exactly with the backend schema
 

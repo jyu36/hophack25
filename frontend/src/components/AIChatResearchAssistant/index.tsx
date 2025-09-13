@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { Sparkles, ArrowLeft } from 'lucide-react';
-import ChatPanel from '../Chat/ChatPanel';
-import GraphPanel from '../Graph/GraphPanel';
-import ResizableDivider from '../Common/ResizableDivider';
-import { useChat } from '../../hooks/useChat';
-import { useExperiments } from '../../hooks/useExperiments';
-import { ExperimentSuggestion, NodeStatus } from '../../types/research';
+import React, { useState } from "react";
+import { Sparkles, ArrowLeft } from "lucide-react";
+import ChatPanel from "../Chat/ChatPanel";
+import GraphPanel from "../Graph/GraphPanel";
+import ResizableDivider from "../Common/ResizableDivider";
+import { useChat } from "../../hooks/useChat";
+import { useExperiments } from "../../hooks/useExperiments";
+import { ExperimentSuggestion, NodeStatus } from "../../types/research";
 
 interface AIChatResearchAssistantProps {
   initialSuggestions?: ExperimentSuggestion[];
@@ -17,11 +17,8 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   onBackToDashboard,
 }) => {
   const { messages, isLoading, sendMessage } = useChat(initialSuggestions);
-  const {
-    experiments,
-    getExperimentsByStatus,
-    updateExperimentStatus
-  } = useExperiments();
+  const { experiments, getExperimentsByStatus, updateExperimentStatus } =
+    useExperiments();
 
   // State for panel widths
   const [chatPanelWidth, setChatPanelWidth] = useState(400);
@@ -29,27 +26,27 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   const handleAcceptSuggestion = (suggestion: ExperimentSuggestion) => {
     // Instead of using addExperiment, we'll use the API through useExperiments hook
     // This will be handled by the parent component
-    console.log('Accept suggestion:', suggestion);
+    console.log("Accept suggestion:", suggestion);
   };
 
   const handleDeclineSuggestion = (suggestion: ExperimentSuggestion) => {
     // Instead of using addExperiment, we'll use the API through useExperiments hook
     // This will be handled by the parent component
-    console.log('Decline suggestion:', suggestion);
+    console.log("Decline suggestion:", suggestion);
   };
 
   const handleResize = (newWidth: number) => {
     setChatPanelWidth(newWidth);
   };
 
-  const acceptedCount = getExperimentsByStatus('accepted').length;
-  const pendingCount = getExperimentsByStatus('planned').length;
+  const acceptedCount = getExperimentsByStatus("completed").length;
+  const pendingCount = getExperimentsByStatus("planned").length;
 
   // Create relationships based on experiments data
   const relationships = experiments.map((exp, index) => ({
     source: exp.id,
     target: experiments[(index + 1) % experiments.length].id,
-    type: 'related',
+    type: "related",
   }));
 
   return (
@@ -66,7 +63,9 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
               <ArrowLeft className="text-gray-600" size={20} />
             </button>
             <Sparkles className="text-blue-600" size={24} />
-            <h1 className="text-2xl font-bold text-gray-900">AI Research Assistant</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              AI Research Assistant
+            </h1>
           </div>
           <div className="flex items-center space-x-4 text-sm text-gray-600">
             <div className="flex items-center space-x-1">
@@ -82,10 +81,7 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
       </header>
 
       <div className="flex-1 flex overflow-hidden min-h-0">
-        <div
-          className="flex-shrink-0"
-          style={{ width: `${chatPanelWidth}px` }}
-        >
+        <div className="flex-shrink-0" style={{ width: `${chatPanelWidth}px` }}>
           <ChatPanel
             messages={messages}
             isLoading={isLoading}
@@ -102,10 +98,7 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
         />
 
         <div className="flex-1 min-w-0">
-          <GraphPanel
-            experiments={experiments}
-            relationships={relationships}
-          />
+          <GraphPanel experiments={experiments} relationships={relationships} />
         </div>
       </div>
     </div>

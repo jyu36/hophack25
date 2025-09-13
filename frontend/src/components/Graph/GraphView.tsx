@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -9,13 +9,13 @@ import ReactFlow, {
   OnNodesChange,
   OnEdgesChange,
   MarkerType,
-} from 'reactflow';
-import dagre from 'dagre';
-import 'reactflow/dist/style.css';
+} from "reactflow";
+import dagre from "dagre";
+import "reactflow/dist/style.css";
 
-import CustomNode from './Node';
-import NodeDetailsModal from './NodeDetailsModal';
-import { ResearchNode, NodeDetails } from '../../types/research';
+import CustomNode from "./Node";
+import NodeDetailsModal from "./NodeDetailsModal";
+import { ResearchNode, NodeDetails } from "../../types/research";
 
 interface GraphViewProps {
   nodes: Node[];
@@ -23,7 +23,10 @@ interface GraphViewProps {
   onNodesChange?: OnNodesChange;
   onEdgesChange?: OnEdgesChange;
   onConnect?: OnConnect;
-  onNodeStatusChange: (nodeId: string, status: 'accepted' | 'pending' | 'rejected') => void;
+  onNodeStatusChange: (
+    nodeId: string,
+    status: "accepted" | "pending" | "rejected"
+  ) => void;
   onCreateBranch: (nodeId: string) => void;
   fetchNodeDetails: (nodeId: string) => Promise<NodeDetails>;
 }
@@ -33,7 +36,11 @@ const nodeTypes: NodeTypes = {
 };
 
 // Use dagre layout algorithm
-const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => {
+const getLayoutedElements = (
+  nodes: Node[],
+  edges: Edge[],
+  direction = "TB"
+) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({ rankdir: direction });
@@ -89,14 +96,14 @@ const GraphView: React.FC<GraphViewProps> = ({
   // Custom edge styles
   const edgesWithStyle = edges.map((edge) => ({
     ...edge,
-    type: 'smoothstep',
+    type: "smoothstep",
     markerEnd: {
       type: MarkerType.ArrowClosed,
       width: 20,
       height: 20,
     },
     style: {
-      stroke: '#94a3b8',
+      stroke: "#94a3b8",
       strokeWidth: 2,
     },
   }));
@@ -113,13 +120,13 @@ const GraphView: React.FC<GraphViewProps> = ({
         papers: [],
         solutions: [],
         isLoading: false,
-        error: 'Failed to load node details',
+        error: "Failed to load node details",
       });
     }
   };
 
   // Add onNodeDoubleClick to node data
-  const nodesWithCallback = nodes.map(node => ({
+  const nodesWithCallback = nodes.map((node) => ({
     ...node,
     data: {
       ...node.data,

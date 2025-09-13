@@ -1,10 +1,10 @@
-import React, { useState, useCallback } from 'react';
-import { Network } from 'lucide-react';
-import GraphView from './GraphView';
-import Legend from './Legend';
-import KeywordList from './KeywordList';
-import { Experiment, NodeDetails } from '../../types/research';
-import { experimentsToNodes } from '../../utils/helpers';
+import React, { useState, useCallback } from "react";
+import { Network } from "lucide-react";
+import GraphView from "./GraphView";
+import Legend from "./Legend";
+import KeywordList from "./KeywordList";
+import { Experiment, NodeDetails } from "../../types/research";
+import { experimentsToNodes } from "../../utils/helpers";
 
 interface GraphPanelProps {
   experiments: Experiment[];
@@ -40,24 +40,30 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
     label: rel.type,
   }));
 
-  const handleNodeStatusChange = useCallback((nodeId: string, status: 'accepted' | 'pending' | 'rejected') => {
-    // TODO: Implement status change logic
-    console.log('Change node status:', nodeId, status);
-  }, []);
+  const handleNodeStatusChange = useCallback(
+    (nodeId: string, status: "accepted" | "pending" | "rejected") => {
+      // TODO: Implement status change logic
+      console.log("Change node status:", nodeId, status);
+    },
+    []
+  );
 
   const handleCreateBranch = useCallback((nodeId: string) => {
     // TODO: Implement branch creation logic
-    console.log('Create branch from node:', nodeId);
+    console.log("Create branch from node:", nodeId);
   }, []);
 
-  const fetchNodeDetails = useCallback(async (nodeId: string): Promise<NodeDetails> => {
-    // TODO: Implement actual API call
-    return {
-      papers: [],
-      solutions: [],
-      isLoading: false,
-    };
-  }, []);
+  const fetchNodeDetails = useCallback(
+    async (nodeId: string): Promise<NodeDetails> => {
+      // TODO: Implement actual API call
+      return {
+        papers: [],
+        solutions: [],
+        isLoading: false,
+      };
+    },
+    []
+  );
 
   return (
     <div className="flex-1 flex flex-col">
@@ -76,7 +82,9 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
           <div className="text-center">
             <Network size={64} className="mx-auto mb-4 text-gray-400" />
             <h3 className="text-lg font-medium mb-2">No experiments yet</h3>
-            <p className="text-sm">Start a conversation to get AI-suggested experiments!</p>
+            <p className="text-sm">
+              Start a conversation to get AI-suggested experiments!
+            </p>
           </div>
         </div>
       ) : (
@@ -103,5 +111,4 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
     </div>
   );
 };
-
 export default GraphPanel;

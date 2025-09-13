@@ -29,9 +29,6 @@ export interface ResearchNode {
   solutions?: ResearchNode[]; // Child nodes/solutions proposed by AI
 }
 
-// 为了保持兼容性，我们将 Experiment 定义为 ResearchNode 的别名
-export type Experiment = ResearchNode;
-
 export interface ExperimentSuggestion {
   title: string;
   description: string;

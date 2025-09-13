@@ -294,10 +294,17 @@ async def update_node(
     """
     Update an existing node (experiment).
     """
-    await log_request(request, "UPDATE_NODE", {"node_id": node_id, "data": update_data.model_dump()})
+    update_dict = update_data.model_dump(exclude_unset=True)
+    print(f"\n[UPDATE NODE] Received request - Node ID: {node_id}")
+    print(f"[UPDATE NODE] Update data received: {update_dict}")
+    
+    await log_request(request, "UPDATE_NODE", {"node_id": node_id, "data": update_dict})
     try:
         experiment = db.query(models.Experiment).filter(models.Experiment.id == node_id).first()
+        print(f"[UPDATE NODE] Found experiment: {experiment.title if experiment else 'Not found'}")
+        
         if not experiment:
+            print(f"[UPDATE NODE ERROR] Node {node_id} not found")
             raise HTTPException(
                 status_code=404,
                 detail={
@@ -321,16 +328,23 @@ async def update_node(
             )
 
         # Validate specific fields
+        print("\n[VALIDATION] Starting field validation...")
         invalid_fields = []
         if 'status' in update_dict:
+            print(f"[VALIDATION] Checking status field: {update_dict['status']}")
             # Convert status to lowercase for case-insensitive comparison
             status_value = update_dict['status'].lower() if isinstance(update_dict['status'], str) else update_dict['status']
             valid_statuses = [s.value for s in ExperimentStatus]
+            print(f"[VALIDATION] Valid status values: {valid_statuses}")
+            print(f"[VALIDATION] Received status (lowercase): {status_value}")
+            
             if status_value not in valid_statuses:
+                print(f"[VALIDATION ERROR] Invalid status value: {status_value}")
                 invalid_fields.append(('status', f"Must be one of: {', '.join(valid_statuses)}"))
             else:
                 # Ensure correct case is used
                 update_dict['status'] = next(s.value for s in ExperimentStatus if s.value == status_value)
+                print(f"[VALIDATION] Status value accepted and normalized to: {update_dict['status']}")
 
         if 'title' in update_dict and not update_dict['title'].strip():
             invalid_fields.append(('title', "Cannot be empty"))
@@ -354,10 +368,14 @@ async def update_node(
             )
 
         # Apply updates
+        print("\n[UPDATE] Applying field updates...")
         for field, value in update_dict.items():
+            print(f"[UPDATE] Setting field '{field}' to value: {value}")
             if field == 'extra_data' and value and experiment.extra_data:
+                print(f"[UPDATE] Merging extra_data: {value}")
                 experiment.extra_data.update(value)
             else:
+                print(f"[UPDATE] Setting attribute {field}={value}")
                 setattr(experiment, field, value)
 
         try:

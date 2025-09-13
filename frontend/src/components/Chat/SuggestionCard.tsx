@@ -15,51 +15,56 @@ const SuggestionCard: React.FC<SuggestionCardProps> = ({
   onDecline,
 }) => {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+    <div className="bg-white rounded-lg border border-gray-200 p-2.5 shadow-sm">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h4 className="text-lg font-medium text-gray-900">{suggestion.title}</h4>
-          <p className="mt-1 text-sm text-gray-600">{suggestion.description}</p>
+          <h4 className="text-sm font-medium text-gray-900">{suggestion.title}</h4>
+          <p className="mt-0.5 text-xs text-gray-600 line-clamp-2">{suggestion.description}</p>
 
           {suggestion.reasoning && (
-            <p className="mt-2 text-sm text-blue-600 italic">
+            <p className="mt-1 text-xs text-blue-600 italic line-clamp-1">
               💡 {suggestion.reasoning}
             </p>
           )}
 
           {suggestion.keywords && suggestion.keywords.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {suggestion.keywords.map((keyword, index) => (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {suggestion.keywords.slice(0, 3).map((keyword, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
+                  className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
                 >
                   {keyword}
                 </span>
               ))}
+              {suggestion.keywords.length > 3 && (
+                <span className="text-xs text-gray-500">
+                  +{suggestion.keywords.length - 3} more
+                </span>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-2 flex gap-1.5">
         <Button
           variant="success"
           size="sm"
-          className="flex-1"
+          className="flex-1 py-1 text-xs"
           onClick={() => onAccept(suggestion)}
         >
-          <Check className="mr-1 h-4 w-4" />
+          <Check className="mr-1 h-3 w-3" />
           Accept
         </Button>
         <Button
           variant="secondary"
           size="sm"
-          className="flex-1"
+          className="flex-1 py-1 text-xs"
           onClick={() => onDecline(suggestion)}
         >
-          <Clock className="mr-1 h-4 w-4" />
-          Keep for Later
+          <Clock className="mr-1 h-3 w-3" />
+          Later
         </Button>
       </div>
     </div>

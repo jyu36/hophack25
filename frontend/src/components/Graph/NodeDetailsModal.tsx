@@ -2,31 +2,34 @@ import React, { useState } from 'react';
 import { ExternalLink, Book, GitBranch, Loader } from 'lucide-react';
 import Modal from '../Common/Modal';
 import Button from '../Common/Button';
-import { ResearchNode, RelatedPaper, NodeDetails } from '../../types/research';
+import ResizableHorizontalDivider from '../Common/ResizableHorizontalDivider';
+import { ResearchNode, RelatedPaper, NodeDetails, NodeStatus } from '../../types/research';
 
 interface NodeDetailsModalProps {
   node: ResearchNode;
   isOpen: boolean;
   onClose: () => void;
-  onStatusChange: (nodeId: string, status: 'accepted' | 'pending' | 'rejected') => void;
+  onStatusChange: (nodeId: string, status: NodeStatus) => void;
   onCreateBranch: (nodeId: string) => void;
   nodeDetails: NodeDetails;
 }
 
-const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
+const NodeDetailsModal = ({
   node,
   isOpen,
   onClose,
   onStatusChange,
   onCreateBranch,
   nodeDetails,
-}) => {
+}: NodeDetailsModalProps) => {
   const [activeTab, setActiveTab] = useState<'info' | 'papers' | 'solutions'>('info');
+  const [topSectionHeight, setTopSectionHeight] = useState(200); // Default height for the top section
 
   const statusColors = {
     accepted: 'bg-green-100 text-green-800 border-green-200',
     pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     rejected: 'bg-red-100 text-red-800 border-red-200',
+    planned: 'bg-purple-100 text-purple-800 border-purple-200',
   };
 
   const renderPaperList = (papers: RelatedPaper[]) => (
@@ -88,7 +91,7 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={node.title} size="lg">
-      <div className="space-y-6">
+      <div className="space-y-6 modal-content">
         {/* Tabs */}
         <div className="border-b">
           <div className="flex space-x-4">
@@ -129,63 +132,76 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
         <div>
           {activeTab === 'info' && (
             <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-gray-700">Description</h4>
-                <p className="mt-1 text-sm text-gray-600">{node.description}</p>
+              {/* Top Section with fixed height */}
+              <div style={{ height: topSectionHeight }} className="overflow-y-auto">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700">Description</h4>
+                  <p className="mt-1 text-sm text-gray-600">{node.description}</p>
+                </div>
+
+                {node.motivation && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700">Motivation</h4>
+                    <p className="mt-1 text-sm text-gray-600">{node.motivation}</p>
+                  </div>
+                )}
               </div>
 
-              {node.motivation && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700">Motivation</h4>
-                  <p className="mt-1 text-sm text-gray-600">{node.motivation}</p>
-                </div>
-              )}
+              {/* Resizable Divider */}
+              <ResizableHorizontalDivider
+                onResize={setTopSectionHeight}
+                minHeight={100}
+                maxHeight={400}
+              />
 
-              {node.expectations && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700">Expected Outcomes</h4>
-                  <p className="mt-1 text-sm text-gray-600">{node.expectations}</p>
-                </div>
-              )}
+              {/* Bottom Section */}
+              <div className="space-y-4">
+                {node.expectations && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700">Expected Outcomes</h4>
+                    <p className="mt-1 text-sm text-gray-600">{node.expectations}</p>
+                  </div>
+                )}
 
-              <div>
-                <h4 className="text-sm font-medium text-gray-700">Keywords</h4>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {node.keywords.map((keyword) => (
-                    <span
-                      key={keyword}
-                      className="bg-blue-100 text-blue-800 text-xs rounded-full px-2 py-1"
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700">Keywords</h4>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {node.keywords.map((keyword) => (
+                      <span
+                        key={keyword}
+                        className="bg-blue-100 text-blue-800 text-xs rounded-full px-2 py-1"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700">Status</h4>
+                  <div className="mt-2 flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant={node.status === 'accepted' ? 'success' : 'secondary'}
+                      onClick={() => onStatusChange(node.id, 'accepted')}
                     >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium text-gray-700">Status</h4>
-                <div className="mt-2 flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant={node.status === 'accepted' ? 'success' : 'secondary'}
-                    onClick={() => onStatusChange(node.id, 'accepted')}
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={node.status === 'pending' ? 'primary' : 'secondary'}
-                    onClick={() => onStatusChange(node.id, 'pending')}
-                  >
-                    Keep Pending
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={node.status === 'rejected' ? 'danger' : 'secondary'}
-                    onClick={() => onStatusChange(node.id, 'rejected')}
-                  >
-                    Reject
-                  </Button>
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={node.status === 'pending' ? 'primary' : 'secondary'}
+                      onClick={() => onStatusChange(node.id, 'pending')}
+                    >
+                      Keep Pending
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={node.status === 'rejected' ? 'danger' : 'secondary'}
+                      onClick={() => onStatusChange(node.id, 'rejected')}
+                    >
+                      Reject
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

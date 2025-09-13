@@ -3,7 +3,7 @@ import { Network } from 'lucide-react';
 import GraphView from './GraphView';
 import Legend from './Legend';
 import KeywordList from './KeywordList';
-import { Experiment, NodeDetails } from '../../types/research';
+import { Experiment, NodeDetails, NodeStatus } from '../../types/research';
 import { experimentsToNodes } from '../../utils/helpers';
 
 interface GraphPanelProps {
@@ -40,7 +40,7 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
     label: rel.type,
   }));
 
-  const handleNodeStatusChange = useCallback((nodeId: string, status: 'accepted' | 'pending' | 'rejected') => {
+  const handleNodeStatusChange = useCallback((nodeId: string, status: NodeStatus) => {
     // TODO: Implement status change logic
     console.log('Change node status:', nodeId, status);
   }, []);

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Sparkles, ArrowLeft } from 'lucide-react';
 import ChatPanel from './Chat/ChatPanel';
 import GraphPanel from './Graph/GraphPanel';
+import ResizableDivider from './Common/ResizableDivider';
 import { useChat } from '../hooks/useChat';
 import { useExperiments } from '../hooks/useExperiments';
 import { ExperimentSuggestion } from '../types/research';
@@ -22,6 +23,9 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
     addExperiment,
     getExperimentsByStatus
   } = useExperiments();
+
+  // State for the chat panel width with a default of 1/3 of the screen
+  const [chatWidth, setChatWidth] = useState(window.innerWidth / 3);
 
   const handleAcceptSuggestion = (suggestion: ExperimentSuggestion) => {
     addExperiment(suggestion, 'accepted');
@@ -64,17 +68,34 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        <ChatPanel
-          messages={messages}
-          isLoading={isLoading}
-          onSendMessage={sendMessage}
-          onAcceptSuggestion={handleAcceptSuggestion}
-          onDeclineSuggestion={handleDeclineSuggestion}
+        {/* Chat Panel with dynamic width */}
+        <div
+          style={{ width: chatWidth }}
+          className="flex-shrink-0 bg-white border-r border-gray-200 transition-all duration-150"
+        >
+          <ChatPanel
+            messages={messages}
+            isLoading={isLoading}
+            onSendMessage={sendMessage}
+            onAcceptSuggestion={handleAcceptSuggestion}
+            onDeclineSuggestion={handleDeclineSuggestion}
+          />
+        </div>
+
+        {/* Resizable Divider */}
+        <ResizableDivider
+          onResize={setChatWidth}
+          minWidth={window.innerWidth * 0.2} // Minimum 20% of screen width
+          maxWidth={window.innerWidth * 0.6} // Maximum 60% of screen width
         />
-        <GraphPanel
-          experiments={experiments}
-          relationships={relationships}
-        />
+
+        {/* Graph Panel - takes remaining space */}
+        <div className="flex-1 transition-all duration-150">
+          <GraphPanel
+            experiments={experiments}
+            relationships={relationships}
+          />
+        </div>
       </div>
     </div>
   );

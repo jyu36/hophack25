@@ -15,7 +15,7 @@ import 'reactflow/dist/style.css';
 
 import CustomNode from './Node';
 import NodeDetailsModal from './NodeDetailsModal';
-import { ResearchNode, NodeDetails } from '../../types/research';
+import { ResearchNode, NodeDetails, NodeStatus } from '../../types/research';
 
 interface GraphViewProps {
   nodes: Node[];
@@ -23,7 +23,7 @@ interface GraphViewProps {
   onNodesChange?: OnNodesChange;
   onEdgesChange?: OnEdgesChange;
   onConnect?: OnConnect;
-  onNodeStatusChange: (nodeId: string, status: 'accepted' | 'pending' | 'rejected') => void;
+  onNodeStatusChange: (nodeId: string, status: NodeStatus) => void;
   onCreateBranch: (nodeId: string) => void;
   fetchNodeDetails: (nodeId: string) => Promise<NodeDetails>;
 }

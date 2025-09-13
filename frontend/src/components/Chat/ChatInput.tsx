@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent } from 'react';
+import React, { useState, KeyboardEvent, ChangeEvent } from 'react';
 import { Send } from 'lucide-react';
 import Button from '../Common/Button';
 
@@ -35,7 +35,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <input
           type="text"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Describe your research interests or ask about experiments..."
           className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"

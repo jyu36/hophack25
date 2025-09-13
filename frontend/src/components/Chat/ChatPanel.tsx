@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import Message from './Message';
 import ChatInput from './ChatInput';
+import ResizableHorizontalDivider from '../Common/ResizableHorizontalDivider';
 import { ChatMessage, ExperimentSuggestion } from '../../types/research';
 
 interface ChatPanelProps {
@@ -27,21 +28,26 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   onAcceptSuggestion,
   onDeclineSuggestion,
 }) => {
+  const [messagesHeight, setMessagesHeight] = useState(window.innerHeight * 0.6); // Default 60% of window height
+
   return (
-    <div className="w-1/2 flex flex-col bg-white border-r">
+    <div className="flex flex-col h-full">
       {/* Chat Header */}
-      <div className="p-4 border-b bg-gray-50">
+      <div className="p-3 border-b bg-gray-50">
         <div className="flex items-center space-x-2">
-          <MessageCircle size={20} className="text-blue-600" />
-          <h2 className="font-semibold">Research Conversation</h2>
+          <MessageCircle size={18} className="text-blue-600" />
+          <h2 className="font-semibold text-sm">Research Conversation</h2>
         </div>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-xs text-gray-600 mt-1">
           Describe your research interests and I'll suggest relevant experiments
         </p>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages with adjustable height */}
+      <div
+        style={{ height: messagesHeight }}
+        className="overflow-y-auto p-3 space-y-3 transition-all duration-150"
+      >
         {messages.map(message => (
           <Message
             key={message.id}
@@ -52,12 +58,21 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         ))}
       </div>
 
-      {/* Input */}
-      <ChatInput
-        onSend={onSendMessage}
-        isLoading={isLoading}
-        suggestedKeywords={suggestedKeywords}
+      {/* Resizable Divider */}
+      <ResizableHorizontalDivider
+        onResize={setMessagesHeight}
+        minHeight={200} // Minimum height for messages area
+        maxHeight={window.innerHeight * 0.8} // Maximum 80% of window height
       />
+
+      {/* Input - Fixed height */}
+      <div className="flex-shrink-0">
+        <ChatInput
+          onSend={onSendMessage}
+          isLoading={isLoading}
+          suggestedKeywords={suggestedKeywords}
+        />
+      </div>
     </div>
   );
 };

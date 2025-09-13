@@ -1,8 +1,11 @@
 # backend/services/orchestrator.py
 from typing import List, Optional, Dict, Any
 from . import memory, llm_gemini as llm, openalex, scorer
-from backend.app.models.experiment import Experiment
-from backend.app.models.literature import Literature
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from app.models.experiment import Experiment
+from app.models.literature import Literature
 from sqlalchemy.orm import Session
 
 

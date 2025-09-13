@@ -226,6 +226,22 @@ async def create_node(
             validation_errors["invalid_fields"]["status"] = "Experiment has results but status is not COMPLETED"
             validation_errors["suggestions"]["status"] = "Set status to COMPLETED or remove results"
 
+        # Check for existing node with the same title
+        existing_node = db.query(models.Experiment).filter(
+            models.Experiment.title == experiment.title
+        ).first()
+
+        if existing_node:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Duplicate node",
+                    "message": "An experiment with this title already exists",
+                    "existing_node_id": existing_node.id,
+                    "action_required": "Please use a different title or update the existing experiment"
+                }
+            )
+
         # If any validation errors found, return detailed feedback
         if validation_errors["missing_fields"] or validation_errors["invalid_fields"]:
             raise HTTPException(
@@ -571,6 +587,23 @@ async def create_edge(
                     "error": "Invalid edge",
                     "message": "Cannot create an edge from a node to itself",
                     "action_required": "Please provide different from_experiment_id and to_experiment_id"
+                }
+            )
+
+        # Check for existing edge between these nodes
+        existing_edge = db.query(models.ExperimentRelationship).filter(
+            models.ExperimentRelationship.from_experiment_id == edge.from_experiment_id,
+            models.ExperimentRelationship.to_experiment_id == edge.to_experiment_id
+        ).first()
+
+        if existing_edge:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "Duplicate edge",
+                    "message": "An edge already exists between these nodes",
+                    "existing_edge_id": existing_edge.id,
+                    "action_required": "Use PATCH /edges/{edge_id} to update the existing edge if needed"
                 }
             )
 

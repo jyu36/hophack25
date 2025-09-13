@@ -4,8 +4,8 @@ import { ResearchNode } from './research';
 
 export enum ExperimentStatus {
   PLANNED = "planned",
-  IN_PROGRESS = "in_progress",
   COMPLETED = "completed",
+  REJECTED = "rejected",
 }
 
 export enum RelationshipType {

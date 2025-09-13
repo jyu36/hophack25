@@ -4,6 +4,17 @@ from ...database import get_db
 from ...models import literature as models
 from ...models.experiment import Experiment
 from ...schemas import literature as schemas
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+from services import orchestrator
+from services import openalex as openalex_svc
+from services import llm_gemini as llm
+import re
+import traceback
+from fastapi.responses import JSONResponse
+
+from urllib.parse import unquote
 
 router = APIRouter()
 

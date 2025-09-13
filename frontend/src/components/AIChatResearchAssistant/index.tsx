@@ -44,9 +44,11 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
 
   // Create relationships based on experiments data
   const relationships = experiments.map((exp, index) => ({
-    source: exp.id,
-    target: experiments[(index + 1) % experiments.length].id,
+    id: index + 1,
+    from: parseInt(exp.id),
+    to: parseInt(experiments[(index + 1) % experiments.length].id),
     type: "related",
+    label: `Relationship ${index + 1}`,
   }));
 
   return (

@@ -2,81 +2,117 @@ import api from '../utils/api';
 import { APIExperiment, apiToUIExperiment } from '../types/api';
 import { Experiment, NodeStatus, NodeType } from '../types/research';
 
+// Debug logger
+const debug = {
+  log: (...args: any[]) => {
+    console.log('[ExperimentService]', ...args);
+  },
+  error: (...args: any[]) => {
+    console.error('[ExperimentService]', ...args);
+  },
+  warn: (...args: any[]) => {
+    console.warn('[ExperimentService]', ...args);
+  }
+};
+
 // Extract status value from backend response
 const extractStatusValue = (status: any): string => {
-  if (!status) return '';
+  debug.log('Extracting status from:', status);
+
+  if (!status) {
+    debug.warn('Status is empty');
+    return '';
+  }
 
   // Handle string format: "<ExperimentStatus.COMPLETED: 'completed'>"
   if (typeof status === 'string') {
     const match = status.match(/[A-Z_]+:\s*'([^']+)'/);
     if (match) {
-      console.log('Extracted status from string:', match[1]);
+      debug.log('Extracted status from string:', match[1]);
       return match[1];
     }
+    debug.log('Using status string as is:', status);
     return status;
   }
 
   // Handle object format
   if (typeof status === 'object') {
     if ('value' in status) {
-      console.log('Extracted status from object.value:', status.value);
+      debug.log('Extracted status from object.value:', status.value);
       return status.value;
     }
     if ('toString' in status) {
       const str = status.toString();
       const match = str.match(/[A-Z_]+:\s*'([^']+)'/);
       if (match) {
-        console.log('Extracted status from object.toString:', match[1]);
+        debug.log('Extracted status from object.toString:', match[1]);
         return match[1];
       }
     }
   }
 
-  console.log('Using status as is:', status);
+  debug.warn('Using status as is:', status);
   return String(status);
 };
 
 // Map UI status to API status
 const mapUIStatusToAPIStatus = (uiStatus: NodeStatus): string => {
+  debug.log('Mapping UI status to API:', uiStatus);
+  let apiStatus: string;
+
   switch (uiStatus) {
     case 'accepted':
-      return 'completed';
+      apiStatus = 'completed';
+      break;
     case 'planned':
-      return 'planned';
+      apiStatus = 'planned';
+      break;
     case 'rejected':
-      return 'rejected';
+      apiStatus = 'rejected';
+      break;
     default:
-      return 'in_progress';
+      apiStatus = 'in_progress';
   }
+
+  debug.log('Mapped UI status:', uiStatus, 'to API status:', apiStatus);
+  return apiStatus;
 };
 
 // Map API status to UI status
 const mapAPIStatusToUIStatus = (apiStatus: any): NodeStatus => {
   const status = extractStatusValue(apiStatus).toLowerCase();
-  console.log('Mapping API status to UI status:', { original: apiStatus, extracted: status });
+  debug.log('Mapping API status to UI:', { original: apiStatus, extracted: status });
 
+  let uiStatus: NodeStatus;
   switch (status) {
     case 'completed':
-      return 'accepted';
+      uiStatus = 'accepted';
+      break;
     case 'planned':
-      return 'planned';
+      uiStatus = 'planned';
+      break;
     case 'rejected':
-      return 'rejected';
+      uiStatus = 'rejected';
+      break;
     case 'in_progress':
-      return 'pending';
+      uiStatus = 'pending';
+      break;
     default:
-      console.warn('Unknown status:', status);
-      return 'pending';
+      debug.warn('Unknown status:', status);
+      uiStatus = 'pending';
   }
+
+  debug.log('Mapped API status:', status, 'to UI status:', uiStatus);
+  return uiStatus;
 };
 
 // Convert API node to ResearchNode
 const convertToResearchNode = (node: any): Experiment => {
-  console.log('Converting node:', node);
+  debug.log('Converting node:', node);
   const status = mapAPIStatusToUIStatus(node.status);
-  console.log('Mapped status:', status);
+  debug.log('Mapped status:', status);
 
-  return {
+  const experiment: Experiment = {
     id: node.id.toString(),
     title: node.title,
     description: node.description || '',
@@ -87,21 +123,24 @@ const convertToResearchNode = (node: any): Experiment => {
     createdAt: node.created_at,
     aiGenerated: false
   };
+
+  debug.log('Converted experiment:', experiment);
+  return experiment;
 };
 
 export const experimentService = {
   // Get all experiments
   async getAllExperiments(): Promise<Experiment[]> {
     try {
-      console.log('Fetching all experiments...');
+      debug.log('Fetching all experiments...');
       const response = await api.get('/graph/overview');
-      console.log('Response:', response.data);
+      debug.log('API Response:', response.data);
       const { nodes } = response.data;
       const experiments = nodes.map(convertToResearchNode);
-      console.log('Converted experiments:', experiments);
+      debug.log('Converted all experiments:', experiments);
       return experiments;
     } catch (error) {
-      console.error('Error fetching all experiments:', error);
+      debug.error('Error fetching all experiments:', error);
       throw error;
     }
   },
@@ -109,19 +148,21 @@ export const experimentService = {
   // Get past (completed) experiments
   async getPastExperiments(): Promise<Experiment[]> {
     try {
-      console.log('Fetching past experiments...');
+      debug.log('Fetching past experiments...');
       const { nodes } = await api.get('/graph/overview').then(res => res.data);
       const experiments = nodes
         .filter((node: any) => {
           const status = extractStatusValue(node.status);
-          console.log('Filtering node:', { node, extractedStatus: status });
-          return status.toLowerCase() === 'completed';
+          debug.log('Filtering node:', { node, extractedStatus: status });
+          const isCompleted = status.toLowerCase() === 'completed';
+          debug.log('Is completed:', isCompleted);
+          return isCompleted;
         })
         .map(convertToResearchNode);
-      console.log('Past experiments:', experiments);
+      debug.log('Past experiments:', experiments);
       return experiments;
     } catch (error) {
-      console.error('Error fetching past experiments:', error);
+      debug.error('Error fetching past experiments:', error);
       throw error;
     }
   },
@@ -129,19 +170,21 @@ export const experimentService = {
   // Get planned experiments
   async getPlannedExperiments(): Promise<Experiment[]> {
     try {
-      console.log('Fetching planned experiments...');
+      debug.log('Fetching planned experiments...');
       const { nodes } = await api.get('/graph/overview').then(res => res.data);
       const experiments = nodes
         .filter((node: any) => {
           const status = extractStatusValue(node.status);
-          console.log('Filtering node:', { node, extractedStatus: status });
-          return status.toLowerCase() === 'planned';
+          debug.log('Filtering node:', { node, extractedStatus: status });
+          const isPlanned = status.toLowerCase() === 'planned';
+          debug.log('Is planned:', isPlanned);
+          return isPlanned;
         })
         .map(convertToResearchNode);
-      console.log('Planned experiments:', experiments);
+      debug.log('Planned experiments:', experiments);
       return experiments;
     } catch (error) {
-      console.error('Error fetching planned experiments:', error);
+      debug.error('Error fetching planned experiments:', error);
       throw error;
     }
   },
@@ -149,19 +192,21 @@ export const experimentService = {
   // Get deferred (rejected) experiments
   async getDeferredExperiments(): Promise<Experiment[]> {
     try {
-      console.log('Fetching deferred experiments...');
+      debug.log('Fetching deferred experiments...');
       const { nodes } = await api.get('/graph/overview').then(res => res.data);
       const experiments = nodes
         .filter((node: any) => {
           const status = extractStatusValue(node.status);
-          console.log('Filtering node:', { node, extractedStatus: status });
-          return status.toLowerCase() === 'rejected';
+          debug.log('Filtering node:', { node, extractedStatus: status });
+          const isRejected = status.toLowerCase() === 'rejected';
+          debug.log('Is rejected:', isRejected);
+          return isRejected;
         })
         .map(convertToResearchNode);
-      console.log('Deferred experiments:', experiments);
+      debug.log('Deferred experiments:', experiments);
       return experiments;
     } catch (error) {
-      console.error('Error fetching deferred experiments:', error);
+      debug.error('Error fetching deferred experiments:', error);
       throw error;
     }
   },
@@ -169,15 +214,16 @@ export const experimentService = {
   // Update experiment status
   async updateExperimentStatus(experimentId: string, status: NodeStatus): Promise<Experiment> {
     try {
-      console.log('Updating experiment status:', { experimentId, status });
+      debug.log('Updating experiment status:', { experimentId, status });
       const response = await api.patch(`/nodes/${experimentId}`, {
         status: mapUIStatusToAPIStatus(status)
       });
+      debug.log('Update response:', response.data);
       const experiment = convertToResearchNode(response.data);
-      console.log('Updated experiment:', experiment);
+      debug.log('Updated experiment:', experiment);
       return experiment;
     } catch (error) {
-      console.error('Error updating experiment status:', error);
+      debug.error('Error updating experiment status:', error);
       throw error;
     }
   }

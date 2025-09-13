@@ -27,16 +27,16 @@ const Legend: React.FC<LegendProps> = ({ isCollapsed, onToggle }) => {
 
   return (
     <div
-      className={`absolute top-4 left-4 bg-white rounded-lg shadow-lg border transition-all duration-300 ${
+      className={`absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border transition-all duration-300 ${
         isCollapsed ? 'w-12' : 'w-64'
       }`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b">
+      <div className="flex items-center justify-between p-3 border-b border-gray-200/50">
         <div className="flex items-center">
           <button
             onClick={onToggle}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1 hover:bg-gray-100/50 rounded-full transition-colors"
           >
             <ChevronLeft
               className={`h-4 w-4 transition-transform duration-300 ${

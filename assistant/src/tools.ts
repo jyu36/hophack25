@@ -282,7 +282,7 @@ export const tools = [
   getSuggestedLiterature,
   getAllLiterature,
   getContextKeywords,
-  
+
   // Node Management
   createNode,
   updateNode,

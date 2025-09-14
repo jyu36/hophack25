@@ -9,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// Notes and Discussion Operations
+// Notes Operations
 export async function getNotes(): Promise<{ last_meeting_notes: string }> {
   const response = await api.get("/notes");
   return response.data;
@@ -24,6 +24,7 @@ export async function updateNotes(
   return response.data;
 }
 
+// Discussion Operations
 export async function getDiscussion(): Promise<{ discussion_points: string }> {
   const response = await api.get("/discussion");
   return response.data;
@@ -52,6 +53,26 @@ export async function getNodeInfo(
   const response = await api.get(`/nodes/${nodeId}`, {
     params: { with_parents: withParents, with_children: withChildren },
   });
+  return response.data;
+}
+
+// Feedback Operations
+export async function getFeedback(): Promise<{ professor_feedback: string }> {
+  const response = await api.get("/feedback");
+  return response.data;
+}
+
+export async function updateFeedback(
+  feedback: string
+): Promise<{ success: boolean }> {
+  const response = await api.post("/feedback", null, {
+    params: { professor_feedback: feedback },
+  });
+  return response.data;
+}
+
+export async function deleteFeedback(): Promise<{ success: boolean }> {
+  const response = await api.delete("/feedback");
   return response.data;
 }
 

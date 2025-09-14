@@ -1,0 +1,117 @@
+You are a senior academic slide designer. Turn the following “Research Context” into a high-quality proposal/summary deck (16:9). The deck must be visually rich (multiple charts), rigorously organized, and strongly academic in tone.
+
+Return ONLY one JSON object with two top-level keys: `SLIDE_PLAN` and `SPEAKER_NOTES`. No extra text.
+
+# Research Context (placeholders may be empty)
+PROJECT_TITLE: {PROJECT_TITLE}
+PI_MISSION: {PI_MISSION}            # one-line long-term mission
+FOCUS_NODE: {FOCUS_NODE_TITLE}      # current node/experiment title
+PROBLEM: {PROBLEM}                  # problem & motivation
+HYPOTHESIS: {HYPOTHESIS}            # core hypothesis
+METHODS: {METHODS_LIST}             # key methods/pipeline bullets
+DATASETS: {DATASETS_LIST}
+METRICS: {METRICS_DICT}             # e.g., {"faithfulness": "...", "accuracy": "..."}
+EXPECTATIONS: {EXPECTATIONS}        # quantified goals if possible
+PLAN_STEPS: {PLAN_STEPS_LIST}       # milestones in order
+RESULTS_SUMMARY: {RESULTS_SUMMARY}  # if any early results
+RISKS: {RISKS_LIST}
+KEYWORDS: {KEYWORDS_WITH_WEIGHTS}   # keyword → weight
+LITERATURE: {LITERATURE_LIST}
+# Example:
+# [
+#  {"id":"W2741809807","title":"...","venue":"...","year":2023,"rel_type":"builds_on","url":"..."},
+#  {"id":"...","title":"...","year":2021,"rel_type":"contrast","url":"..."}
+# ]
+
+# Goals & Style
+- Purpose: academic proposal / weekly summary (for group/PI decisions)
+- Tone: academic, concise, objective; no marketing language
+- Layout: 16:9, consistent grid, clear hierarchy (title vs body)
+- Theme: deep-blue/graphite base with a single high-saturation accent; consistent across slides
+- Visualization: include multiple meaningful charts tied to the research (no decorative charts)
+
+# Recommended Structure (10–12 slides; adjust if data is limited)
+1) Cover: PROJECT_TITLE, PI_MISSION, author/date
+2) Problem & Motivation (left: bullets; right: **bar chart of papers per year** from LITERATURE)
+3) Related Work Map (**2D similarity scatter**; color = rel_type, size = citations or recency)
+4) Hypothesis & Objectives (SMART goals + **radar chart**: target vs current on key metrics)
+5) Method Overview (**flow diagram**; if no image, provide explicit node/edge spec)
+6) Experimental Design & Data (**table** of datasets/settings + **bar chart** of ablation or config effects)
+7) Metrics & Evaluation (**heatmap**: Experiments × Metrics with values)
+8) Plan & Timeline (**gantt** using PLAN_STEPS mapped to dates/weeks)
+9) Risks & Mitigations (**2×2 scatter**: Impact × Probability; bullets for mitigations)
+10) Expected Outcomes (or Early Results) (**line/bar** over time or across variants)
+11) Conclusion & Next Steps (decision list + owners/milestones)
+12) References (from LITERATURE; mark rel_type; allow inline numbers for citations)
+
+# Output Format (STRICT)
+Return a single JSON object with keys `SLIDE_PLAN` and `SPEAKER_NOTES`.
+
+`SLIDE_PLAN`:
+- `theme`: { "palette": "deep-blue", "accent": "#2396F5" }
+- `slides`: array of slide objects. Each slide object:
+  - `title`: string
+  - `layout`: one of "title-only" | "two-col" | "chart-full" | "table-left-chart-right" | "grid"
+  - `bullets`: array of short strings (≤ 12 words each, up to 4 items)
+  - `charts`: array (can be empty). Each chart:
+      {
+        "type": "bar" | "line" | "scatter-2d" | "heatmap" | "radar" | "gantt" | "flow-diagram",
+        "spec": { ... }   # see specs below
+      }
+  - `tables`: array (can be empty). Each table:
+      { "columns":[string], "rows":[[cell,...]] }
+  - `refs`: array of literature IDs/labels used on this slide
+
+Chart `spec` schemas (provide real data when available; otherwise create explicit placeholders and label them as placeholders):
+- bar/line:  {"x":[...], "y":[...], "xLabel":"...", "yLabel":"..."}
+- scatter-2d: {"points":[{"x":..,"y":..,"label":"...","group":"rel_type","size":..,"url":"..."}],
+               "xLabel":"UMAP-1","yLabel":"UMAP-2"}
+- heatmap:    {"xCats":[...], "yCats":[...], "values":[[...]], "xLabel":"Metrics", "yLabel":"Experiments"}
+- radar:      {"indicators":[...], "series":[{"name":"target","values":[...]},{"name":"current","values":[...]}]}
+- gantt:      {"tasks":[{"name":"S1 Define","start":"2025-09-15","end":"2025-09-29"}, ...]}
+- flow-diagram: {"nodes":[{"id":"ingest","label":"Data Ingest"}, ...],
+                 "edges":[{"source":"ingest","target":"rerank","label":"NLI score"}, ...]}
+
+`SPEAKER_NOTES`:
+- Array aligned 1:1 with `SLIDE_PLAN.slides`
+- Each item is an array of 3–5 concise bullet notes (academic phrasing, causal logic)
+- When citing, use inline labels [WID] that correspond to `refs`
+
+# Quality & Constraints
+- Do NOT fabricate data. If data is missing, emit a valid placeholder `spec` and state “placeholder / to be replaced” in `bullets`.
+- Keep terminology consistent throughout (e.g., “faithfulness / factual consistency” — define once).
+- Max 1 prominent chart per slide (or 1 table + 1 small chart).
+- All citations must come from the provided LITERATURE (use `id` or `url`); list them on the References slide.
+
+# Minimal JSON skeleton (example; replace with your content)
+{
+  "SLIDE_PLAN": {
+    "theme": { "palette": "deep-blue", "accent": "#2396F5" },
+    "slides": [
+      {
+        "title": "Project Title",
+        "layout": "title-only",
+        "bullets": ["PI mission: ...", "Goal: ..."],
+        "charts": [],
+        "tables": [],
+        "refs": []
+      },
+      {
+        "title": "Problem & Motivation",
+        "layout": "two-col",
+        "bullets": ["Pain points ...", "Gap ...", "Impact ..."],
+        "charts": [
+          {"type":"bar","spec":{"x":[2021,2022,2023],"y":[3,7,12],"xLabel":"Year","yLabel":"#Papers"}}
+        ],
+        "tables": [],
+        "refs": ["W2741809807"]
+      }
+      // ... more slides ...
+    ]
+  },
+  "SPEAKER_NOTES": [
+    ["Aligns with PI mission ...", "Audience & application ..."],
+    ["Explain trend & field activity ...", "Gap identification ...", "Cite [W2741809807]"]
+    // ... more pages ...
+  ]
+}

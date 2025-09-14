@@ -9,6 +9,14 @@ const api = axios.create({
   },
 });
 
+// Assistant API for summaries (runs on port 3001)
+const assistantApi = axios.create({
+  baseURL: process.env.REACT_APP_ASSISTANT_API_URL || "http://localhost:3001",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 // Notes Operations
 export async function getNotes(): Promise<{ last_meeting_notes: string }> {
   const response = await api.get("/notes");
@@ -49,7 +57,11 @@ export async function getNodeInfo(
   nodeId: number,
   withParents = true,
   withChildren = true
-): Promise<{ node: ResearchNode; parents: ResearchNode[]; children: ResearchNode[] }> {
+): Promise<{
+  node: ResearchNode;
+  parents: ResearchNode[];
+  children: ResearchNode[];
+}> {
   const response = await api.get(`/nodes/${nodeId}`, {
     params: { with_parents: withParents, with_children: withChildren },
   });
@@ -179,6 +191,56 @@ export async function deleteLiterature(
   const response = await api.delete(
     `/nodes/${nodeId}/literature/${encodeURIComponent(link)}`
   );
+  return response.data;
+}
+
+// Summary Operations
+export interface SummaryResponse {
+  summary: string;
+  generated_at: string;
+  cache_hit: boolean;
+  node_count: number;
+  edge_count: number;
+}
+
+export async function getOverviewSummary(
+  ignoreCache = false
+): Promise<SummaryResponse> {
+  const response = await assistantApi.get("/api/summaries/overview", {
+    params: { ignore_cache: ignoreCache },
+  });
+  return response.data;
+}
+
+export async function getWeeklySummary(
+  ignoreCache = false
+): Promise<SummaryResponse> {
+  const response = await assistantApi.get("/api/summaries/weekly", {
+    params: { ignore_cache: ignoreCache },
+  });
+  return response.data;
+}
+
+export async function getSummaryCacheStats(): Promise<{
+  cache_stats: {
+    size: number;
+    entries: Array<{
+      key: string;
+      age: number;
+      expiresIn: number;
+    }>;
+  };
+  timestamp: string;
+}> {
+  const response = await assistantApi.get("/api/summaries/cache/stats");
+  return response.data;
+}
+
+export async function clearSummaryCache(): Promise<{
+  message: string;
+  timestamp: string;
+}> {
+  const response = await assistantApi.delete("/api/summaries/cache");
   return response.data;
 }
 

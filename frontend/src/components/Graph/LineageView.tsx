@@ -20,14 +20,14 @@ import {
   LineageLayoutConfig,
   ResearchNode,
   NodeDetails,
-  NodeStatus
+  NodeStatus,
 } from "../../types/research";
 import { experimentService } from "../../services/experimentService";
 import {
   processLineageData,
   calculateLineageLayout,
   DEFAULT_LINEAGE_CONFIG,
-  createLineageNodeData
+  createLineageNodeData,
 } from "../../utils/lineageLayout";
 
 const nodeTypes: NodeTypes = {
@@ -40,7 +40,7 @@ const LineageView: React.FC<LineageViewProps> = ({
   onNodeStatusChange,
   onCreateBranch,
   showControls = true,
-  maxDepth = 5
+  maxDepth = 5,
 }) => {
   const [lineageData, setLineageData] = useState<LineageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,8 +51,11 @@ const LineageView: React.FC<LineageViewProps> = ({
     solutions: [],
     isLoading: false,
   });
-  const [layoutConfig, setLayoutConfig] = useState<LineageLayoutConfig>(DEFAULT_LINEAGE_CONFIG);
-  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const [layoutConfig, setLayoutConfig] = useState<LineageLayoutConfig>(
+    DEFAULT_LINEAGE_CONFIG
+  );
+  const [reactFlowInstance, setReactFlowInstance] =
+    useState<ReactFlowInstance | null>(null);
 
   // Fetch lineage data
   const fetchLineageData = useCallback(async () => {
@@ -84,8 +87,10 @@ const LineageView: React.FC<LineageViewProps> = ({
       };
       setLineageData(transformedData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load lineage data');
-      console.error('Error fetching lineage data:', err);
+      setError(
+        err instanceof Error ? err.message : "Failed to load lineage data"
+      );
+      console.error("Error fetching lineage data:", err);
     } finally {
       setIsLoading(false);
     }
@@ -98,55 +103,67 @@ const LineageView: React.FC<LineageViewProps> = ({
   // Calculate layout
   const { nodes, edges, bounds } = useMemo(() => {
     if (!lineageData) {
-      return { nodes: [], edges: [], bounds: { width: 0, height: 0, minX: 0, maxX: 0, minY: 0, maxY: 0 } };
+      return {
+        nodes: [],
+        edges: [],
+        bounds: { width: 0, height: 0, minX: 0, maxX: 0, minY: 0, maxY: 0 },
+      };
     }
 
     const lineageNodes = processLineageData(lineageData);
 
     // Filter nodes by maxDepth if specified
     const filteredNodes = maxDepth
+<<<<<<< HEAD
       ? lineageNodes.filter(node => node.depth !== undefined && node.depth <= maxDepth)
+=======
+      ? lineageNodes.filter((node) => node.depth <= maxDepth)
+>>>>>>> eda9ef2c0f1608145ea9f6b72aeadb5c80a03ad6
       : lineageNodes;
 
-    return calculateLineageLayout(filteredNodes, lineageData.lineageEdges, layoutConfig);
+    return calculateLineageLayout(
+      filteredNodes,
+      lineageData.lineageEdges,
+      layoutConfig
+    );
   }, [lineageData, layoutConfig, maxDepth]);
 
   // Enhanced nodes with lineage-specific styling
   const enhancedNodes = useMemo(() => {
-    return nodes.map(node => ({
+    return nodes.map((node) => ({
       ...node,
       data: {
         ...node.data,
         ...createLineageNodeData(node.data),
         onNodeDoubleClick: handleNodeDoubleClick,
-      }
+      },
     }));
   }, [nodes]);
 
   // Enhanced edges with lineage-specific styling
   const enhancedEdges = useMemo(() => {
-    return edges.map(edge => ({
+    return edges.map((edge) => ({
       ...edge,
       style: {
         ...edge.style,
         strokeWidth: 3,
-        stroke: '#4f46e5',
+        stroke: "#4f46e5",
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 20,
         height: 20,
-        color: '#4f46e5',
+        color: "#4f46e5",
       },
       labelBgStyle: {
-        fill: '#f3f4f6',
+        fill: "#f3f4f6",
         fillOpacity: 0.9,
       },
       labelStyle: {
         fontSize: 12,
         fontWeight: 500,
-        fill: '#374151',
-      }
+        fill: "#374151",
+      },
     }));
   }, [edges]);
 
@@ -167,34 +184,52 @@ const LineageView: React.FC<LineageViewProps> = ({
     }
   };
 
-  const handleNodeClick = useCallback((nodeId: string) => {
-    const numericId = parseInt(nodeId);
-    if (onNodeSelect) {
-      onNodeSelect(numericId);
-    }
-  }, [onNodeSelect]);
+  const handleNodeClick = useCallback(
+    (nodeId: string) => {
+      const numericId = parseInt(nodeId);
+      if (onNodeSelect) {
+        onNodeSelect(numericId);
+      }
+    },
+    [onNodeSelect]
+  );
 
-  const handleNodeStatusChange = useCallback(async (nodeId: string, status: NodeStatus) => {
-    const numericId = parseInt(nodeId);
-    if (onNodeStatusChange) {
-      await onNodeStatusChange(numericId, status);
-      // Refresh lineage data to show updated status
-      await fetchLineageData();
-    }
-  }, [onNodeStatusChange, fetchLineageData]);
+  const handleNodeStatusChange = useCallback(
+    async (nodeId: string, status: NodeStatus) => {
+      const numericId = parseInt(nodeId);
+      if (onNodeStatusChange) {
+        await onNodeStatusChange(numericId, status);
+        // Refresh lineage data to show updated status
+        await fetchLineageData();
+      }
+    },
+    [onNodeStatusChange, fetchLineageData]
+  );
 
-  const handleCreateBranch = useCallback(async (nodeId: string) => {
-    const numericId = parseInt(nodeId);
-    if (onCreateBranch) {
-      await onCreateBranch(numericId);
-      // Refresh lineage data to show new branch
-      await fetchLineageData();
-    }
-  }, [onCreateBranch, fetchLineageData]);
+  const handleCreateBranch = useCallback(
+    async (nodeId: string) => {
+      const numericId = parseInt(nodeId);
+      if (onCreateBranch) {
+        await onCreateBranch(numericId);
+        // Refresh lineage data to show new branch
+        await fetchLineageData();
+      }
+    },
+    [onCreateBranch, fetchLineageData]
+  );
 
+<<<<<<< HEAD
   const handleLayoutChange = useCallback((newConfig: Partial<LineageLayoutConfig>) => {
     setLayoutConfig((prev: LineageLayoutConfig) => ({ ...prev, ...newConfig }));
   }, []);
+=======
+  const handleLayoutChange = useCallback(
+    (newConfig: Partial<LineageLayoutConfig>) => {
+      setLayoutConfig((prev) => ({ ...prev, ...newConfig }));
+    },
+    []
+  );
+>>>>>>> eda9ef2c0f1608145ea9f6b72aeadb5c80a03ad6
 
   if (isLoading) {
     return (
@@ -229,8 +264,12 @@ const LineageView: React.FC<LineageViewProps> = ({
       <div className="flex items-center justify-center h-full bg-gray-50">
         <div className="text-center">
           <div className="text-gray-400 text-6xl mb-4">🌳</div>
-          <h3 className="text-lg font-medium text-gray-700 mb-2">No lineage found</h3>
-          <p className="text-gray-500">This experiment has no connected ancestors or descendants.</p>
+          <h3 className="text-lg font-medium text-gray-700 mb-2">
+            No lineage found
+          </h3>
+          <p className="text-gray-500">
+            This experiment has no connected ancestors or descendants.
+          </p>
         </div>
       </div>
     );
@@ -248,7 +287,9 @@ const LineageView: React.FC<LineageViewProps> = ({
             <label className="text-sm text-gray-600">Direction:</label>
             <select
               value={layoutConfig.direction}
-              onChange={(e) => handleLayoutChange({ direction: e.target.value as any })}
+              onChange={(e) =>
+                handleLayoutChange({ direction: e.target.value as any })
+              }
               className="ml-2 text-sm border rounded px-2 py-1"
             >
               <option value="TB">Top to Bottom</option>
@@ -266,10 +307,16 @@ const LineageView: React.FC<LineageViewProps> = ({
               min="50"
               max="300"
               value={layoutConfig.horizontalSpacing}
-              onChange={(e) => handleLayoutChange({ horizontalSpacing: parseInt(e.target.value) })}
+              onChange={(e) =>
+                handleLayoutChange({
+                  horizontalSpacing: parseInt(e.target.value),
+                })
+              }
               className="ml-2"
             />
-            <span className="text-xs text-gray-500 ml-1">{layoutConfig.horizontalSpacing}px</span>
+            <span className="text-xs text-gray-500 ml-1">
+              {layoutConfig.horizontalSpacing}px
+            </span>
           </div>
 
           <div>
@@ -279,10 +326,16 @@ const LineageView: React.FC<LineageViewProps> = ({
               min="50"
               max="200"
               value={layoutConfig.verticalSpacing}
-              onChange={(e) => handleLayoutChange({ verticalSpacing: parseInt(e.target.value) })}
+              onChange={(e) =>
+                handleLayoutChange({
+                  verticalSpacing: parseInt(e.target.value),
+                })
+              }
               className="ml-2"
             />
-            <span className="text-xs text-gray-500 ml-1">{layoutConfig.verticalSpacing}px</span>
+            <span className="text-xs text-gray-500 ml-1">
+              {layoutConfig.verticalSpacing}px
+            </span>
           </div>
         </div>
       )}
@@ -293,7 +346,9 @@ const LineageView: React.FC<LineageViewProps> = ({
         <div className="space-y-1 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">Root:</span>
-            <span className="font-medium text-blue-600">{lineageData.node.title}</span>
+            <span className="font-medium text-blue-600">
+              {lineageData.node.title}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Ancestors:</span>
@@ -301,7 +356,9 @@ const LineageView: React.FC<LineageViewProps> = ({
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Descendants:</span>
-            <span className="font-medium">{lineageData.descendants.length}</span>
+            <span className="font-medium">
+              {lineageData.descendants.length}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Total Nodes:</span>
@@ -347,4 +404,8 @@ const LineageView: React.FC<LineageViewProps> = ({
   );
 };
 
+<<<<<<< HEAD
 export default LineageView;
+=======
+export default LineageView;
+>>>>>>> eda9ef2c0f1608145ea9f6b72aeadb5c80a03ad6

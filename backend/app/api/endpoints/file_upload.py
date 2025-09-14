@@ -161,3 +161,23 @@ async def delete_file(file_id: str):
     except Exception as e:
         logger.error(f"Error deleting file: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
+
+@router.get("/download/sample_deck.pptx")
+async def download_sample_presentation():
+    """Download the sample presentation for demo purposes"""
+    try:
+        sample_file_path = os.path.join(UPLOAD_DIR, "sample_deck.pptx")
+        
+        if not os.path.exists(sample_file_path):
+            raise HTTPException(status_code=404, detail="Sample presentation not found")
+        
+        from fastapi.responses import FileResponse
+        return FileResponse(
+            path=sample_file_path,
+            filename="sample_presentation.pptx",
+            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error downloading sample presentation: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error downloading file: {str(e)}")

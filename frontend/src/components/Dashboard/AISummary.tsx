@@ -193,6 +193,16 @@ const AISummary: React.FC<AISummaryProps> = ({
     fetchSummaries(true); // Force refresh by ignoring cache
   };
 
+  const handleDownloadPresentation = () => {
+    // For demo purposes, download the sample presentation
+    const link = document.createElement('a');
+    link.href = 'http://localhost:8000/files/download/sample_deck.pptx'; // Backend API endpoint
+    link.download = 'sample_presentation.pptx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <>
       <div className="p-6 bg-white rounded-lg shadow">
@@ -309,6 +319,7 @@ const AISummary: React.FC<AISummaryProps> = ({
 
           {/* Download Presentation */}
           <button
+            onClick={handleDownloadPresentation}
             disabled={isLoading}
             className="flex items-center justify-center w-full p-3 space-x-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 disabled:opacity-50"
           >

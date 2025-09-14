@@ -11,12 +11,12 @@ import ReactFlow, {
   MarkerType,
   ReactFlowInstance,
 } from "reactflow";
-import { ZoomIn, ZoomOut, Maximize2, RotateCcw, Hand } from "lucide-react";
 import dagre from "dagre";
 import "reactflow/dist/style.css";
 
 import CustomNode from "./Node";
 import NodeDetailsModal from "./NodeDetailsModal";
+import CustomZoomControls from "./CustomZoomControls";
 import { ResearchNode, NodeDetails, NodeStatus } from "../../types/research";
 
 interface GraphViewProps {
@@ -41,6 +41,7 @@ const nodeTypes: NodeTypes = {
   custom: CustomNode,
 };
 
+<<<<<<< HEAD
 // Custom Zoom Controls Component
 const CustomZoomControls: React.FC<{
   reactFlowInstance: ReactFlowInstance | null;
@@ -118,6 +119,8 @@ const CustomZoomControls: React.FC<{
   );
 };
 
+=======
+>>>>>>> main
 // Use dagre layout algorithm
 const getLayoutedElements = (
   nodes: Node[],
@@ -126,7 +129,13 @@ const getLayoutedElements = (
 ) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: direction });
+  dagreGraph.setGraph({
+    rankdir: direction,
+    ranksep: 150, // Increase vertical spacing between nodes
+    nodesep: 100, // Increase horizontal spacing between nodes
+    marginx: 50, // Add margin on the sides
+    marginy: 50, // Add margin on top/bottom
+  });
 
   // Set node sizes
   nodes.forEach((node) => {
@@ -264,8 +273,19 @@ const GraphView: React.FC<GraphViewProps> = ({
   }));
 
   return (
-    <div className="h-full w-full bg-gray-50 relative">
+    <div
+      className="h-full w-full bg-gray-50 relative"
+      style={{ width: "100%", height: "100vh", position: "relative" }}
+    >
       <style>{`
+        .react-flow {
+          width: 100%;
+          height: 100%;
+        }
+        .react-flow__container {
+          width: 100%;
+          height: 100%;
+        }
         .slider::-webkit-slider-thumb {
           appearance: none;
           height: 16px;

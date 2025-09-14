@@ -34,7 +34,11 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
   const [isLegendCollapsed, setIsLegendCollapsed] = useState(false);
   const [isKeywordListCollapsed, setIsKeywordListCollapsed] = useState(false);
 
+  console.log("GraphPanel received experiments:", experiments);
+  console.log("GraphPanel received relationships:", relationships);
+
   const nodes = experimentsToNodes(experiments);
+  console.log("Converted nodes:", nodes);
 
   // Create edges from valid relationships
   const edges = relationships
@@ -46,6 +50,8 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
       label: rel.type || "",
       data: { label: rel.label || "" },
     }));
+
+  console.log("Created edges:", edges);
 
   const { updateExperimentStatus } = useExperiments();
 
@@ -150,16 +156,27 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
             onDeleteEdge={handleDeleteEdge}
             fetchNodeDetails={fetchNodeDetails}
           />
-          <Legend
-            isCollapsed={isLegendCollapsed}
-            onToggle={() => setIsLegendCollapsed(!isLegendCollapsed)}
-          />
-          <KeywordList
-            keywords={extractedKeywords}
-            onKeywordClick={onKeywordSelect}
-            isCollapsed={isKeywordListCollapsed}
-            onToggle={() => setIsKeywordListCollapsed(!isKeywordListCollapsed)}
-          />
+          <div
+            className="fixed right-4 flex flex-col"
+            style={{ top: "5rem", width: "240px" }}
+          >
+            <div className="mb-4">
+              <Legend
+                isCollapsed={isLegendCollapsed}
+                onToggle={() => setIsLegendCollapsed(!isLegendCollapsed)}
+              />
+            </div>
+            <div style={{ marginTop: "calc(100vh - 32rem)" }}>
+              <KeywordList
+                keywords={extractedKeywords}
+                onKeywordClick={onKeywordSelect}
+                isCollapsed={isKeywordListCollapsed}
+                onToggle={() =>
+                  setIsKeywordListCollapsed(!isKeywordListCollapsed)
+                }
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

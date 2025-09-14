@@ -114,11 +114,7 @@ const LineageView: React.FC<LineageViewProps> = ({
 
     // Filter nodes by maxDepth if specified
     const filteredNodes = maxDepth
-<<<<<<< HEAD
       ? lineageNodes.filter(node => node.depth !== undefined && node.depth <= maxDepth)
-=======
-      ? lineageNodes.filter((node) => node.depth <= maxDepth)
->>>>>>> eda9ef2c0f1608145ea9f6b72aeadb5c80a03ad6
       : lineageNodes;
 
     return calculateLineageLayout(
@@ -218,18 +214,9 @@ const LineageView: React.FC<LineageViewProps> = ({
     [onCreateBranch, fetchLineageData]
   );
 
-<<<<<<< HEAD
   const handleLayoutChange = useCallback((newConfig: Partial<LineageLayoutConfig>) => {
     setLayoutConfig((prev: LineageLayoutConfig) => ({ ...prev, ...newConfig }));
   }, []);
-=======
-  const handleLayoutChange = useCallback(
-    (newConfig: Partial<LineageLayoutConfig>) => {
-      setLayoutConfig((prev) => ({ ...prev, ...newConfig }));
-    },
-    []
-  );
->>>>>>> eda9ef2c0f1608145ea9f6b72aeadb5c80a03ad6
 
   if (isLoading) {
     return (
@@ -404,8 +391,4 @@ const LineageView: React.FC<LineageViewProps> = ({
   );
 };
 
-<<<<<<< HEAD
 export default LineageView;
-=======
-export default LineageView;
->>>>>>> eda9ef2c0f1608145ea9f6b72aeadb5c80a03ad6

@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
+import { Button, Modal, List } from "antd";
 import ChatPanel from "./Chat/ChatPanel";
 import GraphPanel from "./Graph/GraphPanel";
 import ResizableDivider from "./Common/ResizableDivider";
 import { useChat } from "../hooks/useChat";
 import { useExperiments } from "../hooks/useExperiments";
-import { ExperimentSuggestion, NodeStatus } from "../types/research";
+import { ExperimentSuggestion } from "../types/research";
+import { experimentService } from "../services/experimentService";
 
 interface AIChatResearchAssistantProps {
   initialSuggestions?: ExperimentSuggestion[];
@@ -14,12 +16,38 @@ interface AIChatResearchAssistantProps {
 const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   initialSuggestions = [],
 }) => {
-  const { messages, isLoading, error, sendMessage, sendFile, clearConversation } = useChat(initialSuggestions);
-  const { experiments, getExperimentsByStatus, updateExperimentStatus } =
-    useExperiments();
+  const {
+    messages,
+    isLoading,
+    error,
+    sendMessage,
+    sendFile,
+    clearConversation,
+  } = useChat(initialSuggestions);
+  const {
+    experiments,
+    relationships,
+    getExperimentsByStatus,
+    updateExperimentStatus,
+    refreshExperiments,
+  } = useExperiments();
 
   // State for panel widths
   const [chatPanelWidth, setChatPanelWidth] = useState(400);
+  const [isKeywordsModalVisible, setIsKeywordsModalVisible] = useState(false);
+  const [keywords, setKeywords] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchKeywords = async () => {
+      try {
+        const fetchedKeywords = await experimentService.getContextKeywords();
+        setKeywords(fetchedKeywords);
+      } catch (error) {
+        console.error("Failed to fetch keywords:", error);
+      }
+    };
+    fetchKeywords();
+  }, []);
 
   const handleAcceptSuggestion = (suggestion: ExperimentSuggestion) => {
     // Instead of using addExperiment, we'll use the API through useExperiments hook
@@ -43,19 +71,43 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
     sendFile(file);
   };
 
+  const handleNodeClick = (node: any) => {
+    console.log("Node clicked:", node);
+    // TODO: Open node details modal or navigate to node details
+  };
+
+  const handleNodeStatusChange = async (nodeId: number, status: string) => {
+    try {
+      // Update the experiment status via the API
+      await updateExperimentStatus(nodeId, status as any);
+      console.log(`Updated node ${nodeId} status to ${status}`);
+      // Refresh graph data after status change
+      setTimeout(() => {
+        refreshExperiments();
+      }, 500); // Small delay to allow backend to process
+    } catch (error) {
+      console.error("Failed to update node status:", error);
+    }
+  };
+
+  const handleSendMessage = async (message: string) => {
+    await sendMessage(message);
+    // Refresh graph data after sending message
+    setTimeout(() => {
+      refreshExperiments();
+    }, 1000); // Small delay to allow backend to process
+  };
+
   const acceptedCount = getExperimentsByStatus("completed").length;
   const pendingCount = getExperimentsByStatus("planned").length;
 
-  // Create relationships based on experiments data
-  const relationships = experiments.map((exp, index) => ({
-    id: index + 1,
-    from: exp.id,
-    to: experiments[(index + 1) % experiments.length].id,
-    type: "leads_to",
-  }));
+  // Relationships are now provided by the useExperiments hook
 
   return (
-    <div className="flex flex-col bg-gray-50" style={{ height: "calc(100vh - 64px)" }}>
+    <div
+      className="flex flex-col bg-gray-50"
+      style={{ height: "calc(100vh - 64px)" }}
+    >
       {/* Header */}
       <header className="bg-white shadow-sm border-b px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -65,15 +117,44 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
               AI Research Assistant
             </h1>
           </div>
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <div className="flex items-center space-x-4 text-sm text-gray-600 flex-shrink-0">
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => setIsKeywordsModalVisible(true)}
+              className="flex-shrink-0"
+            >
+              Keywords
+            </Button>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>Accepted ({acceptedCount})</span>
+              <div className="w-3 h-3 bg-green-500 rounded-full flex-shrink-0"></div>
+              <span className="whitespace-nowrap">
+                Accepted ({acceptedCount})
+              </span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
               <span>For Later ({pendingCount})</span>
             </div>
+
+            <Modal
+              title="Keywords Context"
+              open={isKeywordsModalVisible}
+              onCancel={() => setIsKeywordsModalVisible(false)}
+              footer={null}
+              width={600}
+            >
+              <List
+                dataSource={keywords}
+                renderItem={(keyword) => (
+                  <List.Item>
+                    <span className="text-gray-800">{keyword}</span>
+                  </List.Item>
+                )}
+                bordered
+                className="mt-4"
+              />
+            </Modal>
           </div>
         </div>
       </header>
@@ -84,7 +165,7 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
             messages={messages}
             isLoading={isLoading}
             error={error}
-            onSendMessage={sendMessage}
+            onSendMessage={handleSendMessage}
             onFileUpload={handleFileUpload}
             onAcceptSuggestion={handleAcceptSuggestion}
             onDeclineSuggestion={handleDeclineSuggestion}
@@ -99,7 +180,15 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
         />
 
         <div className="flex-1 min-w-0">
-          <GraphPanel experiments={experiments} relationships={relationships} />
+          <GraphPanel
+            experiments={experiments}
+            relationships={relationships}
+            onNodeClick={handleNodeClick}
+            onNodeStatusChange={handleNodeStatusChange}
+            onRefresh={refreshExperiments}
+            isLoading={isLoading}
+            error={error}
+          />
         </div>
       </div>
     </div>

@@ -33,82 +33,119 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
   });
   const [loading, setLoading] = useState(false);
 
+  const fetchExperiments = async () => {
+    try {
+      const response = await api.get("/graph/overview");
+      const experiments: Experiment[] = response.data.nodes || [];
+
+      // Get tasks from the last 10 days
+      const tenDaysAgo = new Date();
+      tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+
+      // Filter experiments by date and status
+      const recentExperiments = experiments.filter((exp) => {
+        const expDate = new Date(exp.updated_at);
+        return expDate >= tenDaysAgo;
+      });
+
+      const completed = recentExperiments
+        .filter((exp) => exp.status === "completed")
+        .map((exp) => exp.title);
+
+      const planning = recentExperiments
+        .filter((exp) => exp.status === "planned")
+        .map((exp) => exp.title);
+
+      return { completed, planning };
+    } catch (error) {
+      console.error("Error fetching experiments:", error);
+      return { completed: [], planning: [] };
+    }
+  };
+
   useEffect(() => {
-    const fetchTomData = async () => {
+    const setupSSE = () => {
+      const notesEventSource = new EventSource(
+        "http://localhost:8000/notes/updates"
+      );
+      const discussionEventSource = new EventSource(
+        "http://localhost:8000/discussion/updates"
+      );
+
+      notesEventSource.onmessage = async (event) => {
+        const notesData = JSON.parse(event.data);
+        const experimentsData = await fetchExperiments();
+
+        setRealStudentData((prev) => ({
+          ...prev,
+          ...experimentsData,
+          lastMeetingNotes:
+            notesData.last_meeting_notes || "No meeting notes available",
+        }));
+      };
+
+      discussionEventSource.onmessage = (event) => {
+        const discussionData = JSON.parse(event.data);
+        setRealStudentData((prev) => ({
+          ...prev,
+          discussionPoints:
+            discussionData.discussion_points ||
+            "No discussion points available",
+        }));
+      };
+
+      notesEventSource.onerror = (error) => {
+        console.error("Notes SSE error:", error);
+        notesEventSource.close();
+        setTimeout(setupSSE, 5000); // Try to reconnect after 5 seconds
+      };
+
+      discussionEventSource.onerror = (error) => {
+        console.error("Discussion SSE error:", error);
+        discussionEventSource.close();
+        setTimeout(setupSSE, 5000); // Try to reconnect after 5 seconds
+      };
+
+      return () => {
+        notesEventSource.close();
+        discussionEventSource.close();
+      };
+    };
+
+    // Initial data fetch
+    const fetchInitialData = async () => {
       try {
         setLoading(true);
-        // Get tasks from the last 10 days
-        const tenDaysAgo = new Date();
-        tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+        const [notesResponse, discussionResponse] = await Promise.all([
+          api.get("/notes"),
+          api.get("/discussion"),
+        ]);
 
-        // First check if backend is running
-        try {
-          await api.get("/");
-        } catch (err) {
-          const error = err as AxiosError;
-          message.error(
-            "Backend server is not running. Please start the backend server with 'uvicorn app.main:app --reload'"
-          );
-          return;
-        }
-
-        // Fetch all experiments from the graph overview
-        const response = await api.get("/graph/overview");
-        const experiments: Experiment[] = response.data.nodes || [];
-
-        // Filter experiments by date and status
-        const recentExperiments = experiments.filter((exp) => {
-          const expDate = new Date(exp.updated_at);
-          return expDate >= tenDaysAgo;
-        });
-
-        const completed = recentExperiments
-          .filter((exp) => exp.status === "completed")
-          .map((exp) => exp.title);
-
-        const planning = recentExperiments
-          .filter((exp) => exp.status === "planned")
-          .map((exp) => exp.title);
+        const experimentsData = await fetchExperiments();
 
         setRealStudentData({
-          completed,
-          planning,
+          ...experimentsData,
           lastMeetingNotes:
-            "Last meeting notes will be fetched from API once implemented",
+            notesResponse.data.last_meeting_notes ||
+            "No meeting notes available",
           discussionPoints:
-            "Discussion points will be fetched from API once implemented",
+            discussionResponse.data.discussion_points ||
+            "No discussion points available",
         });
-      } catch (err) {
-        const error = err as AxiosError;
-        console.error("Error fetching Tom's data:", error);
-        // Show more specific error message
-        if (error.code === "ERR_NETWORK") {
-          message.error(
-            "Cannot connect to backend server. Please make sure it's running with 'uvicorn app.main:app --reload'"
-          );
-        } else {
-          message.error(`Failed to fetch recent experiments: ${error.message}`);
-        }
-
-        // Set fallback data for Tom
-        setRealStudentData({
-          completed: ["Backend connection error - please start the server"],
-          planning: ["Run 'uvicorn app.main:app --reload' in backend folder"],
-          lastMeetingNotes: "Backend server not running",
-          discussionPoints: "Please start the backend server to see updates",
-        });
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        message.error("Failed to load initial data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTomData();
+    fetchInitialData();
+    const cleanup = setupSSE();
 
-    // Set up polling to refresh data every 30 seconds
-    const intervalId = setInterval(fetchTomData, 30000);
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
+    return () => {
+      cleanup();
+    };
   }, []);
 
   const columns: ProColumns<Student>[] = [

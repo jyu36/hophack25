@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Typography, Input, Button, Card, Space, message } from "antd";
-import type { MessageInstance } from "antd/es/message/interface";
-import api from "../../utils/api";
+import {
+  getNotes,
+  updateNotes,
+  getDiscussion,
+  updateDiscussion,
+} from "../../utils/api";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -9,7 +13,10 @@ const { TextArea } = Input;
 const Communication: React.FC = () => {
   const [lastMeetingNotes, setLastMeetingNotes] = useState<string>("");
   const [nextMeetingPlan, setNextMeetingPlan] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<{
+    notes: boolean;
+    plan: boolean;
+  }>({ notes: false, plan: false });
 
   useEffect(() => {
     fetchData();
@@ -18,11 +25,11 @@ const Communication: React.FC = () => {
   const fetchData = async () => {
     try {
       const [notesRes, discussionRes] = await Promise.all([
-        api.get<{ last_meeting_notes: string }>("/notes"),
-        api.get<{ discussion_points: string }>("/discussion"),
+        getNotes(),
+        getDiscussion(),
       ]);
-      setLastMeetingNotes(notesRes.data.last_meeting_notes || "");
-      setNextMeetingPlan(discussionRes.data.discussion_points || "");
+      setLastMeetingNotes(notesRes.last_meeting_notes || "");
+      setNextMeetingPlan(discussionRes.discussion_points || "");
     } catch (error) {
       console.error("Error fetching data:", error);
       message.error("Failed to load data");
@@ -30,24 +37,28 @@ const Communication: React.FC = () => {
   };
 
   const handleSubmit = async (type: "notes" | "plan") => {
-    setLoading(true);
     try {
+      setLoading((prev) => ({ ...prev, [type]: true }));
+
       if (type === "notes") {
-        await api.post("/notes", null, {
-          params: { last_meeting_notes: lastMeetingNotes },
-        });
+        await updateNotes(lastMeetingNotes);
         message.success("Last meeting notes updated");
       } else {
-        await api.post("/discussion", null, {
-          params: { discussion_points: nextMeetingPlan },
-        });
+        await updateDiscussion(nextMeetingPlan);
         message.success("Next meeting plan updated");
       }
+
+      // Refresh data after update
+      await fetchData();
     } catch (error) {
       console.error("Error updating:", error);
-      message.error("Failed to update");
+      message.error(
+        `Failed to update ${
+          type === "notes" ? "meeting notes" : "meeting plan"
+        }`
+      );
     } finally {
-      setLoading(false);
+      setLoading((prev) => ({ ...prev, [type]: false }));
     }
   };
 
@@ -71,11 +82,14 @@ const Communication: React.FC = () => {
             <Button
               type="primary"
               onClick={() => handleSubmit("notes")}
-              loading={loading}
+              loading={loading.notes}
             >
               Submit
             </Button>
-            <Button onClick={() => handleSubmit("notes")} loading={loading}>
+            <Button
+              onClick={() => handleSubmit("notes")}
+              loading={loading.notes}
+            >
               Modify
             </Button>
           </div>
@@ -93,11 +107,11 @@ const Communication: React.FC = () => {
             <Button
               type="primary"
               onClick={() => handleSubmit("plan")}
-              loading={loading}
+              loading={loading.plan}
             >
               Submit
             </Button>
-            <Button onClick={() => handleSubmit("plan")} loading={loading}>
+            <Button onClick={() => handleSubmit("plan")} loading={loading.plan}>
               Modify
             </Button>
           </div>

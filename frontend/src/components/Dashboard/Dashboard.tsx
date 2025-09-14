@@ -101,7 +101,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="p-6 mx-auto max-w-7xl">
+      <div className="mx-auto max-w-7xl p-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
@@ -161,9 +161,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-6 pb-8 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 pb-8">
           {/* Experiments Section */}
-          <div className="flex flex-col h-full bg-white rounded-lg shadow">
+          <div className="bg-white rounded-lg shadow flex flex-col h-full">
             {/* Tabs Header */}
             <div className="border-b border-gray-200">
               <div className="flex items-center justify-between px-6 pt-6">
@@ -204,7 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Content Area */}
-            <div className="flex-grow p-6 overflow-y-auto" style={{maxHeight: "460px"}}>
+            <div className="p-6 overflow-y-auto flex-grow" style={{maxHeight: "460px"}}>
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center text-gray-500">
@@ -239,7 +239,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* AI Summary Section */}
           <AISummary
-            projectSummary="Your research focuses on exploring novel approaches to machine learning optimization, with 5 completed experiments showing promising results in gradient descent techniques. Recent findings suggest a 23% improvement in convergence speed."
+            projectSummary="Research focus: Exploring novel approaches to machine learning optimization. We have completed 5 experiments in gradient descent techniques, showing promising results. Recent findings indicate a 23% improvement in convergence speed."
             weeklyUpdate="This week: 2 new experiments were completed, focusing on adaptive learning rates. Key achievement: Developed a new momentum-based approach that reduced training time by 15%."
             lastUpdated={new Date()}
           />

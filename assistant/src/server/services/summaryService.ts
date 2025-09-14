@@ -271,29 +271,32 @@ Please generate a comprehensive summary of this research project.`;
       return acc;
     }, {});
 
-    // Generate basic summary
-    let summary = `# Research Project Summary\n\n`;
-    summary += `## Overview\n`;
-    summary += `This research project contains ${nodes.length} experiments with ${edges.length} relationships between them.\n\n`;
+    // Generate basic summary as a single paragraph
+    let summary = `This research project contains ${nodes.length} experiments with ${edges.length} relationships between them. `;
     
-    summary += `## Experiment Status Breakdown\n`;
-    Object.entries(statusCounts).forEach(([status, count]) => {
-      summary += `- ${status}: ${count} experiments\n`;
-    });
+    // Add status breakdown
+    const statusEntries = Object.entries(statusCounts);
+    if (statusEntries.length > 0) {
+      summary += `The experiments are distributed across the following statuses: `;
+      summary += statusEntries.map(([status, count]) => `${status} (${count} experiments)`).join(', ') + '. ';
+    }
     
-    summary += `\n## Relationship Types\n`;
-    Object.entries(edgeTypeCounts).forEach(([type, count]) => {
-      summary += `- ${type}: ${count} relationships\n`;
-    });
+    // Add relationship types
+    const edgeEntries = Object.entries(edgeTypeCounts);
+    if (edgeEntries.length > 0) {
+      summary += `The relationships include: `;
+      summary += edgeEntries.map(([type, count]) => `${type} (${count} relationships)`).join(', ') + '. ';
+    }
 
-    summary += `\n## Recent Experiments\n`;
+    // Add recent experiments
     const recentNodes = nodes
       .sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
       .slice(0, 5);
     
-    recentNodes.forEach((node: any) => {
-      summary += `- **${node.title}** (${node.status}): ${node.description || 'No description'}\n`;
-    });
+    if (recentNodes.length > 0) {
+      summary += `Recent experiments include: `;
+      summary += recentNodes.map((node: any) => `${node.title} (${node.status})${node.description ? ': ' + node.description : ''}`).join(', ') + '.';
+    }
 
     return summary;
   }
@@ -323,18 +326,7 @@ Please generate a comprehensive summary of this research project.`;
       const { nodes, edges } = graphData;
 
       // Generate summary
-      const overviewPrompt = `Generate a comprehensive overview summary of this research project from the beginning. 
-
-Focus on:
-- Overall project scope and objectives
-- Complete timeline of all experiments
-- Key relationships and dependencies between experiments
-- Progress status across all experiments
-- Major findings and results
-- Project structure and organization
-- Next steps and future directions
-
-Provide a complete picture of the entire research project. Space is limited, so be concise and to the point.`;
+      const overviewPrompt = `Generate a comprehensive overview summary of this research project from the beginning. Write this as a single, well-structured paragraph that flows naturally and is readable without any markdown formatting. Do not use headers, bullet points, or any markdown syntax. Focus on the overall project scope and objectives, complete timeline of all experiments, key relationships and dependencies between experiments, progress status across all experiments, major findings and results, project structure and organization, and next steps and future directions. Provide a complete picture of the entire research project in a single flowing paragraph that is concise and to the point.`;
       const summary = await this.generateSummaryWithLLM(nodes, edges, overviewPrompt);
 
       const response: SummaryResponse = {
@@ -402,20 +394,7 @@ Provide a complete picture of the entire research project. Space is limited, so 
       );
 
       // Generate summary
-      const weeklyPrompt = `Generate a weekly summary focusing only on experiments and relationships that were updated in the last week. 
-This will be a first-person narrative on the progress of the project this week, which is well-readable to reportable to professors and other stakeholders.
-Focus on:
-- Recent changes and updates to experiments
-- New experiments or relationships created this week, with intention or desired outcomes. (Emphasize the high level picture)
-- Progress made on ongoing experiments (status changes, etc.)
-- Results or findings from completed experiments
-- Changes in experiment status or direction
-- New insights or discoveries
-- Impact of recent changes on the overall project
-- What was accomplished this week
-- Any blockers or challenges encountered
-
-This should be a focused report on recent activity and progress.`;
+      const weeklyPrompt = `Generate a weekly summary focusing only on experiments and relationships that were updated in the last week. Write this as a single, well-structured paragraph that flows naturally and is readable without any markdown formatting. Do not use headers, bullet points, or any markdown syntax. This will be a first-person narrative on the progress of the project this week, which is well-readable and reportable to professors and other stakeholders. Focus on recent changes and updates to experiments, new experiments or relationships created this week with intention or desired outcomes (emphasize the high level picture), progress made on ongoing experiments including status changes, results or findings from completed experiments, changes in experiment status or direction, new insights or discoveries, impact of recent changes on the overall project, what was accomplished this week, and any blockers or challenges encountered. This should be a focused report on recent activity and progress written as a single flowing paragraph.`;
       const summary = await this.generateSummaryWithLLM(recentNodes, recentEdges, weeklyPrompt);
 
       const response: SummaryResponse = {

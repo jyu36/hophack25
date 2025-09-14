@@ -4,8 +4,8 @@
 
 The Assistant API provides conversational AI capabilities for the research graph system. It enables real-time chat interactions with an AI assistant that can understand and manipulate the research graph through natural language.
 
-**Base URL:** `http://localhost:3001`  
-**Content-Type:** `application/json`  
+**Base URL:** `http://localhost:3001`
+**Content-Type:** `application/json`
 **Authentication:** None (session-based)
 
 ## Quick Start
@@ -16,7 +16,7 @@ const response = await fetch('http://localhost:3001/api/conversations', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ useContext: true })
-});
+})
 
 const { sessionId, message } = await response.json();
 console.log('Assistant:', message);
@@ -368,16 +368,16 @@ export function useAssistant(): UseAssistantReturn {
   const startConversation = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('http://localhost:3001/api/conversations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ useContext: true })
       });
-      
+
       if (!response.ok) throw new Error('Failed to start conversation');
-      
+
       const data = await response.json();
       setSessionId(data.sessionId);
       setMessages([{
@@ -394,10 +394,10 @@ export function useAssistant(): UseAssistantReturn {
 
   const sendMessage = useCallback(async (message: string) => {
     if (!sessionId) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     // Add user message immediately
     const userMessage: ConversationMessage = {
       role: 'user',
@@ -405,16 +405,16 @@ export function useAssistant(): UseAssistantReturn {
       timestamp: new Date().toISOString()
     };
     setMessages(prev => [...prev, userMessage]);
-    
+
     try {
       const response = await fetch(`http://localhost:3001/api/conversations/${sessionId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message })
       });
-      
+
       if (!response.ok) throw new Error('Failed to send message');
-      
+
       const data = await response.json();
       const assistantMessage: ConversationMessage = {
         role: 'assistant',
@@ -432,7 +432,7 @@ export function useAssistant(): UseAssistantReturn {
 
   const clearConversation = useCallback(async () => {
     if (!sessionId) return;
-    
+
     try {
       await fetch(`http://localhost:3001/api/conversations/${sessionId}`, {
         method: 'DELETE'
@@ -468,14 +468,14 @@ export function useAssistant() {
   const startConversation = async () => {
     isLoading.value = true;
     error.value = null;
-    
+
     try {
       const response = await fetch('http://localhost:3001/api/conversations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ useContext: true })
       });
-      
+
       const data = await response.json();
       sessionId.value = data.sessionId;
       messages.value = [{
@@ -492,24 +492,24 @@ export function useAssistant() {
 
   const sendMessage = async (message: string) => {
     if (!sessionId.value) return;
-    
+
     isLoading.value = true;
     error.value = null;
-    
+
     // Add user message
     messages.value.push({
       role: 'user',
       content: message,
       timestamp: new Date().toISOString()
     });
-    
+
     try {
       const response = await fetch(`http://localhost:3001/api/conversations/${sessionId.value}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message })
       });
-      
+
       const data = await response.json();
       messages.value.push({
         role: 'assistant',
@@ -549,7 +549,7 @@ class AssistantAPI {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ useContext: true })
     });
-    
+
     const data = await response.json();
     this.sessionId = data.sessionId;
     return data;
@@ -557,30 +557,30 @@ class AssistantAPI {
 
   async sendMessage(message) {
     if (!this.sessionId) throw new Error('No active session');
-    
+
     const response = await fetch(`${this.baseURL}/api/conversations/${this.sessionId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message })
     });
-    
+
     return response.json();
   }
 
   async getHistory() {
     if (!this.sessionId) throw new Error('No active session');
-    
+
     const response = await fetch(`${this.baseURL}/api/conversations/${this.sessionId}/history`);
     return response.json();
   }
 
   async clearConversation() {
     if (!this.sessionId) throw new Error('No active session');
-    
+
     const response = await fetch(`${this.baseURL}/api/conversations/${this.sessionId}`, {
       method: 'DELETE'
     });
-    
+
     this.sessionId = null;
     return response.json();
   }

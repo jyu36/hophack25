@@ -53,9 +53,9 @@ async def get_graph_overview(request: Request, db: Session = Depends(get_db)):
         edges = [
             {
                 "id": rel.id,
-                "from": rel.from_experiment_id,
-                "to": rel.to_experiment_id,
-                "type": rel.relationship_type,
+                "from_experiment_id": rel.from_experiment_id,
+                "to_experiment_id": rel.to_experiment_id,
+                "relationship_type": rel.relationship_type,
                 "label": rel.label
             }
             for rel in relationships

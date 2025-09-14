@@ -283,4 +283,5 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
   );
 };
 
-export default NodeDetailsModal;
+const MemoizedNodeDetailsModal = React.memo(NodeDetailsModal);
+export default MemoizedNodeDetailsModal;

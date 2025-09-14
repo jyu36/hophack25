@@ -16,7 +16,7 @@ const Summary: React.FC<SummaryProps> = ({ students }) => {
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <Title level={4}>
           {studentsWithUpdates.length} students have updates on their
-          experiments
+          experiments this week:
         </Title>
         <div>
           <Text>Students with updates: </Text>

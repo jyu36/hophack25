@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api.endpoints import experiments, context_keywords, literature
+from .api.endpoints import experiments, context_keywords, literature, notes, discussion
 from .database import engine, Base
 
 # Create database tables
@@ -22,6 +22,8 @@ app.add_middleware(
 app.include_router(experiments.router, tags=["experiments"])
 app.include_router(context_keywords.router, tags=["context"])
 app.include_router(literature.router, tags=["literature"])
+app.include_router(notes.router, tags=["notes"])
+app.include_router(discussion.router, tags=["discussion"])
 
 @app.get("/")
 def read_root():

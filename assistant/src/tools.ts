@@ -43,23 +43,23 @@ export const getNodeInfo = {
   }
 };
 
-export const getAllNodes = {
-  name: "get_all_nodes",
-  description: "Get all experiment nodes, optionally in concise format for quick overview",
-  schema: z.object({
-    concise: z.boolean().optional().default(false).describe("Return concise format with basic info only")
-  }),
-  run: async (args: unknown) => {
-    const { concise } = getAllNodes.schema.parse(args);
-    return apiCall(() => axios.get(`${BASE_URL}/nodes`, {
-      params: { concise }
-    }));
-  }
-};
+// export const getAllNodes = {
+//   name: "get_all_nodes",
+//   description: "Get all experiment nodes, optionally in concise format for quick overview",
+//   schema: z.object({
+//     concise: z.boolean().optional().default(false).describe("Return concise format with basic info only")
+//   }),
+//   run: async (args: unknown) => {
+//     const { concise } = getAllNodes.schema.parse(args);
+//     return apiCall(() => axios.get(`${BASE_URL}/nodes`, {
+//       params: { concise }
+//     }));
+//   }
+// };
 
 export const getNodeLiterature = {
   name: "get_node_literature",
-  description: "Get literature references for a specific experiment node",
+  description: "Get literature references for a specific experiment node, this will not generate new literature, it will only return the literature that has already been added to the graph, use get_suggested_literature to generate new literature",
   schema: z.object({
     node_id: z.number().describe("ID of the node to get literature for")
   }),
@@ -69,9 +69,25 @@ export const getNodeLiterature = {
   }
 };
 
+export const getSuggestedLiterature = {
+  name: "get_suggested_literature",
+  description: "Get AI-suggested literature references for a specific experiment node",
+  schema: z.object({
+    node_id: z.number().describe("ID of the node to get suggested literature for"),
+    ignore_cache: z.boolean().optional().default(false).describe("Bypass cache and recompute suggestions"),
+    relationship: z.enum(["auto", "similar", "builds_on", "prior", "contrast"]).optional().default("auto").describe("Type of relationship to find")
+  }),
+  run: async (args: unknown) => {
+    const { node_id, ignore_cache, relationship } = getSuggestedLiterature.schema.parse(args);
+    return apiCall(() => axios.get(`${BASE_URL}/nodes/${node_id}/literature/suggested`, {
+      params: { ignore_cache, relationship }
+    }));
+  }
+};
+
 export const getAllLiterature = {
   name: "get_all_literature",
-  description: "Get all literature references across all nodes",
+  description: "Get all literature references across all nodes, this will not generate new literature, it will only return the literature that has already been added to the graph, use get_suggested_literature to generate new literature. You ONLY need to call this endpoint once.",
   schema: z.object({}),
   run: async () => apiCall(() => axios.get(`${BASE_URL}/literature`))
 };
@@ -93,7 +109,7 @@ export const createNode = {
     motivation: z.string().optional().describe("Why this experiment is being conducted"),
     expectations: z.string().optional().describe("What we expect to learn/achieve"),
     hypothesis: z.string().optional().describe("The hypothesis being tested"),
-    status: z.enum(["planned", "in_progress", "completed"]).optional().default("planned"),
+    status: z.enum(["planned", "completed", "postponed"]).optional().default("planned"),
     extra_data: z.record(z.any()).optional().describe("Additional properties as JSON object")
   }),
   run: async (args: unknown) => {
@@ -113,7 +129,7 @@ export const updateNode = {
     expectations: z.string().optional().describe("Updated expectations"),
     hypothesis: z.string().optional().describe("Updated hypothesis"),
     result: z.string().optional().describe("Results of the experiment"),
-    status: z.enum(["planned", "in_progress", "completed"]).optional().describe("Updated status"),
+    status: z.enum(["planned", "completed", "postponed"]).optional().describe("Updated status"),
     extra_data: z.record(z.any()).optional().describe("Additional properties as JSON object")
   }),
   run: async (args: unknown) => {
@@ -144,7 +160,7 @@ export const createEdge = {
   schema: z.object({
     from_experiment_id: z.number().describe("Source experiment ID"),
     to_experiment_id: z.number().describe("Target experiment ID"),
-    relationship_type: z.enum(["leads_to", "supports", "refutes", "requires", "related_to"]).describe("Type of relationship"),
+    relationship_type: z.enum(["leads_to", "supports", "refutes", "requires", "related", "inspires", "extends", "validates", "implements"]).describe("Type of relationship"),
     label: z.string().optional().describe("Optional description of the relationship"),
     extra_data: z.record(z.any()).optional().describe("Additional properties as JSON object")
   }),
@@ -161,7 +177,7 @@ export const updateEdge = {
     edge_id: z.number().describe("ID of the edge to update"),
     from_experiment_id: z.number().optional().describe("Updated source experiment ID"),
     to_experiment_id: z.number().optional().describe("Updated target experiment ID"),
-    relationship_type: z.enum(["leads_to", "supports", "refutes", "requires", "related_to"]).optional().describe("Updated relationship type"),
+    relationship_type: z.enum(["leads_to", "supports", "refutes", "requires", "related", "inspires", "extends", "validates", "implements"]).optional().describe("Updated relationship type"),
     label: z.string().optional().describe("Updated label"),
     extra_data: z.record(z.any()).optional().describe("Additional properties as JSON object")
   }),
@@ -183,50 +199,51 @@ export const deleteEdgeById = {
   }
 };
 
-export const deleteEdgeByNodes = {
-  name: "delete_edge_by_nodes",
-  description: "Delete a relationship by specifying source and target nodes",
-  schema: z.object({
-    from_id: z.number().describe("Source experiment ID"),
-    to_id: z.number().describe("Target experiment ID"),
-    label: z.string().optional().describe("Optional label to match specific relationship")
-  }),
-  run: async (args: unknown) => {
-    const { from_id, to_id, label } = deleteEdgeByNodes.schema.parse(args);
-    return apiCall(() => axios.delete(`${BASE_URL}/edges/by-nodes`, {
-      params: { from_id, to_id, label }
-    }));
-  }
-};
+// export const deleteEdgeByNodes = {
+//   name: "delete_edge_by_nodes",
+//   description: "Delete a relationship by specifying source and target nodes",
+//   schema: z.object({
+//     from_id: z.number().describe("Source experiment ID"),
+//     to_id: z.number().describe("Target experiment ID"),
+//     label: z.string().optional().describe("Optional label to match specific relationship")
+//   }),
+//   run: async (args: unknown) => {
+//     const { from_id, to_id, label } = deleteEdgeByNodes.schema.parse(args);
+//     return apiCall(() => axios.delete(`${BASE_URL}/edges/by-nodes`, {
+//       params: { from_id, to_id, label }
+//     }));
+//   }
+// };
 
 // Literature Management
-export const addLiterature = {
-  name: "add_literature",
-  description: "Add a literature reference to a specific experiment node",
-  schema: z.object({
-    node_id: z.number().describe("ID of the node to add literature to"),
-    link: z.string().describe("URL or DOI of the literature reference")
-  }),
-  run: async (args: unknown) => {
-    const { node_id, link } = addLiterature.schema.parse(args);
-    return apiCall(() => axios.post(`${BASE_URL}/nodes/${node_id}/literature`, null, {
-      params: { link }
-    }));
-  }
-};
+// export const addLiterature = {
+//   name: "add_literature",
+//   description: "Add a literature reference to a specific experiment node",
+//   schema: z.object({
+//     node_id: z.number().describe("ID of the node to add literature to"),
+//     link: z.string().describe("URL or DOI of the literature reference"),
+//     relationship: z.enum(["similar", "builds_on", "prior", "contrast"]).optional().default("similar").describe("Type of relationship to the experiment")
+//   }),
+//   run: async (args: unknown) => {
+//     const { node_id, link, relationship } = addLiterature.schema.parse(args);
+//     return apiCall(() => axios.post(`${BASE_URL}/nodes/${node_id}/literature`, null, {
+//       params: { link, relationship }
+//     }));
+//   }
+// };
 
-export const deleteLiterature = {
-  name: "delete_literature",
-  description: "Remove a literature reference from a specific experiment node",
-  schema: z.object({
-    node_id: z.number().describe("ID of the node to remove literature from"),
-    link: z.string().describe("URL or DOI of the literature reference to remove")
-  }),
-  run: async (args: unknown) => {
-    const { node_id, link } = deleteLiterature.schema.parse(args);
-    return apiCall(() => axios.delete(`${BASE_URL}/nodes/${node_id}/literature/${encodeURIComponent(link)}`));
-  }
-};
+// export const deleteLiterature = {
+//   name: "delete_literature",
+//   description: "Remove a literature reference from a specific experiment node",
+//   schema: z.object({
+//     node_id: z.number().describe("ID of the node to remove literature from"),
+//     link: z.string().describe("URL or DOI of the literature reference to remove")
+//   }),
+//   run: async (args: unknown) => {
+//     const { node_id, link } = deleteLiterature.schema.parse(args);
+//     return apiCall(() => axios.delete(`${BASE_URL}/nodes/${node_id}/literature/${encodeURIComponent(link)}`));
+//   }
+// };
 
 // Context Management
 export const addContextKeyword = {
@@ -260,8 +277,9 @@ export const tools = [
   // Graph Reading Tools
   getGraphOverview,
   getNodeInfo,
-  getAllNodes,
+  // getAllNodes,
   getNodeLiterature,
+  getSuggestedLiterature,
   getAllLiterature,
   getContextKeywords,
   
@@ -274,11 +292,10 @@ export const tools = [
   createEdge,
   updateEdge,
   deleteEdgeById,
-  deleteEdgeByNodes,
   
   // Literature Management
-  addLiterature,
-  deleteLiterature,
+  // addLiterature,
+  // deleteLiterature,
   
   // Context Management
   addContextKeyword,

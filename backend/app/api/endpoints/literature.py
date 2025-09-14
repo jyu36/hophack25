@@ -84,6 +84,7 @@ async def get_literature_of_node(
     node_id: int,
     ignore_cache: bool = Query(False, description="Bypass cache and recompute suggestion"),
     relationship: str = Query("auto", description="Relationship type: similar|builds_on|prior|contrast|auto"),
+    exclude_ids: str = Query("", description="Comma-separated list of paper IDs to exclude"),
     db: Session = Depends(get_db),
 ):
     """
@@ -100,6 +101,9 @@ async def get_literature_of_node(
         # Normalize relationship
         allowed = {"auto", "similar", "builds_on", "prior", "contrast"}
         rel = relationship if relationship in allowed else "auto"
+        
+        # Parse exclude_ids
+        exclude_list = [id.strip() for id in exclude_ids.split(",") if id.strip()] if exclude_ids else []
 
         if not ignore_cache:
             q = db.query(Literature).filter(Literature.experiment_id == node_id)
@@ -138,12 +142,25 @@ async def get_literature_of_node(
                 }
 
         # No cache or ignore requested: compute suggestion
-        paper = await orchestrator.suggest_one(
-            node_id=str(node_id),
-            relationship=rel,
-            exclude_ids=[],
-            db=db,
-        )
+        try:
+            paper = await orchestrator.suggest_one(
+                node_id=str(node_id),
+                relationship=rel,
+                exclude_ids=exclude_list,
+                db=db,
+            )
+        except Exception as e:
+            # If suggestion fails (e.g., no candidates), try without exclusions
+            if exclude_list:
+                print(f"[api] Suggestion failed with exclusions, trying without: {e}")
+                paper = await orchestrator.suggest_one(
+                    node_id=str(node_id),
+                    relationship=rel,
+                    exclude_ids=[],
+                    db=db,
+                )
+            else:
+                raise e
 
         # Persist to cache
         try:

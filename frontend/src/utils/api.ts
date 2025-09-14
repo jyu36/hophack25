@@ -169,17 +169,50 @@ export async function deleteContextKeyword(
 }
 
 // Literature References
-export async function getNodeLiterature(nodeId: number): Promise<string[]> {
+export interface LiteratureItem {
+  id: string;
+  title: string;
+  year?: number;
+  venue?: string;
+  doi?: string;
+  url: string;
+  relationship: string;
+  confidence?: number;
+  verified: Record<string, any>;
+  summary: string;
+  _error?: string;
+}
+
+export async function getNodeLiterature(
+  nodeId: number
+): Promise<LiteratureItem[]> {
   const response = await api.get(`/nodes/${nodeId}/literature`);
+  return response.data;
+}
+
+export async function getLiteratureSuggestion(
+  nodeId: number,
+  relationship: string = "auto",
+  ignoreCache: boolean = false,
+  excludeIds: string[] = []
+): Promise<LiteratureItem> {
+  const response = await api.get(`/nodes/${nodeId}/literature/suggested`, {
+    params: {
+      relationship,
+      ignore_cache: ignoreCache,
+      exclude_ids: excludeIds.join(","),
+    },
+  });
   return response.data;
 }
 
 export async function addLiterature(
   nodeId: number,
-  link: string
+  link: string,
+  relationship: string = "similar"
 ): Promise<{ success: boolean }> {
   const response = await api.post(`/nodes/${nodeId}/literature`, null, {
-    params: { link },
+    params: { link, relationship },
   });
   return response.data;
 }

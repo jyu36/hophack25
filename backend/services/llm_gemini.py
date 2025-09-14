@@ -74,19 +74,32 @@ async def generate_candidates(ctx: Dict[str, Any], relationship: str, k: int = 1
         relationship=relationship,
         k=k,
     )
+    
+    print(f"[llm] Generating candidates with relationship: {relationship}")
+    print(f"[llm] Prompt preview: {prompt[:200]}...")
     try:
+        # Use different temperature based on relationship type to encourage diversity
+        temperature = 0.2
+        if relationship == "prior":
+            temperature = 0.3  # Slightly higher for more diversity
+        elif relationship == "builds_on":
+            temperature = 0.4  # Even higher for recent work
+        elif relationship == "contrast":
+            temperature = 0.5  # Highest for contrasting work
+            
         resp = model.generate_content(
             prompt,
-            generation_config={"response_mime_type": "application/json", "temperature": 0.2},
+            generation_config={"response_mime_type": "application/json", "temperature": temperature},
         )
-        print("[llm] got response")
+        print(f"[llm] got response for relationship {relationship}")
         txt = _resp_text(resp)
+        print(f"[llm] raw response for {relationship}: {txt}")
         data = json.loads(txt or "{}")
         papers = data.get("papers", [])
         out = []
         for p in papers:
             if "title" in p and "relationship" in p:
-                print("[llm] candidate", {"title": p["title"], "doi": p.get("doi"), "relationship": p["relationship"], "why": p.get("why","")})
+                print(f"[llm] candidate for {relationship}:", {"title": p["title"], "doi": p.get("doi"), "relationship": p["relationship"], "why": p.get("why","")})
                 out.append({"title": p["title"], "doi": p.get("doi"), "relationship": p["relationship"], "why": p.get("why","")})
         if not out:
             print("[llm] empty or invalid JSON; using fallback")

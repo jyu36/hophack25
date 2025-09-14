@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Check, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Experiment } from "../../types/research";
 import { formatDate } from "../../utils/helpers";
+import LiteratureSuggestions from "./LiteratureSuggestions";
 
 interface ExperimentCardProps {
   experiment: Experiment;
@@ -31,7 +32,9 @@ const ExperimentCard: React.FC<ExperimentCardProps> = ({ experiment }) => {
               <Clock className="h-4 w-4 text-yellow-600" />
             )}
           </div>
-          <h4 className="font-medium text-gray-900 w-48 break-words">{experiment.title}</h4>
+          <h4 className="font-medium text-gray-900 w-48 break-words">
+            {experiment.title}
+          </h4>
         </div>
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-500">
@@ -83,6 +86,14 @@ const ExperimentCard: React.FC<ExperimentCardProps> = ({ experiment }) => {
           </div>
         </div>
       )}
+
+      {/* Literature Suggestions - Always visible */}
+      <div className="border-t border-gray-200 p-4">
+        <LiteratureSuggestions
+          nodeId={experiment.id}
+          experimentTitle={experiment.title}
+        />
+      </div>
     </div>
   );
 };

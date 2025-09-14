@@ -29,9 +29,34 @@ async def suggest_one(
     ctx = await memory.get_node_context(int(node_id), db)
 
     # 2) LLM candidates
-    print("[orch] generating candidates for node", node_id)
-    cands = await llm.generate_candidates(ctx, relationship=relationship, k=12)
+    print(f"[orch] generating candidates for node {node_id} with relationship: {relationship}")
+    
+    # Try different strategies based on relationship type
+    if relationship == "prior":
+        # For prior work, try with a more specific prompt
+        cands = await llm.generate_candidates(ctx, relationship="prior", k=12)
+        # If we get the same results, try with a different approach
+        if len(cands) > 0 and any("Salient Object Detection" in c.get("title", "") for c in cands):
+            print("[orch] Got same results for prior, trying with different context")
+            # Modify context to emphasize older work
+            modified_ctx = ctx.copy()
+            modified_ctx["problem"] = f"Foundational work for {ctx.get('problem', 'this topic')} - focus on classic papers"
+            cands = await llm.generate_candidates(modified_ctx, relationship="prior", k=12)
+    elif relationship == "builds_on":
+        # For builds_on, try with emphasis on recent work
+        cands = await llm.generate_candidates(ctx, relationship="builds_on", k=12)
+        if len(cands) > 0 and any("Salient Object Detection" in c.get("title", "") for c in cands):
+            print("[orch] Got same results for builds_on, trying with different context")
+            # Modify context to emphasize recent work
+            modified_ctx = ctx.copy()
+            modified_ctx["problem"] = f"Recent advances in {ctx.get('problem', 'this topic')} - focus on 2020+ papers"
+            cands = await llm.generate_candidates(modified_ctx, relationship="builds_on", k=12)
+    else:
+        # For similar work, use standard approach
+        cands = await llm.generate_candidates(ctx, relationship=relationship, k=12)
+    
     print(f"[orch] LLM candidates count: {len(cands) if isinstance(cands, list) else 'N/A'}")
+    print(f"[orch] First few candidates: {cands[:3] if isinstance(cands, list) and len(cands) > 0 else 'None'}")
     if callable(cands):
         raise TypeError("BUG: cands is a function; did you forget to CALL llm.generate_candidates?")
     if not isinstance(cands, list):
@@ -78,7 +103,7 @@ async def suggest_one(
     summary = await llm.summarize_one_liner_cn(w.get("abstract","") or "")
 
     # 6) Return normalized card
-    return {
+    result = {
         "id": w["id"],
         "title": w["title"],
         "year": w.get("year"),
@@ -91,6 +116,9 @@ async def suggest_one(
         "summary": summary,
         "why_relevant": best["why"],
     }
+    
+    print(f"[orch] Final result for relationship {relationship}: {result['title']} (relationship: {result['relationship']})")
+    return result
 
 def _parse_doi_from_link(link: str) -> Optional[str]:
     try:

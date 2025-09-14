@@ -11,7 +11,6 @@ import ReactFlow, {
   ReactFlowInstance,
 } from "reactflow";
 import dagre from "dagre";
-import "reactflow/dist/style.css";
 
 import CustomNode from "./Node";
 import NodeDetailsModal from "./NodeDetailsModal";
@@ -107,6 +106,7 @@ const GraphView: React.FC<GraphViewProps> = ({
   // Apply layout
   const { nodes, edges } = getLayoutedElements(initialNodes, initialEdges);
 
+
   // Debug log to verify data
   console.log(
     "GraphView rendering with nodes:",
@@ -164,7 +164,7 @@ const GraphView: React.FC<GraphViewProps> = ({
   }));
 
   return (
-    <div className="relative w-full h-full bg-gray-50">
+    <div style={{ width: '100%', height: '600px' }}>
       <ReactFlow
         nodes={nodesWithCallback}
         edges={edgesWithStyle}

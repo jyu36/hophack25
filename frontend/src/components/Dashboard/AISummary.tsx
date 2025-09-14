@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ReactMarkdown from 'react-markdown';
 import {
   Brain,
   Calendar,
@@ -48,6 +49,8 @@ const FullViewModal: React.FC<FullViewModalProps> = ({
       text: "text-blue-900",
       iconText: "text-blue-600",
       contentText: "text-blue-800",
+      sectionBg: "bg-blue-50/50",
+      sectionBorder: "border-blue-200",
     },
     purple: {
       bg: "bg-purple-50",
@@ -55,10 +58,26 @@ const FullViewModal: React.FC<FullViewModalProps> = ({
       text: "text-purple-900",
       iconText: "text-purple-600",
       contentText: "text-purple-800",
+      sectionBg: "bg-purple-50/50",
+      sectionBorder: "border-purple-200",
     },
   };
 
   const currentColors = colors[colorScheme];
+
+  // 格式化内容为结构化显示
+  interface Section {
+    title: string;
+    content: string[];
+  }
+
+  const formatContent = (rawContent: string): Section[] => {
+    const lines = rawContent.split('\n').filter(line => line.trim());
+    // Simplistic formatting: just treat each line as a paragraph or a simple section
+    return [{ title: '', content: lines }];
+  };
+
+  const formattedSections = formatContent(content);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
@@ -75,17 +94,24 @@ const FullViewModal: React.FC<FullViewModalProps> = ({
             onClick={onClose}
             className={`p-1 rounded-full hover:bg-white hover:bg-opacity-20 ${currentColors.iconText}`}
           >
-            <X className="h-5 w-5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6 max-h-[70vh] overflow-y-auto">
-          <p
-            className={`text-sm whitespace-pre-wrap ${currentColors.contentText}`}
-          >
-            {content}
-          </p>
+          <div className="space-y-4">
+            {formattedSections.map((section, index) => (
+              <div key={index} className="space-y-2">
+                {/* Only display content, ignore title if empty */}
+                {section.content.map((paragraph, pIndex) => (
+                  <p key={pIndex} className={`text-sm ${currentColors.contentText} leading-relaxed`}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -169,8 +195,8 @@ const AISummary: React.FC<AISummaryProps> = ({
 
   return (
     <>
-      <div className="rounded-lg bg-white p-6 shadow">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="p-6 bg-white rounded-lg shadow">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-medium text-gray-900">
             AI Research Assistant
           </h2>
@@ -181,15 +207,15 @@ const AISummary: React.FC<AISummaryProps> = ({
               isRefreshing ? "animate-spin" : ""
             }`}
           >
-            <RefreshCw className="h-5 w-5" />
+            <RefreshCw className="w-5 h-5" />
           </button>
         </div>
 
         {/* Error State */}
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="p-4 mb-4 border border-red-200 rounded-lg bg-red-50">
             <div className="flex items-center">
-              <AlertCircle className="mr-2 h-5 w-5 text-red-600" />
+              <AlertCircle className="w-5 h-5 mr-2 text-red-600" />
               <div>
                 <h3 className="text-sm font-medium text-red-800">
                   Error loading summaries
@@ -197,7 +223,7 @@ const AISummary: React.FC<AISummaryProps> = ({
                 <p className="text-sm text-red-700">{error}</p>
                 <button
                   onClick={() => fetchSummaries(true)}
-                  className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+                  className="mt-2 text-sm text-red-600 underline hover:text-red-800"
                 >
                   Try again
                 </button>
@@ -208,20 +234,14 @@ const AISummary: React.FC<AISummaryProps> = ({
 
         <div className="space-y-6">
           {/* Project Overview */}
-          <div className="rounded-lg border border-blue-100 bg-blue-50">
+          <div className="border border-blue-100 rounded-lg bg-blue-50">
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <Brain className="mr-2 h-5 w-5 text-blue-600" />
+                  <Brain className="w-5 h-5 mr-2 text-blue-600" />
                   <h3 className="font-medium text-blue-900">
                     Project Overview
                   </h3>
-                  {overviewData && (
-                    <span className="ml-2 text-xs text-blue-600">
-                      ({overviewData.node_count} nodes,{" "}
-                      {overviewData.edge_count} edges)
-                    </span>
-                  )}
                 </div>
                 <button
                   onClick={() => setIsProjectModalOpen(true)}
@@ -236,39 +256,35 @@ const AISummary: React.FC<AISummaryProps> = ({
             <div className="px-4 pb-4">
               {isLoading ? (
                 <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <div className="w-4 h-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
                   <p className="text-sm text-blue-600">
                     Loading project overview...
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-blue-800 whitespace-pre-wrap line-clamp-3">
-                  {projectSummary}
-                </p>
+                <div className="text-sm text-blue-800">
+                  <div className="px-1 line-clamp-4">
+                    {projectSummary}
+                  </div>
+                </div>
               )}
             </div>
           </div>
 
           {/* Weekly Update */}
-          <div className="rounded-lg border border-purple-100 bg-purple-50">
+          <div className="border border-purple-100 rounded-lg bg-purple-50">
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <Calendar className="mr-2 h-5 w-5 text-purple-600" />
+                  <Calendar className="w-5 h-5 mr-2 text-purple-600" />
                   <h3 className="font-medium text-purple-900">Weekly Update</h3>
-                  {weeklyData && (
-                    <span className="ml-2 text-xs text-purple-600">
-                      ({weeklyData.node_count} nodes, {weeklyData.edge_count}{" "}
-                      edges)
-                    </span>
-                  )}
                 </div>
                 <button
                   onClick={() => setIsWeeklyModalOpen(true)}
                   disabled={isLoading}
                   className="flex items-center rounded-md bg-purple-100 px-2.5 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-200 transition-colors disabled:opacity-50"
                 >
-                  <Maximize2 className="mr-1.5 h-3.5 w-3.5" />
+                  <Maximize2 className="w-3.5 h-3.5 mr-1.5" />
                   View Full
                 </button>
               </div>
@@ -276,15 +292,17 @@ const AISummary: React.FC<AISummaryProps> = ({
             <div className="px-4 pb-4">
               {isLoading ? (
                 <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                  <div className="w-4 h-4 border-b-2 border-purple-600 rounded-full animate-spin"></div>
                   <p className="text-sm text-purple-600">
                     Loading weekly update...
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-purple-800 whitespace-pre-wrap line-clamp-3">
-                  {weeklyUpdate}
-                </p>
+                <div className="text-sm text-purple-800">
+                  <div className="px-1 line-clamp-4">
+                    {weeklyUpdate}
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -292,14 +310,14 @@ const AISummary: React.FC<AISummaryProps> = ({
           {/* Download Presentation */}
           <button
             disabled={isLoading}
-            className="flex w-full items-center justify-center space-x-2 rounded-lg border border-gray-200 bg-white p-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
+            className="flex items-center justify-center w-full p-3 space-x-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 disabled:opacity-50"
           >
-            <Presentation className="h-5 w-5" />
+            <Presentation className="w-5 h-5" />
             <span>Download Latest Presentation</span>
           </button>
         </div>
 
-        <div className="mt-4 text-right text-xs text-gray-500">
+        <div className="mt-4 text-xs text-right text-gray-500">
           Last updated: {formatDate(lastUpdated)}
           {overviewData?.cache_hit && (
             <span className="ml-2 text-green-600">(cached)</span>
@@ -311,7 +329,7 @@ const AISummary: React.FC<AISummaryProps> = ({
       <FullViewModal
         title="Project Overview"
         content={projectSummary}
-        icon={<Brain className="h-5 w-5" />}
+        icon={<Brain className="w-5 h-5" />}
         isOpen={isProjectModalOpen}
         onClose={() => setIsProjectModalOpen(false)}
         colorScheme="blue"
@@ -320,7 +338,7 @@ const AISummary: React.FC<AISummaryProps> = ({
       <FullViewModal
         title="Weekly Update"
         content={weeklyUpdate}
-        icon={<Calendar className="h-5 w-5" />}
+        icon={<Calendar className="w-5 h-5" />}
         isOpen={isWeeklyModalOpen}
         onClose={() => setIsWeeklyModalOpen(false)}
         colorScheme="purple"

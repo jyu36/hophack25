@@ -5,10 +5,10 @@ import {
   GraphOverview,
   LiteratureReference,
   AddLiteratureResponse,
-  DeleteResponse
-} from '../types/api';
-import { ResearchNode, NodeDetails } from '../types/research';
-import { withRetry } from '../utils/retry';
+  DeleteResponse,
+} from "../types/api";
+import { ResearchNode, NodeDetails } from "../types/research";
+import { withRetry } from "../utils/retry";
 
 const RETRY_OPTIONS = {
   maxRetries: 3,
@@ -16,19 +16,22 @@ const RETRY_OPTIONS = {
   maxDelay: 5000,
   shouldRetry: (error: any) => {
     // Retry on network errors and 5xx server errors
-    if (error.name === 'TypeError' || error.name === 'NetworkError') return true;
+    if (error.name === "TypeError" || error.name === "NetworkError")
+      return true;
     if (error.response?.status >= 500) return true;
     return false;
-  }
+  },
 };
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 class ExperimentService {
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail?.message || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        error.detail?.message || `HTTP error! status: ${response.status}`
+      );
     }
     return response.json();
   }
@@ -38,30 +41,31 @@ class ExperimentService {
     options: RequestInit = {},
     customRetryOptions?: typeof RETRY_OPTIONS
   ): Promise<T> {
-    return withRetry(
-      async () => {
-        const response = await fetch(url, {
-          ...options,
-          headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-          },
-        });
-        return this.handleResponse<T>(response);
-      },
-      customRetryOptions || RETRY_OPTIONS
-    );
+    return withRetry(async () => {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
+      return this.handleResponse<T>(response);
+    }, customRetryOptions || RETRY_OPTIONS);
   }
 
   // Node operations
   async createNode(data: CreateNodeRequest): Promise<ResearchNode> {
     return this.makeRequest<ResearchNode>(`${API_BASE_URL}/nodes`, {
-      method: 'POST',
-      body: JSON.stringify(data)
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
-  async getNode(nodeId: number, withParents = true, withChildren = true): Promise<{
+  async getNode(
+    nodeId: number,
+    withParents = true,
+    withChildren = true
+  ): Promise<{
     node: ResearchNode;
     parents: ResearchNode[];
     children: ResearchNode[];
@@ -71,17 +75,23 @@ class ExperimentService {
     );
   }
 
-  async updateNode(nodeId: number, data: UpdateNodeRequest): Promise<ResearchNode> {
+  async updateNode(
+    nodeId: number,
+    data: UpdateNodeRequest
+  ): Promise<ResearchNode> {
     return this.makeRequest<ResearchNode>(`${API_BASE_URL}/nodes/${nodeId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data)
+      method: "PATCH",
+      body: JSON.stringify(data),
     });
   }
 
-  async deleteNode(nodeId: number, forceDelete = false): Promise<DeleteResponse> {
+  async deleteNode(
+    nodeId: number,
+    forceDelete = false
+  ): Promise<DeleteResponse> {
     return this.makeRequest<DeleteResponse>(
       `${API_BASE_URL}/nodes/${nodeId}?force_delete=${forceDelete}`,
-      { method: 'DELETE' }
+      { method: "DELETE" }
     );
   }
 
@@ -99,8 +109,8 @@ class ExperimentService {
     extra_data?: Record<string, any>;
   }): Promise<Edge> {
     return this.makeRequest<Edge>(`${API_BASE_URL}/edges`, {
-      method: 'POST',
-      body: JSON.stringify(data)
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
@@ -113,55 +123,71 @@ class ExperimentService {
     }
   ): Promise<Edge> {
     return this.makeRequest<Edge>(`${API_BASE_URL}/edges/${edgeId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data)
+      method: "PATCH",
+      body: JSON.stringify(data),
     });
   }
 
   async deleteEdge(edgeId: number): Promise<DeleteResponse> {
     return this.makeRequest<DeleteResponse>(`${API_BASE_URL}/edges/${edgeId}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
   }
 
   // Literature operations
-  async addLiterature(nodeId: number, link: string, relationship = 'similar'): Promise<AddLiteratureResponse> {
+  async addLiterature(
+    nodeId: number,
+    link: string,
+    relationship = "similar"
+  ): Promise<AddLiteratureResponse> {
     return this.makeRequest<AddLiteratureResponse>(
-      `${API_BASE_URL}/nodes/${nodeId}/literature?link=${encodeURIComponent(link)}&relationship=${relationship}`,
-      { method: 'POST' }
+      `${API_BASE_URL}/nodes/${nodeId}/literature?link=${encodeURIComponent(
+        link
+      )}&relationship=${relationship}`,
+      { method: "POST" }
     );
   }
 
   async getNodeLiterature(nodeId: number): Promise<LiteratureReference[]> {
-    return this.makeRequest<LiteratureReference[]>(`${API_BASE_URL}/nodes/${nodeId}/literature`);
+    return this.makeRequest<LiteratureReference[]>(
+      `${API_BASE_URL}/nodes/${nodeId}/literature`
+    );
   }
 
   async getSuggestedLiterature(
     nodeId: number,
     ignoreCache = false,
-    relationship = 'auto'
+    relationship = "auto"
   ): Promise<LiteratureReference> {
     return this.makeRequest<LiteratureReference>(
       `${API_BASE_URL}/nodes/${nodeId}/literature/suggested?ignore_cache=${ignoreCache}&relationship=${relationship}`
     );
   }
 
-  async deleteLiterature(nodeId: number, link: string): Promise<{ success: boolean }> {
+  async deleteLiterature(
+    nodeId: number,
+    link: string
+  ): Promise<{ success: boolean }> {
     return this.makeRequest<{ success: boolean }>(
       `${API_BASE_URL}/nodes/${nodeId}/literature/${encodeURIComponent(link)}`,
-      { method: 'DELETE' }
+      { method: "DELETE" }
     );
   }
 
   // Additional methods for graph functionality
   async getNodeDetails(nodeId: number): Promise<NodeDetails> {
-    return this.makeRequest<NodeDetails>(`${API_BASE_URL}/nodes/${nodeId}/details`);
+    return this.makeRequest<NodeDetails>(
+      `${API_BASE_URL}/nodes/${nodeId}/details`
+    );
   }
 
   async createBranch(nodeId: number): Promise<ResearchNode> {
-    return this.makeRequest<ResearchNode>(`${API_BASE_URL}/nodes/${nodeId}/branch`, {
-      method: 'POST'
-    });
+    return this.makeRequest<ResearchNode>(
+      `${API_BASE_URL}/nodes/${nodeId}/branch`,
+      {
+        method: "POST",
+      }
+    );
   }
 
   // Lineage operations
@@ -189,7 +215,7 @@ class ExperimentService {
       const nodeInfo = await this.getNode(currentNodeId, true, false);
 
       for (const parent of nodeInfo.parents) {
-        if (!ancestors.find(a => a.id === parent.id)) {
+        if (!ancestors.find((a) => a.id === parent.id)) {
           ancestors.push(parent);
         }
         await fetchAncestors(parent.id);
@@ -204,7 +230,7 @@ class ExperimentService {
       const nodeInfo = await this.getNode(currentNodeId, false, true);
 
       for (const child of nodeInfo.children) {
-        if (!descendants.find(d => d.id === child.id)) {
+        if (!descendants.find((d) => d.id === child.id)) {
           descendants.push(child);
         }
         await fetchDescendants(child.id);
@@ -215,28 +241,38 @@ class ExperimentService {
     visited.clear();
 
     // Fetch all ancestors and descendants
-    await Promise.all([
-      fetchAncestors(nodeId),
-      fetchDescendants(nodeId)
-    ]);
+    await Promise.all([fetchAncestors(nodeId), fetchDescendants(nodeId)]);
 
     // Get all edges in the lineage
     const graphOverview = await this.getGraphOverview();
-    const allNodeIds = new Set([rootNode.id, ...ancestors.map(a => a.id), ...descendants.map(d => d.id)]);
+    const allNodeIds = new Set([
+      rootNode.id,
+      ...ancestors.map((a) => a.id),
+      ...descendants.map((d) => d.id),
+    ]);
 
-    const filteredEdges = graphOverview.edges.filter(edge =>
-      allNodeIds.has(edge.from_experiment_id) && allNodeIds.has(edge.to_experiment_id)
+    const filteredEdges = graphOverview.edges.filter(
+      (edge) =>
+        allNodeIds.has(edge.from_experiment_id) &&
+        allNodeIds.has(edge.to_experiment_id)
     );
 
     return {
       node: rootNode,
       ancestors,
       descendants,
-      lineageEdges: filteredEdges
+      lineageEdges: filteredEdges,
     };
   }
 
-  async getAncestorPath(nodeId: number, targetAncestorId?: number): Promise<{
+  async getContextKeywords(): Promise<string[]> {
+    return this.makeRequest<string[]>(`${API_BASE_URL}/context-keywords`);
+  }
+
+  async getAncestorPath(
+    nodeId: number,
+    targetAncestorId?: number
+  ): Promise<{
     path: ResearchNode[];
     edges: Edge[];
   }> {
@@ -268,8 +304,10 @@ class ExperimentService {
         if (found) {
           // Add edge information
           const graphOverview = await this.getGraphOverview();
-          const edge = graphOverview.edges.find(e =>
-            e.from_experiment_id === parent.id && e.to_experiment_id === currentNodeId
+          const edge = graphOverview.edges.find(
+            (e) =>
+              e.from_experiment_id === parent.id &&
+              e.to_experiment_id === currentNodeId
           );
           if (edge) edges.push(edge);
           return true;

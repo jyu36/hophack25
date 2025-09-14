@@ -119,3 +119,4 @@ logs
 ehthumbs.db
 Thumbs.db
 .DS_Store
+/backend/research_assistant.db

@@ -6,13 +6,14 @@ import LiteratureSuggestions from "./LiteratureSuggestions";
 
 interface ExperimentCardProps {
   experiment: Experiment;
+  className?: string;
 }
 
-const ExperimentCard: React.FC<ExperimentCardProps> = ({ experiment }) => {
+const ExperimentCard: React.FC<ExperimentCardProps> = ({ experiment, className = '' }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="rounded-lg border border-gray-200 hover:bg-gray-50">
+    <div className={`rounded-lg border border-gray-200 hover:bg-gray-50 ${className}`}>
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center space-x-3">
           <div
@@ -57,31 +58,20 @@ const ExperimentCard: React.FC<ExperimentCardProps> = ({ experiment }) => {
         <div className="border-t border-gray-200 p-4">
           <div className="space-y-4">
             <div>
-              <h5 className="text-sm font-medium text-gray-700">Motivation</h5>
-              <p className="mt-1 text-sm text-gray-600">
+              <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50/50">
+                <h5 className="text-sm font-medium text-gray-700">Motivation</h5>
+              </div>
+              <p className="mt-2 text-sm text-gray-600 px-1">
                 {experiment.motivation || "No motivation provided"}
               </p>
             </div>
             <div>
-              <h5 className="text-sm font-medium text-gray-700">
-                Basic Results
-              </h5>
-              <p className="mt-1 text-sm text-gray-600">
+              <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50/50">
+                <h5 className="text-sm font-medium text-gray-700">Basic Results</h5>
+              </div>
+              <p className="mt-2 text-sm text-gray-600 px-1">
                 {experiment.description}
               </p>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium text-gray-700">Keywords</h5>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {experiment.keywords.map((keyword: string, index: number) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
-                  >
-                    {keyword}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
         </div>

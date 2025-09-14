@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
+import { Button, Modal, List } from "antd";
 import ChatPanel from "./Chat/ChatPanel";
 import GraphPanel from "./Graph/GraphPanel";
 import ResizableDivider from "./Common/ResizableDivider";
 import { useChat } from "../hooks/useChat";
 import { useExperiments } from "../hooks/useExperiments";
 import { ExperimentSuggestion } from "../types/research";
+import { experimentService } from "../services/experimentService";
 
 interface AIChatResearchAssistantProps {
   initialSuggestions?: ExperimentSuggestion[];
@@ -32,6 +34,20 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
 
   // State for panel widths
   const [chatPanelWidth, setChatPanelWidth] = useState(400);
+  const [isKeywordsModalVisible, setIsKeywordsModalVisible] = useState(false);
+  const [keywords, setKeywords] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchKeywords = async () => {
+      try {
+        const fetchedKeywords = await experimentService.getContextKeywords();
+        setKeywords(fetchedKeywords);
+      } catch (error) {
+        console.error("Failed to fetch keywords:", error);
+      }
+    };
+    fetchKeywords();
+  }, []);
 
   const handleAcceptSuggestion = (suggestion: ExperimentSuggestion) => {
     // Instead of using addExperiment, we'll use the API through useExperiments hook
@@ -101,15 +117,44 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
               AI Research Assistant
             </h1>
           </div>
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <div className="flex items-center space-x-4 text-sm text-gray-600 flex-shrink-0">
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => setIsKeywordsModalVisible(true)}
+              className="flex-shrink-0"
+            >
+              Keywords
+            </Button>
             <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span>Accepted ({acceptedCount})</span>
+              <div className="w-3 h-3 bg-green-500 rounded-full flex-shrink-0"></div>
+              <span className="whitespace-nowrap">
+                Accepted ({acceptedCount})
+              </span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
               <span>For Later ({pendingCount})</span>
             </div>
+
+            <Modal
+              title="Keywords Context"
+              open={isKeywordsModalVisible}
+              onCancel={() => setIsKeywordsModalVisible(false)}
+              footer={null}
+              width={600}
+            >
+              <List
+                dataSource={keywords}
+                renderItem={(keyword) => (
+                  <List.Item>
+                    <span className="text-gray-800">{keyword}</span>
+                  </List.Item>
+                )}
+                bordered
+                className="mt-4"
+              />
+            </Modal>
           </div>
         </div>
       </header>

@@ -104,7 +104,7 @@ const ExperimentNode: React.FC<NodeProps<ExperimentNodeData>> = ({ data }) => {
         <div
           style={{
             width: 280,
-            height: 80,
+            height: experiment.id <= 3 ? 180 : 80, // Taller for nodes with images
             backgroundColor: "white",
             border: `2px solid ${getStatusColor(experiment.status)}`,
             borderRadius: 8,
@@ -117,6 +117,8 @@ const ExperimentNode: React.FC<NodeProps<ExperimentNodeData>> = ({ data }) => {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
           {/* Title row */}
@@ -157,6 +159,39 @@ const ExperimentNode: React.FC<NodeProps<ExperimentNodeData>> = ({ data }) => {
             />
           </div>
 
+          {/* Hardcoded images for experiments with IDs 1, 2, and 3 */}
+          {experiment.id <= 3 && (
+            <div
+              style={{
+                flex: 1,
+                margin: "12px -12px -12px -12px",
+                position: "relative",
+                height: "100px",
+                overflow: "hidden",
+                borderTop: "1px solid #f0f0f0",
+                backgroundColor: "#f5f5f5",
+              }}
+            >
+              <img
+                src={`/images/image_${
+                  experiment.id === 1
+                    ? "4.gif"
+                    : experiment.id === 2
+                    ? "2.png"
+                    : "3.png"
+                }`}
+                alt={`Visualization for ${experiment.title}`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  borderRadius: "0 0 6px 6px",
+                  imageRendering: experiment.id === 1 ? "auto" : "crisp-edges",
+                }}
+              />
+            </div>
+          )}
+
           {/* Status indicator row */}
           <div
             style={{
@@ -165,6 +200,7 @@ const ExperimentNode: React.FC<NodeProps<ExperimentNodeData>> = ({ data }) => {
               justifyContent: "space-between",
               fontSize: 12,
               color: "#666",
+              marginTop: "auto",
             }}
           >
             <span style={{ textTransform: "capitalize" }}>

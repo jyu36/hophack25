@@ -119,14 +119,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
             <StatsCard
-              title="Total Experiments"
+              title={<>Total<br />Experiments</>}
               value={counts.total}
               icon={LayoutGrid}
               description="All research experiments"
               trend={{ value: counts.total, label: "total" }}
             />
             <StatsCard
-              title="Completed Experiments"
+              title={<>Completed<br />Experiments</>}
               value={counts.completed}
               icon={Lightbulb}
               description="Successfully completed experiments"
@@ -137,14 +137,14 @@ const Dashboard: React.FC<DashboardProps> = ({
               }}
             />
             <StatsCard
-              title="Planned Experiments"
+              title={<>Planned<br />Experiments</>}
               value={counts.planned}
               icon={Clock}
               description="Experiments for later consideration"
               trend={{ value: counts.planned, label: "planned" }}
             />
             <StatsCard
-              title="Connected Ideas"
+              title={<>Connected<br />Ideas</>}
               value={counts.total > 1 ? counts.total - 1 : 0}
               icon={GitBranch}
               description="Relationships between experiments"
@@ -163,7 +163,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 pb-8">
           {/* Experiments Section */}
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-white rounded-lg shadow flex flex-col h-full">
             {/* Tabs Header */}
             <div className="border-b border-gray-200">
               <div className="flex items-center justify-between px-6 pt-6">
@@ -204,7 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Content Area */}
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto flex-grow" style={{maxHeight: "460px"}}>
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center text-gray-500">
@@ -239,7 +239,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* AI Summary Section */}
           <AISummary
-            projectSummary="Your research focuses on exploring novel approaches to machine learning optimization, with 5 completed experiments showing promising results in gradient descent techniques. Recent findings suggest a 23% improvement in convergence speed."
+            projectSummary="Research focus: Exploring novel approaches to machine learning optimization. We have completed 5 experiments in gradient descent techniques, showing promising results. Recent findings indicate a 23% improvement in convergence speed."
             weeklyUpdate="This week: 2 new experiments were completed, focusing on adaptive learning rates. Key achievement: Developed a new momentum-based approach that reduced training time by 15%."
             lastUpdated={new Date()}
           />

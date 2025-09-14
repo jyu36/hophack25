@@ -1,0 +1,97 @@
+// API Type Definitions for Assistant Service
+
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  actions?: string[];
+}
+
+export interface ConversationContext {
+  currentIteration: number;
+  messageCount: number;
+  lastToolCalls: string[];
+}
+
+export interface StartConversationRequest {
+  sessionId?: string;
+  useContext?: boolean;
+}
+
+export interface StartConversationResponse {
+  sessionId: string;
+  message: string;
+  context: ConversationContext;
+}
+
+export interface SendMessageRequest {
+  message: string;
+  context?: ConversationContext;
+}
+
+export interface SendMessageResponse {
+  response: string;
+  context: ConversationContext;
+  actions: string[];
+  timestamp: string;
+}
+
+export interface ConversationHistory {
+  sessionId: string;
+  messages: ConversationMessage[];
+  context: ConversationContext;
+}
+
+export interface RefreshContextResponse {
+  message: string;
+  context: ConversationContext;
+}
+
+export interface ClearConversationResponse {
+  message: string;
+  sessionId: string;
+}
+
+export interface HealthCheckResponse {
+  status: 'healthy' | 'unhealthy';
+  timestamp: string;
+  version: string;
+  uptime: number;
+}
+
+export interface ApiError {
+  error: string;
+  message: string;
+  statusCode: number;
+  timestamp: string;
+}
+
+// Session management types
+export interface Session {
+  id: string;
+  createdAt: string;
+  lastActivity: string;
+  context: ConversationContext;
+  messages: ConversationMessage[];
+}
+
+export interface SessionStore {
+  [sessionId: string]: Session;
+}
+
+// Request/Response types for Express
+export interface RequestWithSession extends Express.Request {
+  sessionId?: string;
+  session?: Session;
+  params: { [key: string]: string };
+  body: any;
+}
+
+// Environment configuration
+export interface ServerConfig {
+  port: number;
+  host: string;
+  corsOrigin: string;
+  graphApiBase: string;
+  logLevel: string;
+}

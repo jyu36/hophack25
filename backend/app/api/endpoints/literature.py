@@ -5,9 +5,9 @@ from sqlalchemy.orm import Session
 from ...database import get_db
 from ...models.literature import Literature
 from ...models.experiment import Experiment
-from backend.services import orchestrator
-from backend.services import openalex as openalex_svc
-from backend.services import llm_gemini as llm
+from services import orchestrator
+from services import openalex as openalex_svc
+from services import llm_gemini as llm
 import re
 import traceback
 from fastapi.responses import JSONResponse

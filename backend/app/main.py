@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from .api.endpoints import experiments, context_keywords, literature, notes, discussion, feedback
+from .api.endpoints import slides as slides_endpoints
 from .database import engine, Base
 
 # Create database tables
@@ -25,6 +27,12 @@ app.include_router(literature.router, tags=["literature"])
 app.include_router(notes.router, tags=["notes"])
 app.include_router(discussion.router, tags=["discussion"])
 app.include_router(feedback.router, tags=["feedback"])
+app.include_router(slides_endpoints.router, tags=["slides"])
+
+BASE_DIR = Path(__file__).resolve().parents[1]       
+GENERATED_DIR = BASE_DIR / "generated"                 
+GENERATED_DIR.mkdir(exist_ok=True)
+app.mount("/download", StaticFiles(directory=GENERATED_DIR), name="download")
 
 @app.get("/")
 def read_root():

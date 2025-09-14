@@ -14,6 +14,11 @@ import healthRoutes from './routes/health';
 import conversationRoutes from './routes/conversations';
 import summaryRoutes from './routes/summaries';
 import fileRoutes from './routes/files';
+import toolsRoutes from './routes/tools';
+import fileSearchRoutes from './routes/fileSearch';
+
+// Import services
+import { fileSearchService } from './services/fileSearchService';
 
 const logger = createCategoryLogger('SERVER');
 
@@ -62,6 +67,8 @@ app.use('/api/health', healthRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/summaries', summaryRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/tools', toolsRoutes);
+app.use('/api/file-search', fileSearchRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -74,7 +81,9 @@ app.get('/', (req, res) => {
       health: '/api/health',
       conversations: '/api/conversations',
       summaries: '/api/summaries',
-      files: '/api/files'
+      files: '/api/files',
+      tools: '/api/tools',
+      fileSearch: '/api/file-search'
     }
   });
 });
@@ -97,6 +106,17 @@ const startServer = async () => {
       logger.warn('GRAPH_API_BASE not set, using default: http://localhost:8000');
     }
 
+    // Initialize file search service
+    try {
+      await fileSearchService.initializeAssistant();
+      logger.info('File search service initialized successfully');
+    } catch (error) {
+      logger.warn('Failed to initialize file search service', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      // Continue startup even if file search fails
+    }
+
     const server = app.listen(config.port, config.host, () => {
       logger.info('Assistant service started successfully', {
         port: config.port,
@@ -116,6 +136,13 @@ const startServer = async () => {
     // Graceful shutdown
     const gracefulShutdown = (signal: string) => {
       logger.info(`Received ${signal}, shutting down gracefully`);
+      
+      // Cleanup file search service
+      fileSearchService.cleanup().catch(error => {
+        logger.warn('Error during file search cleanup', {
+          error: error instanceof Error ? error.message : String(error)
+        });
+      });
       
       server.close(() => {
         logger.info('Server closed successfully');

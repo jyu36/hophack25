@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { z } from "zod";
+import { fileSearchService } from "./server/services/fileSearchService";
 
 const BASE_URL = process.env.GRAPH_API_BASE || "http://127.0.0.1:8000";
 
@@ -272,6 +273,19 @@ export const deleteContextKeyword = {
   }
 };
 
+// File Search Tool
+export const searchFiles = {
+  name: "search_files",
+  description: "Search through uploaded files using vector search to find relevant content based on a query",
+  schema: z.object({
+    query: z.string().describe("The search query to find relevant content in uploaded files")
+  }),
+  run: async (args: unknown) => {
+    const { query } = searchFiles.schema.parse(args);
+    return await fileSearchService.searchFiles(query);
+  }
+};
+
 // Export all tools
 export const tools = [
   // Graph Reading Tools
@@ -299,7 +313,10 @@ export const tools = [
   
   // Context Management
   addContextKeyword,
-  deleteContextKeyword
+  deleteContextKeyword,
+  
+  // File Search
+  searchFiles
 ];
 
 // Generate OpenAI function calling specifications

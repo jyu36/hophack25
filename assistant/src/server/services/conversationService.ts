@@ -101,9 +101,17 @@ export class ConversationService {
         ? conversationContextToAgentContext(request.context, session.messages)
         : undefined;
 
+      // Enhance message with file search prompt if files are attached
+      let enhancedMessage = request.message;
+      if (request.fileIds && request.fileIds.length > 0) {
+        enhancedMessage = `${request.message}
+
+[IMPORTANT: You have access to uploaded files. Please use the search_files tool to search through these files for relevant information before responding. The file IDs are: ${request.fileIds.join(', ')}]`;
+      }
+
       // Process message with assistant (including file attachments)
       const { response, newContext, actions } = await this.assistant.processMessage(
-        request.message, 
+        enhancedMessage, 
         agentContext,
         request.fileIds
       );

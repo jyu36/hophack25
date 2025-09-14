@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { createCategoryLogger } from '../../logger';
 import { FileUploadResponse, FileInfo } from '../../types/api';
+import { fileSearchService } from './fileSearchService';
 
 const logger = createCategoryLogger('FILE_UPLOAD');
 
@@ -46,6 +47,18 @@ export class FileUploadService {
         filename: file.originalname || file.name,
         size: file.size
       });
+
+      // Attach file to search assistant for vector search
+      try {
+        await fileSearchService.attachFiles([response.id]);
+        logger.info('File attached to search assistant', { fileId: response.id });
+      } catch (searchError) {
+        logger.warn('Failed to attach file to search assistant', {
+          fileId: response.id,
+          error: searchError instanceof Error ? searchError.message : String(searchError)
+        });
+        // Don't fail the upload if search attachment fails
+      }
 
       return fileResponse;
     } catch (error) {

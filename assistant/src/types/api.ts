@@ -27,6 +27,7 @@ export interface StartConversationResponse {
 export interface SendMessageRequest {
   message: string;
   context?: ConversationContext;
+  fileIds?: string[]; // OpenAI file IDs for uploaded files
 }
 
 export interface SendMessageResponse {
@@ -126,4 +127,25 @@ export interface GraphOverview {
     type: string;
     label: string;
   }>;
+}
+
+// File upload types
+export interface FileUploadRequest {
+  file: File;
+  purpose?: 'assistants' | 'fine-tune' | 'batch';
+}
+
+export interface FileUploadResponse {
+  fileId: string;
+  filename: string;
+  size: number;
+  purpose: string;
+  created_at: string;
+}
+
+export interface FileInfo {
+  fileId: string;
+  filename: string;
+  size: number;
+  uploadedAt: string;
 }

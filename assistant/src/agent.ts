@@ -15,6 +15,7 @@ export interface AgentMessage {
   content: string;
   toolCalls?: any[];
   toolCallId?: string;
+  fileIds?: string[]; // OpenAI file IDs for file attachments
 }
 
 export interface AgentContext {
@@ -264,7 +265,7 @@ export class ResearchAssistant {
     }
   }
 
-  async processMessage(userMessage: string, context?: AgentContext): Promise<{
+  async processMessage(userMessage: string, context?: AgentContext, fileIds?: string[]): Promise<{
     response: string;
     newContext: AgentContext;
     actions: string[];
@@ -279,10 +280,11 @@ export class ResearchAssistant {
       }
     ];
 
-    // Add user message
+    // Add user message with optional file attachments
     messages.push({
       role: "user",
-      content: userMessage
+      content: userMessage,
+      fileIds: fileIds
     });
 
     const actions: string[] = [];

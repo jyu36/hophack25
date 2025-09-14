@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@types/multer": "^2.0.0",
+    "multer": "^2.0.2"
+  }
+}

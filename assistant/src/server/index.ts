@@ -13,6 +13,7 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import healthRoutes from './routes/health';
 import conversationRoutes from './routes/conversations';
 import summaryRoutes from './routes/summaries';
+import fileRoutes from './routes/files';
 
 const logger = createCategoryLogger('SERVER');
 
@@ -60,6 +61,7 @@ app.use('/api/health', healthRoutes);
 // API routes
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/summaries', summaryRoutes);
+app.use('/api/files', fileRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -71,7 +73,8 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/api/health',
       conversations: '/api/conversations',
-      summaries: '/api/summaries'
+      summaries: '/api/summaries',
+      files: '/api/files'
     }
   });
 });
@@ -107,6 +110,7 @@ const startServer = async () => {
       console.log(`📊 Health check: http://${config.host}:${config.port}/api/health`);
       console.log(`💬 Conversations: http://${config.host}:${config.port}/api/conversations`);
       console.log(`📋 Summaries: http://${config.host}:${config.port}/api/summaries`);
+      console.log(`📁 Files: http://${config.host}:${config.port}/api/files`);
     });
 
     // Graceful shutdown

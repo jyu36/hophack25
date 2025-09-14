@@ -101,10 +101,11 @@ export class ConversationService {
         ? conversationContextToAgentContext(request.context, session.messages)
         : undefined;
 
-      // Process message with assistant
+      // Process message with assistant (including file attachments)
       const { response, newContext, actions } = await this.assistant.processMessage(
         request.message, 
-        agentContext
+        agentContext,
+        request.fileIds
       );
 
       // Convert AgentContext to ConversationContext

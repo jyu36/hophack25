@@ -39,16 +39,16 @@ const AllExperiments: React.FC<AllExperimentsProps> = ({
   }, [experiments, sortBy]);
 
   return (
-    <div className="flex-1 overflow-auto bg-gray-50 p-6">
-      <div className="mx-auto max-w-5xl">
+    <div className="flex-1 p-6 overflow-auto bg-gray-50">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4">
             <button
               onClick={onBack}
-              className="rounded-full p-2 hover:bg-gray-100"
+              className="p-2 rounded-full hover:bg-gray-100"
             >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
             <h1 className="text-2xl font-bold text-gray-900">
               All Past Experiments
@@ -60,10 +60,10 @@ const AllExperiments: React.FC<AllExperimentsProps> = ({
         </div>
 
         {/* Controls */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-700">Sort by:</span>
-            <div className="flex rounded-lg border border-gray-200 bg-white">
+            <div className="flex bg-white border border-gray-200 rounded-lg">
               <button
                 onClick={() => setSortBy("date")}
                 className={`px-4 py-2 text-sm font-medium transition-colors ${

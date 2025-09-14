@@ -26,10 +26,13 @@ const DashboardWrapper: React.FC = () => {
   );
 };
 
+// Create a stable empty array to prevent unnecessary re-renders
+const EMPTY_SUGGESTIONS: ExperimentSuggestion[] = [];
+
 const ResearchAssistantWrapper: React.FC = () => {
   return (
     <AIChatResearchAssistant
-      initialSuggestions={[]}
+      initialSuggestions={EMPTY_SUGGESTIONS}
     />
   );
 };

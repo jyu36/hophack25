@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ChatMessage, ExperimentSuggestion, FileAttachment, ConversationContext } from '../types/research';
 import { uploadFile, FileUploadResponse } from '../services/fileUploadService';
 import { assistantService } from '../services/assistantService';
@@ -14,49 +14,94 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
     lastToolCalls: []
   });
 
+  // Counter to ensure unique message IDs
+  const messageIdCounter = useRef(0);
+  const generateMessageId = useCallback(() => {
+    messageIdCounter.current += 1;
+    return `${Date.now()}-${messageIdCounter.current}`;
+  }, []);
+
   // Initialize conversation when the hook is first used
   useEffect(() => {
+    let cancelled = false;
+
     const initConversation = async () => {
+      if (cancelled) return;
+
       setIsLoading(true);
       setError(null);
       try {
         // Try to restore existing session
         const restored = await sessionService.restoreSession();
 
+        if (cancelled) return;
+
         if (restored) {
           // Fetch conversation history
-          const history = await assistantService.getHistory();
-          setMessages(history.messages);
-          setContext(history.context);
+          try {
+            const history = await assistantService.getHistory();
+            if (!cancelled) {
+              setMessages(history.messages);
+              setContext(history.context);
+            }
+          } catch (error) {
+            if (cancelled) return;
+            console.error('Failed to restore conversation history:', error);
+            // Session is invalid, clear it and start fresh
+            sessionService.clearSession();
+            const { message, sessionId } = await assistantService.startConversation();
+            sessionService.saveSession(sessionId);
+
+            if (!cancelled) {
+              const initialMessage: ChatMessage = {
+                id: generateMessageId(),
+                role: 'assistant',
+                content: message,
+                timestamp: new Date().toISOString()
+              };
+              setMessages([initialMessage]);
+            }
+          }
         } else {
           // Start new conversation
           const { message, sessionId } = await assistantService.startConversation();
           sessionService.saveSession(sessionId);
 
-          const initialMessage: ChatMessage = {
-            id: Date.now().toString(),
-            role: 'assistant',
-            content: message,
-            timestamp: new Date().toISOString()
-          };
-          setMessages([initialMessage]);
+          if (!cancelled) {
+            const initialMessage: ChatMessage = {
+              id: generateMessageId(),
+              role: 'assistant',
+              content: message,
+              timestamp: new Date().toISOString()
+            };
+            setMessages([initialMessage]);
+          }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to start conversation');
-        console.error('Error starting conversation:', err);
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to start conversation');
+          console.error('Error starting conversation:', err);
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     initConversation();
+
+    // Cleanup function to cancel ongoing operations
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Handle initial suggestions
   useEffect(() => {
     if (initialSuggestions && initialSuggestions.length > 0) {
       const suggestionsMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         role: 'assistant',
         content: 'Based on your uploaded document, here are some suggested experiments:',
         suggestions: initialSuggestions,
@@ -64,7 +109,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
       };
       setMessages(prev => [...prev, suggestionsMessage]);
     }
-  }, [initialSuggestions]);
+  }, [initialSuggestions, generateMessageId]);
 
   const addMessage = useCallback((message: ChatMessage) => {
     setMessages((prev) => [...prev, message]);
@@ -77,7 +122,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
 
     // Add user message
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       role: 'user',
       content,
       timestamp: new Date().toISOString()
@@ -90,7 +135,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
       const response = await assistantService.sendMessage(content, context);
 
       const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: generateMessageId(),
         role: 'assistant',
         content: response.response,
         timestamp: response.timestamp,
@@ -104,7 +149,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
       setError(err instanceof Error ? err.message : 'Failed to send message');
 
       const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: generateMessageId(),
         role: 'assistant',
         content: 'Sorry, there was an error generating a response. Please try again.',
         timestamp: new Date().toISOString()
@@ -114,12 +159,12 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
     } finally {
       setIsLoading(false);
     }
-  }, [addMessage, context]);
+  }, [addMessage, context, generateMessageId]);
 
   const sendFile = useCallback(async (file: File) => {
     // Create file attachment
     const fileAttachment: FileAttachment = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       name: file.name,
       type: file.type,
       size: file.size,
@@ -127,7 +172,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
 
     // Add user message with file attachment
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       role: 'user',
       content: `Uploaded file: ${file.name}`,
       attachments: [fileAttachment],
@@ -187,7 +232,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
       }
 
       const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: generateMessageId(),
         role: 'assistant',
         content: aiResponse.message,
         suggestions: aiResponse.suggestions,
@@ -199,7 +244,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
       console.error('Error processing file:', error);
 
       const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: generateMessageId(),
         role: 'assistant',
         content: `Sorry, there was an error processing your file: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again or contact support.`,
         timestamp: new Date().toISOString(),
@@ -209,7 +254,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
     } finally {
       setIsLoading(false);
     }
-  }, [addMessage]);
+  }, [addMessage, generateMessageId]);
 
   const clearConversation = useCallback(async () => {
     setIsLoading(true);
@@ -228,7 +273,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
       const { message, sessionId } = await assistantService.startConversation();
       sessionService.saveSession(sessionId);
       const initialMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         role: 'assistant',
         content: message,
         timestamp: new Date().toISOString()
@@ -240,7 +285,7 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [generateMessageId]);
 
   return {
     messages,

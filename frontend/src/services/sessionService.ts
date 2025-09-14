@@ -18,16 +18,10 @@ export const sessionService = {
   async restoreSession(): Promise<boolean> {
     const sessionId = this.getSession();
     if (sessionId) {
-      try {
-        assistantService.setSessionId(sessionId);
-        // Verify the session is still valid by fetching history
-        await assistantService.getHistory();
-        return true;
-      } catch (error) {
-        console.error('Failed to restore session:', error);
-        this.clearSession();
-        return false;
-      }
+      // Simply set the session ID and return true
+      // The calling code will handle fetching history
+      assistantService.setSessionId(sessionId);
+      return true;
     }
     return false;
   }

@@ -63,7 +63,26 @@ const LineageView: React.FC<LineageViewProps> = ({
 
     try {
       const data = await experimentService.getNodeLineage(selectedNodeId);
-      setLineageData(data);
+      // Transform the data to match LineageData interface
+      const transformedData: LineageData = {
+        node: data.node,
+        ancestors: data.ancestors,
+        descendants: data.descendants,
+        nodes: [], // Will be populated by processLineageData
+        edges: data.lineageEdges.map(edge => ({
+          id: edge.id?.toString() || `${edge.from_experiment_id}-${edge.to_experiment_id}`,
+          source: edge.from_experiment_id,
+          target: edge.to_experiment_id,
+          type: edge.relationship_type
+        })),
+        lineageEdges: data.lineageEdges.map(edge => ({
+          id: edge.id?.toString() || `${edge.from_experiment_id}-${edge.to_experiment_id}`,
+          source: edge.from_experiment_id,
+          target: edge.to_experiment_id,
+          type: edge.relationship_type
+        }))
+      };
+      setLineageData(transformedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load lineage data');
       console.error('Error fetching lineage data:', err);
@@ -86,7 +105,7 @@ const LineageView: React.FC<LineageViewProps> = ({
 
     // Filter nodes by maxDepth if specified
     const filteredNodes = maxDepth
-      ? lineageNodes.filter(node => node.depth <= maxDepth)
+      ? lineageNodes.filter(node => node.depth !== undefined && node.depth <= maxDepth)
       : lineageNodes;
 
     return calculateLineageLayout(filteredNodes, lineageData.lineageEdges, layoutConfig);
@@ -174,7 +193,7 @@ const LineageView: React.FC<LineageViewProps> = ({
   }, [onCreateBranch, fetchLineageData]);
 
   const handleLayoutChange = useCallback((newConfig: Partial<LineageLayoutConfig>) => {
-    setLayoutConfig(prev => ({ ...prev, ...newConfig }));
+    setLayoutConfig((prev: LineageLayoutConfig) => ({ ...prev, ...newConfig }));
   }, []);
 
   if (isLoading) {
@@ -329,4 +348,3 @@ const LineageView: React.FC<LineageViewProps> = ({
 };
 
 export default LineageView;
-

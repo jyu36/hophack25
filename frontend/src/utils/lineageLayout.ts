@@ -3,11 +3,17 @@ import { LineageData, LineageNode, LineageLayoutConfig, ResearchNode } from "../
 import { getStatusColor } from "./helpers";
 
 export const DEFAULT_LINEAGE_CONFIG: LineageLayoutConfig = {
+  direction: 'TB',
+  nodeSpacing: 150,
+  rankSpacing: 100,
+  nodePadding: 10,
+  animate: true,
+  centerContent: true,
+  fitView: true,
   nodeWidth: 280,
   nodeHeight: 120,
   horizontalSpacing: 150,
-  verticalSpacing: 100,
-  direction: 'TB'
+  verticalSpacing: 100
 };
 
 export interface LineageLayoutResult {
@@ -150,10 +156,11 @@ export function calculateLineageLayout(
   // Group nodes by generation
   const nodesByGeneration: Record<number, LineageNode[]> = {};
   lineageNodes.forEach(node => {
-    if (!nodesByGeneration[node.generation]) {
-      nodesByGeneration[node.generation] = [];
+    const generation = node.generation ?? 0;
+    if (!nodesByGeneration[generation]) {
+      nodesByGeneration[generation] = [];
     }
-    nodesByGeneration[node.generation].push(node);
+    nodesByGeneration[generation].push(node);
   });
 
   // Sort generations
@@ -202,8 +209,8 @@ export function calculateLineageLayout(
         position,
         data: {
           ...node,
-          isLineageRoot: node.isRoot,
-          lineageGeneration: node.generation,
+          isLineageRoot: node.isRoot ?? false,
+          lineageGeneration: node.generation ?? 0,
           lineageDepth: node.depth
         },
         style: {
@@ -265,9 +272,9 @@ export function calculateLineageLayout(
 export function createLineageNodeData(node: LineageNode) {
   return {
     ...node,
-    backgroundColor: node.isRoot ? '#dbeafe' : '#f9fafb',
-    borderColor: node.isRoot ? '#2563eb' : getStatusColor(node.status),
-    borderWidth: node.isRoot ? 3 : 2,
+    backgroundColor: (node.isRoot ?? false) ? '#dbeafe' : '#f9fafb',
+    borderColor: (node.isRoot ?? false) ? '#2563eb' : getStatusColor(node.status),
+    borderWidth: (node.isRoot ?? false) ? 3 : 2,
     showGeneration: true,
     showDepth: true,
   };

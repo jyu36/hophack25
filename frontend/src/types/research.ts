@@ -98,3 +98,63 @@ export interface AIResponse {
   message: string;
   suggestions: ExperimentSuggestion[];
 }
+
+// Lineage Types
+export interface LineageNode extends ResearchNode {
+  children?: LineageNode[];
+  parents?: LineageNode[];
+  depth?: number;
+  x?: number;
+  y?: number;
+  generation?: number;
+  isRoot?: boolean;
+  pathFromRoot?: number[];
+}
+
+export interface LineageData {
+  node: ResearchNode;
+  ancestors: ResearchNode[];
+  descendants: ResearchNode[];
+  nodes: LineageNode[];
+  edges: Array<{
+    id: string;
+    source: number;
+    target: number;
+    type?: string;
+  }>;
+  lineageEdges: Array<{
+    id: string;
+    source: number;
+    target: number;
+    type?: string;
+  }>;
+}
+
+export interface LineageLayoutConfig {
+  direction: 'TB' | 'LR' | 'RL' | 'BT';
+  nodeSpacing: number;
+  rankSpacing: number;
+  nodePadding: number;
+  animate: boolean;
+  centerContent: boolean;
+  fitView: boolean;
+  nodeWidth: number;
+  nodeHeight: number;
+  horizontalSpacing: number;
+  verticalSpacing: number;
+}
+
+export interface LineageViewProps {
+  selectedNodeId?: number;
+  onNodeSelect?: (nodeId: number) => void;
+  onNodeStatusChange?: (nodeId: number, status: NodeStatus) => Promise<void>;
+  onCreateBranch?: (nodeId: number) => Promise<void>;
+  showControls?: boolean;
+  maxDepth?: number;
+  data?: LineageData;
+  onNodeClick?: (node: LineageNode) => void;
+  onEdgeClick?: (edge: { source: number; target: number }) => void;
+  layoutConfig?: Partial<LineageLayoutConfig>;
+  isLoading?: boolean;
+  error?: string;
+}

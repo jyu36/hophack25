@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { Experiment } from '../../types/research';
 import FutureExperimentCard from './FutureExperimentCard';
@@ -16,14 +16,21 @@ const AllFutureExperiments: React.FC<AllFutureExperimentsProps> = ({
 }) => {
   const [sortBy, setSortBy] = useState<'date' | 'priority'>('date');
 
-  const sortedExperiments = [...experiments].sort((a, b) => {
+  // No internal sorting needed, as experiments are already filtered and sorted by the parent
+  const displayedExperiments = useMemo(() => {
+    let currentExperiments = [...experiments];
+
     if (sortBy === 'date') {
-      return new Date(b.plannedDate || b.createdAt).getTime() - new Date(a.plannedDate || a.createdAt).getTime();
-    } else {
+      currentExperiments.sort(
+        (a, b) =>
+          new Date(b.plannedDate || b.created_at).getTime() - new Date(a.plannedDate || a.created_at).getTime()
+      );
+    } else if (sortBy === 'priority') {
       // Sort by priority (if implemented)
-      return (b.priority || 0) - (a.priority || 0);
+      currentExperiments.sort((a, b) => (b.priority || 0) - (a.priority || 0));
     }
-  });
+    return currentExperiments;
+  }, [experiments, sortBy]);
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50 p-6">
@@ -87,7 +94,7 @@ const AllFutureExperiments: React.FC<AllFutureExperimentsProps> = ({
 
         {/* Experiments List */}
         <div className="space-y-4">
-          {sortedExperiments.map((experiment) => (
+          {displayedExperiments.map((experiment) => (
             <FutureExperimentCard key={experiment.id} experiment={experiment} />
           ))}
         </div>

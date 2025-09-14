@@ -5,7 +5,7 @@ import Legend from "./Legend";
 import KeywordList from "./KeywordList";
 import { Experiment, NodeDetails, NodeStatus } from "../../types/research";
 import { useExperiments } from "../../hooks/useExperiments";
-import experimentService from "../../services/experimentService";
+import { experimentService } from "../../services/experimentService";
 import { experimentsToNodes } from "../../utils/helpers";
 
 interface GraphPanelProps {
@@ -52,7 +52,7 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
   const handleNodeStatusChange = useCallback(
     async (nodeId: string, status: NodeStatus) => {
       try {
-        const success = await updateExperimentStatus(nodeId, status);
+        const success = await updateExperimentStatus(Number(nodeId), status);
         if (!success) {
           console.error("Failed to update experiment status");
         }
@@ -66,12 +66,12 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
   const handleCreateEdge = useCallback(
     async (fromId: string, toId: string, type: string, label?: string) => {
       try {
-        const edge = await experimentService.createEdge(
-          parseInt(fromId),
-          parseInt(toId),
-          type,
+        const edge = await experimentService.createEdge({
+          from_experiment_id: parseInt(fromId),
+          to_experiment_id: parseInt(toId),
+          relationship_type: type,
           label
-        );
+        });
         console.log("Created edge:", edge);
       } catch (error) {
         console.error("Error creating edge:", error);
@@ -93,7 +93,7 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
 
   const handleCreateBranch = useCallback(async (nodeId: string) => {
     try {
-      const newExperiment = await experimentService.createBranch(nodeId);
+      const newExperiment = await experimentService.createBranch(Number(nodeId));
       console.log("Created branch experiment:", newExperiment);
     } catch (error) {
       console.error("Error creating branch:", error);
@@ -103,7 +103,7 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
   const fetchNodeDetails = useCallback(
     async (nodeId: string): Promise<NodeDetails> => {
       try {
-        return await experimentService.getNodeDetails(nodeId);
+        return await experimentService.getNodeDetails(Number(nodeId));
       } catch (error) {
         console.error("Error fetching node details:", error);
         return {
@@ -118,29 +118,29 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
   );
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex flex-col flex-1">
       <div className="p-4 border-b bg-gray-50">
         <div className="flex items-center space-x-2">
           <Network size={20} className="text-green-600" />
           <h2 className="font-semibold">Research Graph</h2>
         </div>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="mt-1 text-sm text-gray-600">
           Visual representation of your research experiments
         </p>
       </div>
 
       {experiments.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
+        <div className="flex items-center justify-center flex-1 text-gray-500">
           <div className="text-center">
             <Network size={64} className="mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-medium mb-2">No experiments yet</h3>
+            <h3 className="mb-2 text-lg font-medium">No experiments yet</h3>
             <p className="text-sm">
               Start a conversation to get AI-suggested experiments!
             </p>
           </div>
         </div>
       ) : (
-        <div className="flex-1 relative">
+        <div className="relative flex-1">
           <GraphView
             nodes={nodes}
             edges={edges}

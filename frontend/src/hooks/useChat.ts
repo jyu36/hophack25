@@ -1,28 +1,66 @@
 import { useState, useCallback, useEffect } from 'react';
-import { ChatMessage, ExperimentSuggestion, FileAttachment } from '../types/research';
-import { generateAIResponse } from '../services/mockAI';
+import { ChatMessage, ExperimentSuggestion, FileAttachment, ConversationContext } from '../types/research';
 import { uploadFile, FileUploadResponse } from '../services/fileUploadService';
+import { assistantService } from '../services/assistantService';
+import { sessionService } from '../services/sessionService';
 
 export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      type: 'ai',
-      content: 'Hi! I\'m your AI research assistant. Share a research keyword or describe your project, and I\'ll suggest relevant experiments.',
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [context, setContext] = useState<ConversationContext>({
+    currentIteration: 0,
+    messageCount: 0,
+    lastToolCalls: []
+  });
+
+  // Initialize conversation when the hook is first used
+  useEffect(() => {
+    const initConversation = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Try to restore existing session
+        const restored = await sessionService.restoreSession();
+
+        if (restored) {
+          // Fetch conversation history
+          const history = await assistantService.getHistory();
+          setMessages(history.messages);
+          setContext(history.context);
+        } else {
+          // Start new conversation
+          const { message, sessionId } = await assistantService.startConversation();
+          sessionService.saveSession(sessionId);
+
+          const initialMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: message,
+            timestamp: new Date().toISOString()
+          };
+          setMessages([initialMessage]);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to start conversation');
+        console.error('Error starting conversation:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initConversation();
+  }, []);
 
   // Handle initial suggestions
   useEffect(() => {
     if (initialSuggestions && initialSuggestions.length > 0) {
       const suggestionsMessage: ChatMessage = {
         id: Date.now().toString(),
-        type: 'ai',
+        role: 'assistant',
         content: 'Based on your uploaded document, here are some suggested experiments:',
         suggestions: initialSuggestions,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
       };
       setMessages(prev => [...prev, suggestionsMessage]);
     }
@@ -33,47 +71,50 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
   }, []);
 
   const sendMessage = useCallback(async (content: string) => {
+    if (!content.trim()) return;
+
+    setError(null);
+
     // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      type: 'user',
+      role: 'user',
       content,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString()
     };
     addMessage(userMessage);
 
-    // Simulate AI response
+    // Send to assistant API
     setIsLoading(true);
     try {
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await assistantService.sendMessage(content, context);
 
-      const aiResponse = generateAIResponse(content);
-
-      const aiMessage: ChatMessage = {
+      const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: aiResponse.message,
-        suggestions: aiResponse.suggestions,
-        timestamp: new Date(),
+        role: 'assistant',
+        content: response.response,
+        timestamp: response.timestamp,
+        actions: response.actions
       };
 
-      addMessage(aiMessage);
-    } catch (error) {
-      console.error('Error generating AI response:', error);
+      addMessage(assistantMessage);
+      setContext(response.context);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError(err instanceof Error ? err.message : 'Failed to send message');
 
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        type: 'ai',
+        role: 'assistant',
         content: 'Sorry, there was an error generating a response. Please try again.',
-        timestamp: new Date(),
+        timestamp: new Date().toISOString()
       };
 
       addMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  }, [addMessage]);
+  }, [addMessage, context]);
 
   const sendFile = useCallback(async (file: File) => {
     // Create file attachment
@@ -87,10 +128,10 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
     // Add user message with file attachment
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      type: 'user',
+      role: 'user',
       content: `Uploaded file: ${file.name}`,
       attachments: [fileAttachment],
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
     addMessage(userMessage);
 
@@ -147,10 +188,10 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
 
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        type: 'ai',
+        role: 'assistant',
         content: aiResponse.message,
         suggestions: aiResponse.suggestions,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
       };
 
       addMessage(aiMessage);
@@ -159,9 +200,9 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
 
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        type: 'ai',
+        role: 'assistant',
         content: `Sorry, there was an error processing your file: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again or contact support.`,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
       };
 
       addMessage(errorMessage);
@@ -170,11 +211,44 @@ export function useChat(initialSuggestions: ExperimentSuggestion[] = []) {
     }
   }, [addMessage]);
 
+  const clearConversation = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await assistantService.clearConversation();
+      sessionService.clearSession();
+      setMessages([]);
+      setContext({
+        currentIteration: 0,
+        messageCount: 0,
+        lastToolCalls: []
+      });
+
+      // Start a new conversation
+      const { message, sessionId } = await assistantService.startConversation();
+      sessionService.saveSession(sessionId);
+      const initialMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: message,
+        timestamp: new Date().toISOString()
+      };
+      setMessages([initialMessage]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to clear conversation');
+      console.error('Error clearing conversation:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     messages,
     isLoading,
+    error,
     sendMessage,
     sendFile,
+    clearConversation,
   };
 }
 

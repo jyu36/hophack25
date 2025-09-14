@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Check, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Experiment } from "../../types/research";
 import { formatDate } from "../../utils/helpers";
 
@@ -18,20 +18,24 @@ const ExperimentCard: React.FC<ExperimentCardProps> = ({ experiment }) => {
             className={`rounded-full p-1 ${
               experiment.status === "completed"
                 ? "bg-green-100"
+                : experiment.status === "postponed"
+                ? "bg-red-100"
                 : "bg-yellow-100"
             }`}
           >
             {experiment.status === "completed" ? (
               <Check className="h-4 w-4 text-green-600" />
+            ) : experiment.status === "postponed" ? (
+              <X className="h-4 w-4 text-red-600" />
             ) : (
               <Clock className="h-4 w-4 text-yellow-600" />
             )}
           </div>
-          <h4 className="font-medium text-gray-900">{experiment.title}</h4>
+          <h4 className="font-medium text-gray-900 w-48 break-words">{experiment.title}</h4>
         </div>
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-500">
-            {formatDate(experiment.createdAt)}
+            {formatDate(experiment.created_at)}
           </span>
           <button
             onClick={() => setIsExpanded(!isExpanded)}

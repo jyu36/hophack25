@@ -262,7 +262,7 @@ const GraphView: React.FC<GraphViewProps> = ({
     setNodeDetails({ papers: [], solutions: [], isLoading: true });
 
     try {
-      const details = await fetchNodeDetails(node.id);
+      const details = await fetchNodeDetails(node.id.toString());
       setNodeDetails(details);
     } catch (error) {
       setNodeDetails({

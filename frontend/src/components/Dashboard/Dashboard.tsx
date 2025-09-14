@@ -30,30 +30,52 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const {
     experiments: filteredExperiments,
-    loading,
+    isLoading,
     error,
-    fetchExperiments,
-    getCounts,
+    refreshExperiments,
+    getExperimentsByStatus,
   } = useExperiments();
 
   // Fetch experiments when tab changes
   useEffect(() => {
-    fetchExperiments(activeTab);
-  }, [activeTab, fetchExperiments]);
+    refreshExperiments();
+  }, [activeTab, refreshExperiments]);
 
-  // Sort experiments by date
-  const sortedExperiments = useMemo(() => {
-    return [...filteredExperiments].sort(
+  // Filter and sort experiments based on the active tab
+  const filteredAndSortedExperiments = useMemo(() => {
+    let experimentsToFilter = [...filteredExperiments];
+
+    if (activeTab === "past") {
+      experimentsToFilter = experimentsToFilter.filter(
+        (exp) => exp.status === "completed"
+      );
+    } else if (activeTab === "planned") {
+      experimentsToFilter = experimentsToFilter.filter(
+        (exp) => exp.status === "planned"
+      );
+    } else if (activeTab === "postponed") {
+      experimentsToFilter = experimentsToFilter.filter(
+        (exp) => exp.status === "postponed"
+      );
+    }
+
+    return experimentsToFilter.sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [filteredExperiments]);
+  }, [filteredExperiments, activeTab]);
 
-  const counts = useMemo(() => getCounts(), [getCounts]);
+  const counts = useMemo(() => ({
+    total: filteredExperiments.length,
+    completed: getExperimentsByStatus("completed").length,
+    planned: getExperimentsByStatus("planned").length,
+    postponed: getExperimentsByStatus("postponed").length,
+    past: getExperimentsByStatus("completed").length
+  }), [filteredExperiments, getExperimentsByStatus]);
 
   const tabs: { id: ExperimentTab; label: string; count: number }[] = [
     { id: "all", label: "All", count: counts.total },
-    { id: "past", label: "Past", count: counts.past },
+    { id: "past", label: "Completed", count: counts.past },
     { id: "planned", label: "Planned", count: counts.planned },
     { id: "postponed", label: "Postponed", count: counts.postponed },
   ];
@@ -61,7 +83,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   if (view === "allPast") {
     return (
       <AllExperiments
-        experiments={sortedExperiments}
+        experiments={filteredAndSortedExperiments}
         onBack={() => setView("dashboard")}
       />
     );
@@ -70,7 +92,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   if (view === "allFuture") {
     return (
       <AllFutureExperiments
-        experiments={sortedExperiments.filter((e) => e.status === "planned")}
+        experiments={filteredAndSortedExperiments}
         onBack={() => setView("dashboard")}
         onNewExperiment={onNewExperiment}
       />
@@ -115,7 +137,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               }}
             />
             <StatsCard
-              title="Pending Review"
+              title="Planned Experiments"
               value={counts.planned}
               icon={Clock}
               description="Experiments for later consideration"
@@ -183,8 +205,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Scrollable Content Area */}
             <div className="h-[calc(100vh-32rem)] min-h-[400px] overflow-y-auto p-6">
-              {loading ? (
-                <div className="flex h-full items-center justify-center">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full">
                   <div className="text-center text-gray-500">
                     Loading experiments...
                   </div>
@@ -193,8 +215,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center text-red-500">{error}</div>
                 </div>
-              ) : sortedExperiments.length > 0 ? (
-                <RecentExperiments experiments={sortedExperiments} />
+              ) : filteredAndSortedExperiments.length > 0 ? (
+                <RecentExperiments experiments={filteredAndSortedExperiments} />
               ) : (
                 <div className="flex items-center justify-center h-full p-6 border-2 border-gray-300 border-dashed rounded-lg bg-gray-50">
                   <div className="text-center">
@@ -219,7 +241,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <AISummary
             projectSummary="Your research focuses on exploring novel approaches to machine learning optimization, with 5 completed experiments showing promising results in gradient descent techniques. Recent findings suggest a 23% improvement in convergence speed."
             weeklyUpdate="This week: 2 new experiments were completed, focusing on adaptive learning rates. Key achievement: Developed a new momentum-based approach that reduced training time by 15%."
-            lastUpdated="2 hours ago"
+            lastUpdated={new Date()}
           />
         </div>
       </div>

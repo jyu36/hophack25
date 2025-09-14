@@ -1,142 +1,153 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { Experiment, NodeStatus } from "../types/research";
-import experimentService from "../services/experimentService";
+import { useState, useCallback, useEffect } from 'react';
+import { ResearchNode, NodeStatus, NodeType } from '../types/research';
+import { experimentService } from '../services/experimentService';
+import { CreateNodeRequest, UpdateNodeRequest } from '../types/api';
 
-export const useExperiments = () => {
-  const [experiments, setExperiments] = useState<Experiment[]>([]);
-  const [filteredExperiments, setFilteredExperiments] = useState<Experiment[]>(
-    []
-  );
-  const [loading, setLoading] = useState(false);
+export function useExperiments() {
+  const [experiments, setExperiments] = useState<ResearchNode[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
-  // Cache experiments by status
-  const experimentsByStatus = useMemo(() => {
-    const cache = {
-      // 所有实验
-      all: experiments,
-      // past 只显示已完成（绿色）和已推迟（红色）的实验
-      past: experiments.filter(
-        (e) => e.status === "completed" || e.status === "postponed"
-      ),
-      // planned 只显示计划中（黄色）的实验
-      planned: experiments.filter((e) => e.status === "planned"),
-      // postponed 只显示已推迟（红色）的实验
-      postponed: experiments.filter((e) => e.status === "postponed"),
-    };
-    console.log("Experiments by status:", cache);
-    return cache;
-  }, [experiments]);
+  // Load experiments on mount
+  useEffect(() => {
+    loadExperiments();
+  }, []);
 
-  // Fetch all experiments only if needed
-  const fetchAllExperiments = useCallback(async () => {
-    const now = Date.now();
-    // Only fetch if it's been more than 5 seconds since last fetch
-    if (now - lastFetchTime < 5000) {
-      return;
-    }
-
-    setLoading(true);
+  const loadExperiments = useCallback(async () => {
+    setIsLoading(true);
     setError(null);
     try {
-      const fetchedExperiments = await experimentService.getAllExperiments();
-      console.log("Fetched experiments:", fetchedExperiments);
-      setExperiments(fetchedExperiments);
-      setLastFetchTime(now);
+      const overview = await experimentService.getGraphOverview();
+      // Convert API nodes to ResearchNode format
+      const researchNodes = overview.nodes.map(node => ({
+        ...node,
+        type: node.type as NodeType,
+        status: node.status as NodeStatus,
+        level: 0,
+        keywords: [],
+        aiGenerated: false
+      }));
+      setExperiments(researchNodes);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch experiments"
-      );
+      setError(err instanceof Error ? err.message : 'Failed to load experiments');
+      console.error('Error loading experiments:', err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, [lastFetchTime]);
+  }, []);
 
-  // Fetch experiments based on active tab
-  const fetchExperiments = useCallback(
-    async (tab: "all" | "past" | "planned" | "postponed") => {
-      await fetchAllExperiments();
-      const filtered = experimentsByStatus[tab];
-      setFilteredExperiments(filtered);
-      console.log(`Filtered experiments for ${tab}:`, filtered);
-      return filtered;
-    },
-    [fetchAllExperiments, experimentsByStatus]
-  );
+  const addExperiment = useCallback(async (data: CreateNodeRequest) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const newExperiment = await experimentService.createNode(data);
+      setExperiments(prev => [...prev, newExperiment]);
+      return newExperiment;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add experiment');
+      console.error('Error adding experiment:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Update experiment status
-  const updateExperimentStatus = useCallback(
-    async (experimentId: string, status: NodeStatus) => {
-      try {
-        const updatedExperiment =
-          await experimentService.updateExperimentStatus(experimentId, status);
-        setExperiments((prevExperiments) =>
-          prevExperiments.map((exp) =>
-            exp.id === experimentId ? updatedExperiment : exp
-          )
-        );
-        return true;
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to update experiment status"
-        );
-        return false;
-      }
-    },
-    []
-  );
+  const updateExperiment = useCallback(async (id: number, data: UpdateNodeRequest) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const updatedExperiment = await experimentService.updateNode(id, data);
+      setExperiments(prev =>
+        prev.map(exp => (exp.id === id ? updatedExperiment : exp))
+      );
+      return updatedExperiment;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update experiment');
+      console.error('Error updating experiment:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Get experiments by status
-  const getExperimentsByStatus = useCallback(
-    (status: NodeStatus) => {
-      const filtered = experiments.filter((exp) => exp.status === status);
-      console.log(`Experiments with status ${status}:`, filtered);
-      return filtered;
-    },
-    [experiments]
-  );
+  const deleteExperiment = useCallback(async (id: number, force = false) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await experimentService.deleteNode(id, force);
+      setExperiments(prev => prev.filter(exp => exp.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete experiment');
+      console.error('Error deleting experiment:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Get counts
-  const getCounts = useCallback(() => {
-    const counts = {
-      total: experiments.length,
-      // 已完成的实验（绿色）
-      completed: experiments.filter((e) => e.status === "completed").length,
-      // 计划中的实验（黄色）
-      planned: experiments.filter((e) => e.status === "planned").length,
-      // 已推迟的实验（红色）
-      postponed: experiments.filter((e) => e.status === "postponed").length,
-      // 过去的实验（绿色 + 红色）
-      past: experiments.filter(
-        (e) => e.status === "completed" || e.status === "postponed"
-      ).length,
-    };
-    console.log("Experiment counts:", counts);
-    return counts;
+  const updateExperimentStatus = useCallback(async (id: number, status: NodeStatus) => {
+    return updateExperiment(id, { status });
+  }, [updateExperiment]);
+
+  const getExperimentsByStatus = useCallback((status: NodeStatus) => {
+    return experiments.filter(exp => exp.status === status);
   }, [experiments]);
 
-  // Initial fetch
-  useEffect(() => {
-    fetchAllExperiments();
-  }, [fetchAllExperiments]);
+  const addExperimentRelation = useCallback(async (
+    fromId: number,
+    toId: number,
+    relationshipType: string,
+    label?: string
+  ) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const edge = await experimentService.createEdge({
+        from_experiment_id: fromId,
+        to_experiment_id: toId,
+        relationship_type: relationshipType,
+        label
+      });
+      return edge;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add relation');
+      console.error('Error adding relation:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  // Update filtered experiments when experiments change
-  useEffect(() => {
-    setFilteredExperiments(experiments);
-  }, [experiments]);
+  const addLiteratureReference = useCallback(async (
+    experimentId: number,
+    link: string,
+    relationship = 'similar'
+  ) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await experimentService.addLiterature(experimentId, link, relationship);
+      return result;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add literature reference');
+      console.error('Error adding literature:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   return {
-    experiments: filteredExperiments,
-    loading,
+    experiments,
+    isLoading,
     error,
-    fetchExperiments,
+    addExperiment,
+    updateExperiment,
+    deleteExperiment,
     updateExperimentStatus,
     getExperimentsByStatus,
-    getCounts,
+    addExperimentRelation,
+    addLiteratureReference,
+    refreshExperiments: loadExperiments
   };
-};
-
-export default useExperiments;
+}

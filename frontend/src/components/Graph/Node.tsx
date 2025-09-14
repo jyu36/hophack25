@@ -37,7 +37,7 @@ const CustomNode = ({ data }: NodeProps<CustomNodeData>) => {
       <div className="min-w-[200px] max-w-[300px]">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">{typeIcons[data.type]}</span>
-          <h3 className="font-medium text-white truncate">{data.title}</h3>
+          <h3 className="font-medium text-white w-48 break-words">{data.title}</h3>
         </div>
 
         <p className="mb-2 text-xs text-white/90 line-clamp-2">

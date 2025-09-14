@@ -1,13 +1,6 @@
 import axios from "axios";
 import { ResearchNode } from "../types/research";
-import {
-  APIExperiment,
-  APIExperimentRelationship,
-  APIGraphOverview,
-  APINodeInfo,
-  apiToUIExperiment,
-  uiToAPIExperiment,
-} from "../types/api";
+import { GraphOverview, Edge as APIExperimentRelationship } from "../types/api";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000",
@@ -17,7 +10,7 @@ const api = axios.create({
 });
 
 // Graph and Node Operations
-export async function getGraphOverview(): Promise<APIGraphOverview> {
+export async function getGraphOverview(): Promise<GraphOverview> {
   const response = await api.get("/graph/overview");
   return response.data;
 }
@@ -26,14 +19,14 @@ export async function getNodeInfo(
   nodeId: number,
   withParents = true,
   withChildren = true
-): Promise<APINodeInfo> {
+): Promise<{ node: ResearchNode; parents: ResearchNode[]; children: ResearchNode[] }> {
   const response = await api.get(`/nodes/${nodeId}`, {
     params: { with_parents: withParents, with_children: withChildren },
   });
   return response.data;
 }
 
-export async function getAllNodes(concise = true): Promise<APIExperiment[]> {
+export async function getAllNodes(concise = true): Promise<ResearchNode[]> {
   const response = await api.get("/nodes", {
     params: { concise },
   });
@@ -42,18 +35,16 @@ export async function getAllNodes(concise = true): Promise<APIExperiment[]> {
 
 export async function createNode(
   experiment: ResearchNode
-): Promise<APIExperiment> {
-  const apiExperiment = uiToAPIExperiment(experiment);
-  const response = await api.post("/nodes", apiExperiment);
+): Promise<ResearchNode> {
+  const response = await api.post("/nodes", experiment);
   return response.data;
 }
 
 export async function updateNode(
   nodeId: number,
   updates: Partial<ResearchNode>
-): Promise<APIExperiment> {
-  const apiUpdates = uiToAPIExperiment(updates as ResearchNode);
-  const response = await api.patch(`/nodes/${nodeId}`, apiUpdates);
+): Promise<ResearchNode> {
+  const response = await api.patch(`/nodes/${nodeId}`, updates);
   return response.data;
 }
 

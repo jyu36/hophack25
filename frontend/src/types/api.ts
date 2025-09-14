@@ -1,108 +1,67 @@
-import { ResearchNode, NodeStatus } from "./research";
-
-// Backend API Types - These match exactly with the backend schema
-
-export enum ExperimentStatus {
-  PLANNED = "planned",
-  COMPLETED = "completed",
-  POSTPONED = "postponed",
+export interface ApiError {
+  error: string;
+  message: string;
+  statusCode: number;
+  timestamp: string;
 }
 
-export enum RelationshipType {
-  LEADS_TO = "leads_to",
-  SUPPORTS = "supports",
-  REFUTES = "refutes",
-  REQUIRES = "requires",
-  RELATED_TO = "related",
-  INSPIRES = "inspires",
-  EXTENDS = "extends",
-  VALIDATES = "validates",
-  IMPLEMENTS = "implements",
-}
-
-export interface APIExperiment {
-  id: number;
+export interface CreateNodeRequest {
   title: string;
   description?: string;
   motivation?: string;
   expectations?: string;
-  status: ExperimentStatus;
+  status?: 'planned' | 'completed' | 'postponed';
   hypothesis?: string;
   result?: string;
   extra_data?: Record<string, any>;
-  created_at: string;
-  updated_at: string;
 }
 
-export interface APIExperimentRelationship {
+export interface UpdateNodeRequest extends Partial<CreateNodeRequest> {}
+
+export interface Edge {
   id: number;
   from_experiment_id: number;
   to_experiment_id: number;
-  relationship_type: RelationshipType;
+  relationship_type: string;
   label?: string;
   extra_data?: Record<string, any>;
   created_at: string;
 }
 
-export interface APIGraphNode {
-  id: number;
+export interface GraphOverview {
+  nodes: Array<{
+    id: number;
+    title: string;
+    status: string;
+    type: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
+  }>;
+  edges: Edge[];
+}
+
+export interface LiteratureReference {
+  id: string;
   title: string;
-  status: ExperimentStatus;
-  type: string;
-  description?: string;
+  year: number;
+  venue: string;
+  doi: string;
+  url: string;
+  relationship: string;
+  confidence: number;
+  verified: Record<string, string>;
+  summary: string;
 }
 
-export interface APIGraphEdge {
+export interface AddLiteratureResponse {
+  success: boolean;
   id: number;
-  from: number;
-  to: number;
-  type: string;
-  label?: string;
+  openalex_id: string;
 }
 
-export interface APIGraphOverview {
-  nodes: APIGraphNode[];
-  edges: APIGraphEdge[];
-}
-
-export interface APINodeInfo {
-  node: APIExperiment;
-  incoming_relationships: APIExperimentRelationship[];
-  outgoing_relationships: APIExperimentRelationship[];
-}
-
-// Utility functions to convert between API and UI types
-export function apiToUIExperiment(apiExp: APIExperiment): ResearchNode {
-  return {
-    id: apiExp.id.toString(),
-    title: apiExp.title,
-    description: apiExp.description || "",
-    type: "experiment",
-    status: apiExp.status as NodeStatus, // Map API status to UI status
-    level: 0,
-    motivation: apiExp.motivation,
-    expectations: apiExp.expectations,
-    keywords: apiExp.extra_data?.keywords || [],
-    createdAt: apiExp.created_at,
-    aiGenerated: false,
-    // Map other fields as needed
-  };
-}
-
-export function uiToAPIExperiment(
-  uiExp: ResearchNode
-): Omit<APIExperiment, "id" | "created_at" | "updated_at"> {
-  return {
-    title: uiExp.title,
-    description: uiExp.description,
-    motivation: uiExp.motivation,
-    expectations: uiExp.expectations,
-    status: uiExp.status as ExperimentStatus, // Map UI status to API status
-    extra_data: {
-      keywords: uiExp.keywords,
-      level: uiExp.level,
-      aiGenerated: uiExp.aiGenerated,
-      // Store other UI-specific fields
-    },
-  };
+export interface DeleteResponse {
+  success: boolean;
+  deleted_node_id?: number;
+  deleted_edge_id?: number;
 }

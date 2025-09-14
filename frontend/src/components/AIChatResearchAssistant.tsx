@@ -16,7 +16,7 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   initialSuggestions = [],
   onBackToDashboard,
 }) => {
-  const { messages, isLoading, sendMessage, sendFile } = useChat(initialSuggestions);
+  const { messages, isLoading, error, sendMessage, sendFile, clearConversation } = useChat(initialSuggestions);
   const { experiments, getExperimentsByStatus, updateExperimentStatus } =
     useExperiments();
 
@@ -51,8 +51,8 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   // Create relationships based on experiments data
   const relationships = experiments.map((exp, index) => ({
     id: index + 1,
-    from: parseInt(exp.id),
-    to: parseInt(experiments[(index + 1) % experiments.length].id),
+    from: exp.id,
+    to: experiments[(index + 1) % experiments.length].id,
     type: "leads_to",
   }));
 
@@ -92,10 +92,12 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
           <ChatPanel
             messages={messages}
             isLoading={isLoading}
+            error={error}
             onSendMessage={sendMessage}
             onFileUpload={handleFileUpload}
             onAcceptSuggestion={handleAcceptSuggestion}
             onDeclineSuggestion={handleDeclineSuggestion}
+            onClearChat={clearConversation}
           />
         </div>
 

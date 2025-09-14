@@ -206,7 +206,7 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                       variant={
                         node.status === "completed" ? "success" : "secondary"
                       }
-                      onClick={() => onStatusChange(node.id, "completed")}
+                      onClick={() => onStatusChange(node.id.toString(), "completed")}
                     >
                       Accept
                     </Button>
@@ -215,7 +215,7 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                       variant={
                         node.status === "planned" ? "primary" : "secondary"
                       }
-                      onClick={() => onStatusChange(node.id, "planned")}
+                      onClick={() => onStatusChange(node.id.toString(), "planned")}
                     >
                       Keep Planned
                     </Button>
@@ -224,7 +224,7 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                       variant={
                         node.status === "postponed" ? "danger" : "secondary"
                       }
-                      onClick={() => onStatusChange(node.id, "postponed")}
+                      onClick={() => onStatusChange(node.id.toString(), "postponed")}
                     >
                       Reject
                     </Button>
@@ -274,7 +274,7 @@ const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
           <Button variant="secondary" onClick={onClose}>
             Close
           </Button>
-          <Button onClick={() => onCreateBranch(node.id)}>
+          <Button onClick={() => onCreateBranch(node.id.toString())}>
             Create New Branch
           </Button>
         </div>

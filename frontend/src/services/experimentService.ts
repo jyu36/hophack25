@@ -1,316 +1,169 @@
-import api from "../utils/api";
-import { APIExperiment, apiToUIExperiment } from "../types/api";
 import {
-  Experiment,
-  NodeStatus,
-  NodeType,
-  NodeDetails,
-} from "../types/research";
+  CreateNodeRequest,
+  UpdateNodeRequest,
+  Edge,
+  GraphOverview,
+  LiteratureReference,
+  AddLiteratureResponse,
+  DeleteResponse
+} from '../types/api';
+import { ResearchNode, NodeDetails } from '../types/research';
+import { withRetry } from '../utils/retry';
 
-// Debug logger
-const debug = {
-  log: (...args: any[]) => {
-    console.log("[ExperimentService]", ...args);
-  },
-  error: (...args: any[]) => {
-    console.error("[ExperimentService]", ...args);
-  },
-  warn: (...args: any[]) => {
-    console.warn("[ExperimentService]", ...args);
-  },
+const RETRY_OPTIONS = {
+  maxRetries: 3,
+  baseDelay: 1000,
+  maxDelay: 5000,
+  shouldRetry: (error: any) => {
+    // Retry on network errors and 5xx server errors
+    if (error.name === 'TypeError' || error.name === 'NetworkError') return true;
+    if (error.response?.status >= 500) return true;
+    return false;
+  }
 };
 
-// Extract status value from backend response
-const extractStatusValue = (status: any): string => {
-  debug.log("Extracting status from:", status);
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
-  if (!status) {
-    debug.warn("Status is empty");
-    return "";
+class ExperimentService {
+  private async handleResponse<T>(response: Response): Promise<T> {
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail?.message || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
   }
 
-  // Handle string format: "<ExperimentStatus.COMPLETED: 'completed'>"
-  if (typeof status === "string") {
-    const match = status.match(/[A-Z_]+:\s*'([^']+)'/);
-    if (match) {
-      debug.log("Extracted status from string:", match[1]);
-      return match[1];
-    }
-    debug.log("Using status string as is:", status);
-    return status;
+  private async makeRequest<T>(
+    url: string,
+    options: RequestInit = {},
+    customRetryOptions?: typeof RETRY_OPTIONS
+  ): Promise<T> {
+    return withRetry(
+      async () => {
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+        });
+        return this.handleResponse<T>(response);
+      },
+      customRetryOptions || RETRY_OPTIONS
+    );
   }
 
-  // Handle object format
-  if (typeof status === "object") {
-    if ("value" in status) {
-      debug.log("Extracted status from object.value:", status.value);
-      return status.value;
-    }
-    const str = status.toString();
-    const match = str.match(/[A-Z_]+:\s*'([^']+)'/);
-    if (match) {
-      debug.log("Extracted status from object.toString:", match[1]);
-      return match[1];
-    }
+  // Node operations
+  async createNode(data: CreateNodeRequest): Promise<ResearchNode> {
+    return this.makeRequest<ResearchNode>(`${API_BASE_URL}/nodes`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
   }
 
-  debug.warn("Using status as is:", status);
-  return String(status);
-};
-
-// Map UI status to API status
-const mapUIStatusToAPIStatus = (uiStatus: NodeStatus): string => {
-  debug.log("Mapping UI status to API:", uiStatus);
-  let apiStatus: string;
-
-  switch (uiStatus) {
-    case "completed":
-      apiStatus = "completed"; // completed -> completed
-      break;
-    case "planned":
-      apiStatus = "planned"; // planned -> planned
-      break;
-    case "postponed":
-      apiStatus = "postponed"; // postponed -> postponed
-      break;
-    default:
-      apiStatus = "planned"; // default to planned
+  async getNode(nodeId: number, withParents = true, withChildren = true): Promise<{
+    node: ResearchNode;
+    parents: ResearchNode[];
+    children: ResearchNode[];
+  }> {
+    return this.makeRequest(
+      `${API_BASE_URL}/nodes/${nodeId}?with_parents=${withParents}&with_children=${withChildren}`
+    );
   }
 
-  debug.log("Mapped UI status:", uiStatus, "to API status:", apiStatus);
-  return apiStatus;
-};
-
-// Map API status to UI status
-const mapAPIStatusToUIStatus = (apiStatus: any): NodeStatus => {
-  const status = extractStatusValue(apiStatus).toLowerCase();
-  debug.log("Mapping API status to UI:", {
-    original: apiStatus,
-    extracted: status,
-  });
-
-  let uiStatus: NodeStatus;
-  switch (status) {
-    case "completed":
-      uiStatus = "completed"; // completed -> completed
-      break;
-    case "planned":
-      uiStatus = "planned"; // planned -> planned
-      break;
-    case "in_progress":
-      uiStatus = "planned"; // in_progress -> planned
-      break;
-    case "postponed":
-      uiStatus = "postponed"; // postponed -> postponed
-      break;
-    default:
-      debug.warn("Unknown status:", status);
-      uiStatus = "planned"; // default to planned
+  async updateNode(nodeId: number, data: UpdateNodeRequest): Promise<ResearchNode> {
+    return this.makeRequest<ResearchNode>(`${API_BASE_URL}/nodes/${nodeId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
   }
 
-  debug.log("Mapped API status:", status, "to UI status:", uiStatus);
-  return uiStatus;
-};
+  async deleteNode(nodeId: number, forceDelete = false): Promise<DeleteResponse> {
+    return this.makeRequest<DeleteResponse>(
+      `${API_BASE_URL}/nodes/${nodeId}?force_delete=${forceDelete}`,
+      { method: 'DELETE' }
+    );
+  }
 
-// Convert API node to ResearchNode
-const convertToResearchNode = (node: any): Experiment => {
-  debug.log("Converting node:", node);
-  const status = mapAPIStatusToUIStatus(node.status);
-  debug.log("Mapped status:", status);
+  // Graph operations
+  async getGraphOverview(): Promise<GraphOverview> {
+    return this.makeRequest<GraphOverview>(`${API_BASE_URL}/graph/overview`);
+  }
 
-  const experiment: Experiment = {
-    id: node.id.toString(),
-    title: node.title,
-    description: node.description || "",
-    type: (node.type as NodeType) || "experiment",
-    status,
-    level: 0,
-    keywords: [],
-    createdAt: node.created_at,
-    aiGenerated: false,
-  };
+  // Edge operations
+  async createEdge(data: {
+    from_experiment_id: number;
+    to_experiment_id: number;
+    relationship_type: string;
+    label?: string;
+    extra_data?: Record<string, any>;
+  }): Promise<Edge> {
+    return this.makeRequest<Edge>(`${API_BASE_URL}/edges`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
 
-  debug.log("Converted experiment:", experiment);
-  return experiment;
-};
-
-export const experimentService = {
-  // Get all experiments
-  async getAllExperiments(): Promise<Experiment[]> {
-    try {
-      debug.log("Fetching all experiments...");
-      const response = await api.get("/graph/overview");
-      debug.log("API Response:", response.data);
-      const { nodes } = response.data;
-      const experiments = nodes.map(convertToResearchNode);
-      debug.log("Converted all experiments:", experiments);
-      return experiments;
-    } catch (error) {
-      debug.error("Error fetching all experiments:", error);
-      throw error;
+  async updateEdge(
+    edgeId: number,
+    data: {
+      relationship_type?: string;
+      label?: string;
+      extra_data?: Record<string, any>;
     }
-  },
+  ): Promise<Edge> {
+    return this.makeRequest<Edge>(`${API_BASE_URL}/edges/${edgeId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
 
-  // Get past (completed) experiments
-  async getPastExperiments(): Promise<Experiment[]> {
-    try {
-      debug.log("Fetching past experiments...");
-      const { nodes } = await api
-        .get("/graph/overview")
-        .then((res) => res.data);
-      const experiments = nodes
-        .filter((node: any) => {
-          const status = extractStatusValue(node.status);
-          debug.log("Filtering node:", { node, extractedStatus: status });
-          const isCompleted = status.toLowerCase() === "completed";
-          debug.log("Is completed:", isCompleted);
-          return isCompleted;
-        })
-        .map(convertToResearchNode);
-      debug.log("Past experiments:", experiments);
-      return experiments;
-    } catch (error) {
-      debug.error("Error fetching past experiments:", error);
-      throw error;
-    }
-  },
+  async deleteEdge(edgeId: number): Promise<DeleteResponse> {
+    return this.makeRequest<DeleteResponse>(`${API_BASE_URL}/edges/${edgeId}`, {
+      method: 'DELETE'
+    });
+  }
 
-  // Get planned experiments
-  async getPlannedExperiments(): Promise<Experiment[]> {
-    try {
-      debug.log("Fetching planned experiments...");
-      const { nodes } = await api
-        .get("/graph/overview")
-        .then((res) => res.data);
-      const experiments = nodes
-        .filter((node: any) => {
-          const status = extractStatusValue(node.status);
-          debug.log("Filtering node:", { node, extractedStatus: status });
-          const isPlanned = status.toLowerCase() === "planned";
-          debug.log("Is planned:", isPlanned);
-          return isPlanned;
-        })
-        .map(convertToResearchNode);
-      debug.log("Planned experiments:", experiments);
-      return experiments;
-    } catch (error) {
-      debug.error("Error fetching planned experiments:", error);
-      throw error;
-    }
-  },
+  // Literature operations
+  async addLiterature(nodeId: number, link: string, relationship = 'similar'): Promise<AddLiteratureResponse> {
+    return this.makeRequest<AddLiteratureResponse>(
+      `${API_BASE_URL}/nodes/${nodeId}/literature?link=${encodeURIComponent(link)}&relationship=${relationship}`,
+      { method: 'POST' }
+    );
+  }
 
-  // Get postponed (rejected) experiments
-  async getPostponedExperiments(): Promise<Experiment[]> {
-    try {
-      debug.log("Fetching postponed experiments...");
-      const { nodes } = await api
-        .get("/graph/overview")
-        .then((res) => res.data);
-      const experiments = nodes
-        .filter((node: any) => {
-          const status = extractStatusValue(node.status);
-          debug.log("Filtering node:", { node, extractedStatus: status });
-          const isPostponed = status.toLowerCase() === "postponed";
-          debug.log("Is postponed:", isPostponed);
-          return isPostponed;
-        })
-        .map(convertToResearchNode);
-      debug.log("Postponed experiments:", experiments);
-      return experiments;
-    } catch (error) {
-      debug.error("Error fetching postponed experiments:", error);
-      throw error;
-    }
-  },
+  async getNodeLiterature(nodeId: number): Promise<LiteratureReference[]> {
+    return this.makeRequest<LiteratureReference[]>(`${API_BASE_URL}/nodes/${nodeId}/literature`);
+  }
 
-  // Update experiment status
-  async updateExperimentStatus(
-    experimentId: string,
-    status: NodeStatus
-  ): Promise<Experiment> {
-    try {
-      debug.log("Updating experiment status:", { experimentId, status });
-      const response = await api.patch(`/nodes/${experimentId}`, {
-        status: mapUIStatusToAPIStatus(status),
-      });
-      debug.log("Update response:", response.data);
-      const experiment = convertToResearchNode(response.data);
-      debug.log("Updated experiment:", experiment);
-      return experiment;
-    } catch (error) {
-      debug.error("Error updating experiment status:", error);
-      throw error;
-    }
-  },
+  async getSuggestedLiterature(
+    nodeId: number,
+    ignoreCache = false,
+    relationship = 'auto'
+  ): Promise<LiteratureReference> {
+    return this.makeRequest<LiteratureReference>(
+      `${API_BASE_URL}/nodes/${nodeId}/literature/suggested?ignore_cache=${ignoreCache}&relationship=${relationship}`
+    );
+  }
 
-  // Get node details (papers and solutions)
-  async getNodeDetails(nodeId: string): Promise<NodeDetails> {
-    try {
-      debug.log("Fetching node details:", nodeId);
-      const response = await api.get(`/nodes/${nodeId}`, {
-        params: { with_papers: true, with_solutions: true },
-      });
-      debug.log("Node details response:", response.data);
+  async deleteLiterature(nodeId: number, link: string): Promise<{ success: boolean }> {
+    return this.makeRequest<{ success: boolean }>(
+      `${API_BASE_URL}/nodes/${nodeId}/literature/${encodeURIComponent(link)}`,
+      { method: 'DELETE' }
+    );
+  }
 
-      return {
-        papers: response.data.papers || [],
-        solutions: (response.data.solutions || []).map(convertToResearchNode),
-        isLoading: false,
-      };
-    } catch (error) {
-      debug.error("Error fetching node details:", error);
-      throw error;
-    }
-  },
+  // Additional methods for graph functionality
+  async getNodeDetails(nodeId: number): Promise<NodeDetails> {
+    return this.makeRequest<NodeDetails>(`${API_BASE_URL}/nodes/${nodeId}/details`);
+  }
 
-  // Create an edge between experiments
-  async createEdge(
-    fromId: number,
-    toId: number,
-    type: string,
-    label?: string
-  ): Promise<any> {
-    try {
-      debug.log("Creating edge:", { fromId, toId, type, label });
-      const response = await api.post("/edges", {
-        from_experiment_id: fromId,
-        to_experiment_id: toId,
-        relationship_type: type,
-        label,
-      });
-      debug.log("Edge creation response:", response.data);
-      return response.data;
-    } catch (error) {
-      debug.error("Error creating edge:", error);
-      throw error;
-    }
-  },
+  async createBranch(nodeId: number): Promise<ResearchNode> {
+    return this.makeRequest<ResearchNode>(`${API_BASE_URL}/nodes/${nodeId}/branch`, {
+      method: 'POST'
+    });
+  }
+}
 
-  // Delete an edge
-  async deleteEdge(edgeId: number): Promise<boolean> {
-    try {
-      debug.log("Deleting edge:", edgeId);
-      const response = await api.delete(`/edges/${edgeId}`);
-      debug.log("Edge deletion response:", response.data);
-      return response.data.success;
-    } catch (error) {
-      debug.error("Error deleting edge:", error);
-      throw error;
-    }
-  },
-
-  // Create a branch from an existing experiment
-  async createBranch(nodeId: string): Promise<Experiment> {
-    try {
-      debug.log("Creating branch from node:", nodeId);
-      const response = await api.post(`/nodes/${nodeId}/branch`);
-      debug.log("Branch creation response:", response.data);
-      return convertToResearchNode(response.data);
-    } catch (error) {
-      debug.error("Error creating branch:", error);
-      throw error;
-    }
-  },
-};
-
-export default experimentService;
+// Create a singleton instance
+export const experimentService = new ExperimentService();

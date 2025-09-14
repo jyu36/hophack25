@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Brain, Calendar, Presentation, RefreshCw, Maximize2, X } from 'lucide-react';
+import { formatDate } from '../../utils/helpers';
 
 interface AISummaryProps {
   projectSummary: string;
   weeklyUpdate: string;
-  lastUpdated: string;
+  lastUpdated: string | Date;
 }
 
 interface FullViewModalProps {
@@ -149,7 +150,7 @@ const AISummary: React.FC<AISummaryProps> = ({
         </div>
 
         <div className="mt-4 text-right text-xs text-gray-500">
-          Last updated: {lastUpdated}
+          Last updated: {formatDate(lastUpdated)}
         </div>
       </div>
 

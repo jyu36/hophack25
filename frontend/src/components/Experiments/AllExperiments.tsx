@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Experiment } from "../../types/research";
 import ExperimentCard from "../Dashboard/ExperimentCard";
+import { NodeStatus } from "../../types/research";
 
 interface AllExperimentsProps {
   experiments: Experiment[];
@@ -14,14 +15,28 @@ const AllExperiments: React.FC<AllExperimentsProps> = ({
 }) => {
   const [sortBy, setSortBy] = useState<"date" | "status">("date");
 
-  const sortedExperiments = [...experiments].sort((a, b) => {
+  // No internal sorting needed, as experiments are already filtered and sorted by the parent
+  const displayedExperiments = useMemo(() => {
+    let currentExperiments = [...experiments];
+
     if (sortBy === "date") {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    } else {
-      // Sort by status: accepted first, then planned
-      return a.status === b.status ? 0 : a.status === "completed" ? -1 : 1;
+      currentExperiments.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    } else if (sortBy === "status") {
+      // Sort by status: completed first, then planned, then postponed
+      currentExperiments.sort((a, b) => {
+        const statusOrder: Record<NodeStatus, number> = {
+          completed: 1,
+          planned: 2,
+          postponed: 3,
+        };
+        return statusOrder[a.status] - statusOrder[b.status];
+      });
     }
-  });
+    return currentExperiments;
+  }, [experiments, sortBy]);
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50 p-6">
@@ -78,7 +93,7 @@ const AllExperiments: React.FC<AllExperimentsProps> = ({
 
         {/* Experiments List */}
         <div className="space-y-4">
-          {sortedExperiments.map((experiment) => (
+          {displayedExperiments.map((experiment) => (
             <ExperimentCard key={experiment.id} experiment={experiment} />
           ))}
         </div>

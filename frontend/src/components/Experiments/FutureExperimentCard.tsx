@@ -18,10 +18,10 @@ const FutureExperimentCard: React.FC<FutureExperimentCardProps> = ({ experiment 
             <Calendar className="h-4 w-4 text-purple-600" />
           </div>
           <div>
-            <h4 className="font-medium text-gray-900">{experiment.title}</h4>
+            <h4 className="font-medium text-gray-900 w-48 break-words">{experiment.title}</h4>
             <div className="mt-1 flex items-center text-sm text-gray-500">
               <Clock className="mr-1 h-4 w-4" />
-              Planned for: {formatDate(experiment.plannedDate || experiment.createdAt)}
+              Planned for: {formatDate(experiment.plannedDate || experiment.created_at)}
             </div>
           </div>
         </div>

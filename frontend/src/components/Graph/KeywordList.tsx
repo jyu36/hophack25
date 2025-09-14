@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check, ChevronRight } from 'lucide-react';
+import { formatDate } from '../../utils/helpers'; // Corrected import path
 
 interface Keyword {
   text: string;
@@ -73,12 +74,11 @@ const KeywordList: React.FC<KeywordListProps> = ({
                     {keyword.text}
                   </span>
                 </div>
-                <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100">
-                  {new Date(keyword.timestamp).toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
+                <div>
+                  <p className="text-xs text-gray-500">
+                    Added: {formatDate(keyword.timestamp.toISOString())} {/* Convert Date to string */}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

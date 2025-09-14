@@ -2,7 +2,7 @@ import { Experiment } from "../types/research";
 
 export const mockExperiments: Experiment[] = [
   {
-    id: "1",
+    id: 1,
     title: "Data Preprocessing Optimization",
     description:
       "Study the impact of different data preprocessing methods on model performance",
@@ -13,11 +13,12 @@ export const mockExperiments: Experiment[] = [
     expectations: "Find the most suitable preprocessing pipeline",
     reasoning: "Good data preprocessing is fundamental to ML success",
     keywords: ["preprocessing", "feature engineering", "data cleaning"],
-    createdAt: "2025-09-13T10:00:00.000Z",
+    created_at: "2025-09-13T10:00:00.000Z",
+    updated_at: "2025-09-13T10:00:00.000Z",
     aiGenerated: true,
   },
   {
-    id: "2",
+    id: 2,
     title: "Model Architecture Comparison",
     description:
       "Compare different neural network architectures on specific tasks",
@@ -28,11 +29,12 @@ export const mockExperiments: Experiment[] = [
     expectations: "Identify the most suitable model architecture",
     reasoning: "Architecture choice impacts performance and efficiency",
     keywords: ["neural networks", "architecture", "performance"],
-    createdAt: "2025-09-13T10:30:00.000Z",
+    created_at: "2025-09-13T10:30:00.000Z",
+    updated_at: "2025-09-13T10:30:00.000Z",
     aiGenerated: true,
   },
   {
-    id: "3",
+    id: 3,
     title: "Feature Selection Study",
     description: "Evaluate different feature selection methods",
     type: "experiment",
@@ -42,11 +44,12 @@ export const mockExperiments: Experiment[] = [
     expectations: "Find the most important feature subset",
     reasoning: "Feature selection can improve performance and reduce costs",
     keywords: ["feature selection", "dimensionality reduction", "optimization"],
-    createdAt: "2025-09-13T11:00:00.000Z",
+    created_at: "2025-09-13T11:00:00.000Z",
+    updated_at: "2025-09-13T11:00:00.000Z",
     aiGenerated: true,
   },
   {
-    id: "4",
+    id: 4,
     title: "Hyperparameter Optimization",
     description: "Use Bayesian optimization for hyperparameter tuning",
     type: "experiment",
@@ -56,11 +59,12 @@ export const mockExperiments: Experiment[] = [
     expectations: "Find optimal hyperparameter combinations",
     reasoning: "Hyperparameters significantly impact model performance",
     keywords: ["hyperparameters", "bayesian optimization", "tuning"],
-    createdAt: "2025-09-13T11:30:00.000Z",
+    created_at: "2025-09-13T11:30:00.000Z",
+    updated_at: "2025-09-13T11:30:00.000Z",
     aiGenerated: true,
   },
   {
-    id: "5",
+    id: 5,
     title: "Model Ensemble Methods",
     description: "Research different model ensemble strategies",
     type: "experiment",
@@ -70,7 +74,8 @@ export const mockExperiments: Experiment[] = [
     expectations: "Develop robust ensemble learning methods",
     reasoning: "Ensembles typically outperform single models",
     keywords: ["ensemble learning", "model fusion", "voting strategies"],
-    createdAt: "2025-09-13T12:00:00.000Z",
+    created_at: "2025-09-13T12:00:00.000Z",
+    updated_at: "2025-09-13T12:00:00.000Z",
     aiGenerated: true,
   },
 ];
@@ -78,23 +83,23 @@ export const mockExperiments: Experiment[] = [
 // Define relationships between experiments
 export const mockRelationships = [
   {
-    source: "1", // Data Preprocessing
-    target: "2", // Model Architecture
+    source: 1, // Data Preprocessing
+    target: 2, // Model Architecture
     type: "leads_to",
   },
   {
-    source: "2", // Model Architecture
-    target: "4", // Hyperparameter Optimization
+    source: 2, // Model Architecture
+    target: 4, // Hyperparameter Optimization
     type: "leads_to",
   },
   {
-    source: "1", // Data Preprocessing
-    target: "3", // Feature Selection
+    source: 1, // Data Preprocessing
+    target: 3, // Feature Selection
     type: "supports",
   },
   {
-    source: "4", // Hyperparameter Optimization
-    target: "5", // Model Ensemble
+    source: 4, // Hyperparameter Optimization
+    target: 5, // Model Ensemble
     type: "leads_to",
   },
 ];

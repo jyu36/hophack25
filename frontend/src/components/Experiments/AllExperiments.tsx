@@ -1,22 +1,25 @@
-import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { Experiment } from '../../types/research';
-import ExperimentCard from '../Dashboard/ExperimentCard';
+import React, { useState } from "react";
+import { ArrowLeft } from "lucide-react";
+import { Experiment } from "../../types/research";
+import ExperimentCard from "../Dashboard/ExperimentCard";
 
 interface AllExperimentsProps {
   experiments: Experiment[];
   onBack: () => void;
 }
 
-const AllExperiments: React.FC<AllExperimentsProps> = ({ experiments, onBack }) => {
-  const [sortBy, setSortBy] = useState<'date' | 'status'>('date');
+const AllExperiments: React.FC<AllExperimentsProps> = ({
+  experiments,
+  onBack,
+}) => {
+  const [sortBy, setSortBy] = useState<"date" | "status">("date");
 
   const sortedExperiments = [...experiments].sort((a, b) => {
-    if (sortBy === 'date') {
+    if (sortBy === "date") {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     } else {
-      // Sort by status: accepted first, then pending
-      return a.status === b.status ? 0 : a.status === 'accepted' ? -1 : 1;
+      // Sort by status: accepted first, then planned
+      return a.status === b.status ? 0 : a.status === "completed" ? -1 : 1;
     }
   });
 
@@ -32,7 +35,9 @@ const AllExperiments: React.FC<AllExperimentsProps> = ({ experiments, onBack }) 
             >
               <ArrowLeft className="h-5 w-5 text-gray-600" />
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">All Past Experiments</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              All Past Experiments
+            </h1>
           </div>
           <p className="mt-2 text-sm text-gray-500">
             View and manage all your past experiments
@@ -45,21 +50,21 @@ const AllExperiments: React.FC<AllExperimentsProps> = ({ experiments, onBack }) 
             <span className="text-sm text-gray-700">Sort by:</span>
             <div className="flex rounded-lg border border-gray-200 bg-white">
               <button
-                onClick={() => setSortBy('date')}
+                onClick={() => setSortBy("date")}
                 className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  sortBy === 'date'
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-50'
+                  sortBy === "date"
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 Date
               </button>
               <button
-                onClick={() => setSortBy('status')}
+                onClick={() => setSortBy("status")}
                 className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  sortBy === 'status'
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-50'
+                  sortBy === "status"
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 Status

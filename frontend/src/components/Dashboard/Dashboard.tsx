@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { LayoutGrid, Lightbulb, Network, Clock, GitBranch } from 'lucide-react';
-import StatsCard from './StatsCard';
-import RecentExperiments from './RecentExperiments';
-import TopicExtractor from '../TopicExtractor/TopicExtractor';
-import AllExperiments from '../Experiments/AllExperiments';
-import AllFutureExperiments from '../Experiments/AllFutureExperiments';
-import AISummary from './AISummary';
-import { Experiment, ExperimentSuggestion } from '../../types/research';
-import { useExperiments } from '../../hooks/useExperiments';
+import React, { useState, useEffect, useMemo } from "react";
+import { LayoutGrid, Lightbulb, Network, Clock, GitBranch } from "lucide-react";
+import StatsCard from "./StatsCard";
+import RecentExperiments from "./RecentExperiments";
+import TopicExtractor from "../TopicExtractor/TopicExtractor";
+import AllExperiments from "../Experiments/AllExperiments";
+import AllFutureExperiments from "../Experiments/AllFutureExperiments";
+import AISummary from "./AISummary";
+import { Experiment, ExperimentSuggestion } from "../../types/research";
+import { useExperiments } from "../../hooks/useExperiments";
 
 interface DashboardProps {
   onNewExperiment: () => void;
@@ -15,7 +15,7 @@ interface DashboardProps {
   onSuggestionsGenerated: (suggestions: ExperimentSuggestion[]) => void;
 }
 
-type ExperimentTab = "all" | "completed" | "planned" | "rejected";
+type ExperimentTab = "all" | "past" | "planned" | "postponed";
 
 const Dashboard: React.FC<DashboardProps> = ({
   onNewExperiment,
@@ -23,15 +23,17 @@ const Dashboard: React.FC<DashboardProps> = ({
   onSuggestionsGenerated,
 }) => {
   const [showTopicExtractor, setShowTopicExtractor] = useState(false);
-  const [activeTab, setActiveTab] = useState<ExperimentTab>('all');
-  const [view, setView] = useState<'dashboard' | 'allPast' | 'allFuture'>('dashboard');
+  const [activeTab, setActiveTab] = useState<ExperimentTab>("all");
+  const [view, setView] = useState<"dashboard" | "allPast" | "allFuture">(
+    "dashboard"
+  );
 
   const {
     experiments: filteredExperiments,
     loading,
     error,
     fetchExperiments,
-    getCounts
+    getCounts,
   } = useExperiments();
 
   // Fetch experiments when tab changes
@@ -42,40 +44,41 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Sort experiments by date
   const sortedExperiments = useMemo(() => {
     return [...filteredExperiments].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [filteredExperiments]);
 
   const counts = useMemo(() => getCounts(), [getCounts]);
 
   const tabs: { id: ExperimentTab; label: string; count: number }[] = [
-    { id: 'all', label: 'All', count: counts.total },
-    { id: 'past', label: 'Past', count: counts.accepted },
-    { id: 'planned', label: 'Planned', count: counts.planned },
-    { id: 'deferred', label: 'Deferred', count: counts.deferred },
+    { id: "all", label: "All", count: counts.total },
+    { id: "past", label: "Past", count: counts.past },
+    { id: "planned", label: "Planned", count: counts.planned },
+    { id: "postponed", label: "Postponed", count: counts.postponed },
   ];
 
-  if (view === 'allPast') {
+  if (view === "allPast") {
     return (
       <AllExperiments
         experiments={sortedExperiments}
-        onBack={() => setView('dashboard')}
+        onBack={() => setView("dashboard")}
       />
     );
   }
 
-  if (view === 'allFuture') {
+  if (view === "allFuture") {
     return (
       <AllFutureExperiments
-        experiments={sortedExperiments.filter(e => e.status === 'planned')}
-        onBack={() => setView('dashboard')}
+        experiments={sortedExperiments.filter((e) => e.status === "planned")}
+        onBack={() => setView("dashboard")}
         onNewExperiment={onNewExperiment}
       />
     );
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-gray-50 p-6">
+    <div className="flex-1 p-6 overflow-auto bg-gray-50">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8">
@@ -88,7 +91,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Stats Overview Module */}
-        <div className="mb-8 rounded-xl bg-white p-8 shadow-xl">
+        <div className="p-8 mb-8 bg-white shadow-xl rounded-xl">
           <h2 className="mb-6 text-2xl font-bold text-gray-900">
             Research Statistics Overview
           </h2>
@@ -113,10 +116,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             />
             <StatsCard
               title="Pending Review"
-              value={counts.deferred}
+              value={counts.planned}
               icon={Clock}
               description="Experiments for later consideration"
-              trend={{ value: counts.deferred, label: 'pending' }}
+              trend={{ value: counts.planned, label: "planned" }}
             />
             <StatsCard
               title="Connected Ideas"
@@ -127,9 +130,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             />
             <button
               onClick={onViewGraph}
-              className="flex h-full flex-col items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+              className="flex flex-col items-center justify-center h-full p-6 text-white transition-all duration-200 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              <Network className="mb-2 h-10 w-10" />
+              <Network className="w-10 h-10 mb-2" />
               <span className="text-sm font-medium">View Research Graph</span>
             </button>
           </div>
@@ -138,7 +141,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Experiments Section */}
-          <div className="rounded-lg bg-white shadow">
+          <div className="bg-white rounded-lg shadow">
             {/* Tabs Header */}
             <div className="border-b border-gray-200">
               <div className="flex items-center justify-between px-6 pt-6">
@@ -146,7 +149,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   Experiments
                 </h2>
               </div>
-              <div className="mt-4 flex space-x-1 px-6">
+              <div className="flex px-6 mt-4 space-x-1">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
@@ -182,16 +185,18 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div className="h-[calc(100vh-32rem)] min-h-[400px] overflow-y-auto p-6">
               {loading ? (
                 <div className="flex h-full items-center justify-center">
-                  <div className="text-center text-gray-500">Loading experiments...</div>
+                  <div className="text-center text-gray-500">
+                    Loading experiments...
+                  </div>
                 </div>
               ) : error ? (
-                <div className="flex h-full items-center justify-center">
+                <div className="flex items-center justify-center h-full">
                   <div className="text-center text-red-500">{error}</div>
                 </div>
               ) : sortedExperiments.length > 0 ? (
                 <RecentExperiments experiments={sortedExperiments} />
               ) : (
-                <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6">
+                <div className="flex items-center justify-center h-full p-6 border-2 border-gray-300 border-dashed rounded-lg bg-gray-50">
                   <div className="text-center">
                     <p className="text-sm text-gray-500">
                       No experiments found in this category.

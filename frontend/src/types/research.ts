@@ -1,5 +1,5 @@
-export type NodeStatus = 'accepted' | 'pending' | 'rejected' | 'planned';
-export type NodeType = 'hypothesis' | 'experiment' | 'result' | 'analysis';
+export type NodeStatus = "completed" | "postponed" | "planned";
+export type NodeType = "hypothesis" | "experiment" | "result" | "analysis";
 
 export interface RelatedPaper {
   id: string;

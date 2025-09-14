@@ -1,10 +1,11 @@
-import React from 'react';
-import { Sparkles, ArrowLeft } from 'lucide-react';
-import ChatPanel from '../Chat/ChatPanel';
-import GraphPanel from '../Graph/GraphPanel';
-import { useChat } from '../../hooks/useChat';
-import { useExperiments } from '../../hooks/useExperiments';
-import { ExperimentSuggestion, NodeStatus } from '../../types/research';
+import React, { useState } from "react";
+import { Sparkles, ArrowLeft } from "lucide-react";
+import ChatPanel from "../Chat/ChatPanel";
+import GraphPanel from "../Graph/GraphPanel";
+import ResizableDivider from "../Common/ResizableDivider";
+import { useChat } from "../../hooks/useChat";
+import { useExperiments } from "../../hooks/useExperiments";
+import { ExperimentSuggestion, NodeStatus } from "../../types/research";
 
 interface AIChatResearchAssistantProps {
   initialSuggestions?: ExperimentSuggestion[];
@@ -16,38 +17,54 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   onBackToDashboard,
 }) => {
   const { messages, isLoading, sendMessage } = useChat(initialSuggestions);
-  const {
-    experiments,
-    getExperimentsByStatus,
-    updateExperimentStatus
-  } = useExperiments();
+  const { experiments, getExperimentsByStatus, updateExperimentStatus } =
+    useExperiments();
+
+  // State for panel widths
+  const [chatPanelWidth, setChatPanelWidth] = useState(400);
 
   const handleAcceptSuggestion = (suggestion: ExperimentSuggestion) => {
     // Instead of using addExperiment, we'll use the API through useExperiments hook
     // This will be handled by the parent component
-    console.log('Accept suggestion:', suggestion);
+    console.log("Accept suggestion:", suggestion);
   };
 
   const handleDeclineSuggestion = (suggestion: ExperimentSuggestion) => {
     // Instead of using addExperiment, we'll use the API through useExperiments hook
     // This will be handled by the parent component
-    console.log('Decline suggestion:', suggestion);
+    console.log("Decline suggestion:", suggestion);
   };
 
-  const acceptedCount = getExperimentsByStatus('accepted').length;
-  const pendingCount = getExperimentsByStatus('pending').length;
+  const handleResize = (newWidth: number) => {
+    setChatPanelWidth(newWidth);
+  };
+
+  const handleFileUpload = (file: File) => {
+    console.log("File uploaded:", file.name, file.type, file.size);
+    // TODO: Implement file processing logic
+    // This could include:
+    // 1. Upload file to backend
+    // 2. Extract text content
+    // 3. Generate research suggestions based on content
+    // 4. Add file info to chat messages
+  };
+
+  const acceptedCount = getExperimentsByStatus("completed").length;
+  const pendingCount = getExperimentsByStatus("planned").length;
 
   // Create relationships based on experiments data
   const relationships = experiments.map((exp, index) => ({
-    source: exp.id,
-    target: experiments[(index + 1) % experiments.length].id,
-    type: 'related',
+    id: index + 1,
+    from: parseInt(exp.id),
+    to: parseInt(experiments[(index + 1) % experiments.length].id),
+    type: "leads_to",
+    label: `Relationship ${index + 1}`,
   }));
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen w-screen flex flex-col bg-gray-50 fixed inset-0">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b px-6 py-4">
+      <header className="bg-white shadow-sm border-b px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
@@ -58,7 +75,9 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
               <ArrowLeft className="text-gray-600" size={20} />
             </button>
             <Sparkles className="text-blue-600" size={24} />
-            <h1 className="text-2xl font-bold text-gray-900">AI Research Assistant</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              AI Research Assistant
+            </h1>
           </div>
           <div className="flex items-center space-x-4 text-sm text-gray-600">
             <div className="flex items-center space-x-1">
@@ -73,18 +92,27 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
-        <ChatPanel
-          messages={messages}
-          isLoading={isLoading}
-          onSendMessage={sendMessage}
-          onAcceptSuggestion={handleAcceptSuggestion}
-          onDeclineSuggestion={handleDeclineSuggestion}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        <div className="flex-shrink-0" style={{ width: `${chatPanelWidth}px` }}>
+          <ChatPanel
+            messages={messages}
+            isLoading={isLoading}
+            onSendMessage={sendMessage}
+            onFileUpload={handleFileUpload}
+            onAcceptSuggestion={handleAcceptSuggestion}
+            onDeclineSuggestion={handleDeclineSuggestion}
+          />
+        </div>
+
+        <ResizableDivider
+          onResize={handleResize}
+          minWidth={300}
+          maxWidth={800}
         />
-        <GraphPanel
-          experiments={experiments}
-          relationships={relationships}
-        />
+
+        <div className="flex-1 min-w-0">
+          <GraphPanel experiments={experiments} relationships={relationships} />
+        </div>
       </div>
     </div>
   );

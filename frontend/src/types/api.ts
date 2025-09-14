@@ -1,11 +1,11 @@
-import { ResearchNode } from './research';
+import { ResearchNode, NodeStatus } from "./research";
 
 // Backend API Types - These match exactly with the backend schema
 
 export enum ExperimentStatus {
   PLANNED = "planned",
   COMPLETED = "completed",
-  REJECTED = "rejected",
+  POSTPONED = "postponed",
 }
 
 export enum RelationshipType {
@@ -78,7 +78,7 @@ export function apiToUIExperiment(apiExp: APIExperiment): ResearchNode {
     title: apiExp.title,
     description: apiExp.description || "",
     type: "experiment",
-    status: "pending", // Map status appropriately
+    status: apiExp.status as NodeStatus, // Map API status to UI status
     level: 0,
     motivation: apiExp.motivation,
     expectations: apiExp.expectations,
@@ -97,7 +97,7 @@ export function uiToAPIExperiment(
     description: uiExp.description,
     motivation: uiExp.motivation,
     expectations: uiExp.expectations,
-    status: ExperimentStatus.PLANNED, // Default or map from UI status
+    status: uiExp.status as ExperimentStatus, // Map UI status to API status
     extra_data: {
       keywords: uiExp.keywords,
       level: uiExp.level,

@@ -8,8 +8,8 @@ interface CustomNodeData extends ResearchNode {
 
 const statusColors = {
   completed: "bg-green-500 border-green-600",
-  planned: "bg-purple-500 border-purple-600",
-  rejected: "bg-red-500 border-red-600",
+  planned: "bg-yellow-500 border-yellow-600",
+  postponed: "bg-red-500 border-red-600",
 };
 
 const typeIcons = {
@@ -40,7 +40,7 @@ const CustomNode = ({ data }: NodeProps<CustomNodeData>) => {
           <h3 className="font-medium text-white truncate">{data.title}</h3>
         </div>
 
-        <p className="text-xs text-white/90 line-clamp-2 mb-2">
+        <p className="mb-2 text-xs text-white/90 line-clamp-2">
           {data.description}
         </p>
 

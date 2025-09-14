@@ -104,7 +104,7 @@ const ExperimentNode: React.FC<NodeProps<ExperimentNodeData>> = ({ data }) => {
         <div
           style={{
             width: 280,
-            height: experiment.id <= 3 ? 180 : 80, // Taller for nodes with images
+            height: experiment.id <= 4 ? 180 : 80, // Taller for nodes with images
             backgroundColor: "white",
             border: `2px solid ${getStatusColor(experiment.status)}`,
             borderRadius: 8,
@@ -159,8 +159,8 @@ const ExperimentNode: React.FC<NodeProps<ExperimentNodeData>> = ({ data }) => {
             />
           </div>
 
-          {/* Hardcoded images for experiments with IDs 1, 2, and 3 */}
-          {experiment.id <= 3 && (
+          {/* Hardcoded images for experiments with IDs 1, 2, 4, and 6 */}
+          {experiment.id <= 4 && (
             <div
               style={{
                 flex: 1,
@@ -178,6 +178,8 @@ const ExperimentNode: React.FC<NodeProps<ExperimentNodeData>> = ({ data }) => {
                     ? "4.gif"
                     : experiment.id === 2
                     ? "2.png"
+                    : experiment.id === 3
+                    ? "1.jpeg"
                     : "3.png"
                 }`}
                 alt={`Visualization for ${experiment.title}`}

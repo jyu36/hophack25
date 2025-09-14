@@ -9,6 +9,7 @@ import {
   ProjectOutlined,
   MessageOutlined,
 } from "@ant-design/icons";
+import Profile from "./Profile";
 
 const { Header, Sider, Content } = AntLayout;
 
@@ -53,7 +54,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         collapsed={collapsed}
         theme="light"
         className="border-r"
-        style={{ position: "fixed", height: "100vh", left: 0, top: 0, zIndex: 100 }}
+        style={{
+          position: "fixed",
+          height: "100vh",
+          left: 0,
+          top: 0,
+          zIndex: 100,
+        }}
       >
         <div className="p-4 h-16 flex items-center justify-between">
           <h1
@@ -71,10 +78,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           onClick={handleMenuClick}
         />
       </Sider>
-      <AntLayout style={{ marginLeft: collapsed ? 80 : 200, transition: "margin-left 0.2s" }}>
+      <AntLayout
+        style={{
+          marginLeft: collapsed ? 80 : 200,
+          transition: "margin-left 0.2s",
+        }}
+      >
         <Header
-          style={{ padding: 0, background: "white", position: "fixed", width: `calc(100% - ${collapsed ? 80 : 200}px)`, zIndex: 99, top: 0 }}
-          className="border-b flex items-center"
+          style={{
+            padding: 0,
+            background: "white",
+            position: "fixed",
+            width: `calc(100% - ${collapsed ? 80 : 200}px)`,
+            zIndex: 99,
+            top: 0,
+          }}
+          className="border-b flex items-center justify-between"
         >
           {React.createElement(
             collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
@@ -83,8 +102,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               onClick: () => setCollapsed(!collapsed),
             }
           )}
+          <Profile />
         </Header>
-        <Content style={{ marginTop: 64, padding: 0, overflow: "visible" }}>{children}</Content>
+        <Content style={{ marginTop: 64, padding: 0, overflow: "visible" }}>
+          {children}
+        </Content>
       </AntLayout>
     </AntLayout>
   );

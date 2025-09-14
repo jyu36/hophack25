@@ -109,7 +109,7 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
         />
 
         <div className="flex-1 min-w-0">
-          {/* <GraphPanel experiments={experiments} relationships={relationships} /> */}
+          <GraphPanel experiments={experiments} relationships={relationships} />
         </div>
       </div>
     </div>

@@ -2,6 +2,8 @@ import React from 'react';
 import { Bot, User, File, Download } from 'lucide-react';
 import { ChatMessage, ExperimentSuggestion, FileAttachment } from '../../types/research';
 import SuggestionCard from './SuggestionCard';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface MessageProps {
   message: ChatMessage;
@@ -15,6 +17,11 @@ const Message: React.FC<MessageProps> = ({
   onSuggestionDecline,
 }) => {
   const isAI = message.role === 'assistant';
+
+  // Custom renderer for paragraphs to add a line after each one
+  const renderParagraph = ({ children }: any) => {
+    return <p className="mb-2 text-xs leading-relaxed">{children}</p>;
+  };
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -34,7 +41,7 @@ const Message: React.FC<MessageProps> = ({
 
   return (
     <div
-      className={`flex ${isAI ? 'justify-start' : 'justify-end'} ${isAI ? 'space-x-3' : 'space-x-reverse space-x-3'}`}
+      className={`flex ${isAI ? 'justify-start' : 'justify-end'} ${isAI ? 'space-x-3' : 'space-x-reverse space-x-3'} mt-4`}
     >
       {/* AI Avatar - Left side */}
       {isAI && (
@@ -52,7 +59,18 @@ const Message: React.FC<MessageProps> = ({
               : 'bg-blue-600 text-white'
           }`}
         >
-          <p className="text-xs leading-relaxed">{message.content}</p>
+          {isAI ? (
+            <div className="prose prose-sm max-w-none text-xs leading-relaxed">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{ p: renderParagraph }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
+          ) : (
+            <p className="text-xs leading-relaxed">{message.content}</p>
+          )}
 
           {/* File Attachments */}
           {message.attachments && message.attachments.length > 0 && (

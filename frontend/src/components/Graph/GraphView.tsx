@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 import ReactFlow, {
   Background,
-  Controls,
+  // Controls, // Removed Controls import
   Edge,
   Node,
   NodeTypes,
@@ -107,69 +107,14 @@ const CustomZoomControls: React.FC<{
   }, [reactFlowInstance, updateZoomLevel]);
 
   // Debug log to verify component is rendering
-  console.log(
-    "CustomZoomControls rendering, reactFlowInstance:",
-    !!reactFlowInstance
-  );
+  // console.log(
+  //   "CustomZoomControls rendering, reactFlowInstance:",
+  //   !!reactFlowInstance
+  // );
 
   return (
-    <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 flex flex-col space-y-2 z-50">
-      <div className="flex flex-col space-y-1">
-        <button
-          onClick={handleZoomIn}
-          className="p-2 hover:bg-gray-100 rounded transition-colors"
-          title="Zoom In (Ctrl + Plus)"
-        >
-          <ZoomIn size={16} />
-        </button>
-        <button
-          onClick={handleZoomOut}
-          className="p-2 hover:bg-gray-100 rounded transition-colors"
-          title="Zoom Out (Ctrl + Minus)"
-        >
-          <ZoomOut size={16} />
-        </button>
-        <button
-          onClick={handleFitView}
-          className="p-2 hover:bg-gray-100 rounded transition-colors"
-          title="Fit View (Ctrl + 0)"
-        >
-          <Maximize2 size={16} />
-        </button>
-        <button
-          onClick={handleResetView}
-          className="p-2 hover:bg-gray-100 rounded transition-colors"
-          title="Reset View"
-        >
-          <RotateCcw size={16} />
-        </button>
-        <button
-          onClick={handlePanModeToggle}
-          className={`p-2 rounded transition-colors ${
-            isPanMode ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
-          }`}
-          title="Toggle Pan Mode (Space)"
-        >
-          <Hand size={16} />
-        </button>
-      </div>
-
-      <div className="border-t border-gray-200 pt-2">
-        <div className="px-2 py-1 text-xs text-gray-600 text-center mb-2">
-          {Math.round(zoomLevel * 100)}%
-        </div>
-        <input
-          type="range"
-          min="0.1"
-          max="2"
-          step="0.1"
-          value={zoomLevel}
-          onChange={handleZoomSlider}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-          title="Zoom Level"
-        />
-      </div>
-    </div>
+    // Removed CustomZoomControls component
+    null
   );
 };
 
@@ -229,7 +174,7 @@ const GraphView: React.FC<GraphViewProps> = ({
   });
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
-  const [isPanMode, setIsPanMode] = useState(false);
+  // const [isPanMode, setIsPanMode] = useState(false); // Removed isPanMode state
 
   // Apply layout
   const { nodes, edges } = getLayoutedElements(initialNodes, initialEdges);
@@ -275,39 +220,39 @@ const GraphView: React.FC<GraphViewProps> = ({
   };
 
   // Keyboard shortcuts for zoom and pan
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (!reactFlowInstance) return;
-
-      if (event.ctrlKey || event.metaKey) {
-        switch (event.key) {
-          case "=":
-          case "+":
-            event.preventDefault();
-            reactFlowInstance.zoomIn();
-            break;
-          case "-":
-            event.preventDefault();
-            reactFlowInstance.zoomOut();
-            break;
-          case "0":
-            event.preventDefault();
-            reactFlowInstance.fitView({ padding: 0.1 });
-            break;
-        }
-      } else if (event.key === " ") {
-        event.preventDefault();
-        setIsPanMode(!isPanMode);
-      }
-    },
-    [reactFlowInstance, isPanMode]
-  );
+  // const handleKeyDown = useCallback(
+  //   (event: KeyboardEvent) => {
+  //     if (!reactFlowInstance) return;
+  //
+  //     if (event.ctrlKey || event.metaKey) {
+  //       switch (event.key) {
+  //         case "=":
+  //         case "+":
+  //           event.preventDefault();
+  //           reactFlowInstance.zoomIn();
+  //           break;
+  //         case "-":
+  //           event.preventDefault();
+  //           reactFlowInstance.zoomOut();
+  //           break;
+  //         case "0":
+  //           event.preventDefault();
+  //           reactFlowInstance.fitView({ padding: 0.1 });
+  //           break;
+  //       }
+  //     } else if (event.key === " ") {
+  //       event.preventDefault();
+  //       setIsPanMode(!isPanMode);
+  //     }
+  //   },
+  //   [reactFlowInstance, isPanMode]
+  // );
 
   // Add keyboard event listeners
-  React.useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyDown]);
+  // React.useEffect(() => {
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   return () => document.removeEventListener("keydown", handleKeyDown);
+  // }, [handleKeyDown]);
 
   // Add onNodeDoubleClick to node data
   const nodesWithCallback = nodes.map((node) => ({
@@ -353,23 +298,23 @@ const GraphView: React.FC<GraphViewProps> = ({
         minZoom={0.1}
         maxZoom={2}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-        panOnDrag={!isPanMode}
+        // panOnDrag={!isPanMode} // Removed panOnDrag
         panOnScroll={true}
         zoomOnScroll={true}
         zoomOnPinch={true}
         preventScrolling={false}
-        nodesDraggable={!isPanMode}
-        nodesConnectable={!isPanMode}
-        elementsSelectable={!isPanMode}
+        // nodesDraggable={!isPanMode} // Removed nodesDraggable
+        // nodesConnectable={!isPanMode} // Removed nodesConnectable
+        // elementsSelectable={!isPanMode} // Removed elementsSelectable
       >
         <Background />
-        <Controls />
+        {/* <Controls /> */} {/* Removed Controls component */}
       </ReactFlow>
-      <CustomZoomControls
+      {/* <CustomZoomControls // Removed CustomZoomControls
         reactFlowInstance={reactFlowInstance}
         isPanMode={isPanMode}
         onPanModeToggle={() => setIsPanMode(!isPanMode)}
-      />
+      /> */}
 
       {selectedNode && (
         <NodeDetailsModal

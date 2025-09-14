@@ -113,6 +113,7 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
       position: { x: 0, y: 0 }, // Initial position, will be overridden by Dagre
       data: {
         experiment,
+        nodes: experiments,
         onNodeClick,
         onNodeStatusChange,
       },

@@ -9,6 +9,7 @@ interface ChatPanelProps {
   messages: ChatMessage[];
   isLoading: boolean;
   onSendMessage: (message: string) => void;
+  onFileUpload?: (file: File) => void;
   onAcceptSuggestion: (suggestion: ExperimentSuggestion) => void;
   onDeclineSuggestion: (suggestion: ExperimentSuggestion) => void;
 }
@@ -25,6 +26,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   messages,
   isLoading,
   onSendMessage,
+  onFileUpload,
   onAcceptSuggestion,
   onDeclineSuggestion,
 }) => {
@@ -69,6 +71,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       <div className="flex-shrink-0">
         <ChatInput
           onSend={onSendMessage}
+          onFileUpload={onFileUpload}
           isLoading={isLoading}
           suggestedKeywords={suggestedKeywords}
         />

@@ -68,7 +68,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
       />
 
       {/* Input - Fixed height */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 w-full min-w-0">
         <ChatInput
           onSend={onSendMessage}
           onFileUpload={onFileUpload}

@@ -21,9 +21,23 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
-    if (message.trim()) {
-      onSend(message.trim());
+    if (message.trim() || selectedFile) {
+      // Send text message if there's text
+      if (message.trim()) {
+        onSend(message.trim());
+      }
+
+      // Send file if there's a selected file
+      if (selectedFile && onFileUpload) {
+        onFileUpload(selectedFile);
+      }
+
+      // Clear both message and file after sending
       setMessage('');
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -52,9 +66,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
 
     setSelectedFile(file);
-    if (onFileUpload) {
-      onFileUpload(file);
-    }
+    // Don't send file immediately - wait for user to click send button
   };
 
   const handleFileClick = () => {
@@ -106,14 +118,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      <div className="flex space-x-2">
+      <div className="flex space-x-2 min-w-0">
         <input
           type="text"
           value={message}
           onChange={(e: ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Describe your research interests or ask about experiments..."
-          className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           disabled={isLoading}
         />
 
@@ -123,14 +135,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
           disabled={isLoading}
           variant="secondary"
           size="sm"
+          className="flex-shrink-0"
         >
           <Paperclip className="h-5 w-5" />
         </Button>
 
         <Button
           onClick={handleSend}
-          disabled={!message.trim() || isLoading}
+          disabled={(!message.trim() && !selectedFile) || isLoading}
           isLoading={isLoading}
+          className="flex-shrink-0"
         >
           <Send className="h-5 w-5" />
         </Button>

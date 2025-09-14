@@ -16,7 +16,7 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   initialSuggestions = [],
   onBackToDashboard,
 }) => {
-  const { messages, isLoading, sendMessage } = useChat(initialSuggestions);
+  const { messages, isLoading, sendMessage, sendFile } = useChat(initialSuggestions);
   const { experiments, getExperimentsByStatus, updateExperimentStatus } =
     useExperiments();
 
@@ -41,12 +41,8 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
 
   const handleFileUpload = (file: File) => {
     console.log("File uploaded:", file.name, file.type, file.size);
-    // TODO: Implement file processing logic
-    // This could include:
-    // 1. Upload file to backend
-    // 2. Extract text content
-    // 3. Generate research suggestions based on content
-    // 4. Add file info to chat messages
+    // Send file to chat for processing
+    sendFile(file);
   };
 
   const acceptedCount = getExperimentsByStatus("completed").length;

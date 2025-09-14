@@ -48,11 +48,20 @@ export interface ExperimentSuggestion {
   relatedPapers?: RelatedPaper[];
 }
 
+export interface FileAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url?: string; // For uploaded files
+}
+
 export interface ChatMessage {
   id: string;
   type: "user" | "ai";
   content: string;
   suggestions?: ExperimentSuggestion[];
+  attachments?: FileAttachment[];
   timestamp: Date;
 }
 

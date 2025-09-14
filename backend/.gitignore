@@ -23,7 +23,6 @@ coverage.xml
 .hypothesis
 
 # Database
-*.db
 *.sqlite
 *.sqlite3
 

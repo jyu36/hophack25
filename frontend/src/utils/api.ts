@@ -1,13 +1,4 @@
 import axios from "axios";
-import { ResearchNode } from "../types/research";
-import {
-  APIExperiment,
-  APIExperimentRelationship,
-  APIGraphOverview,
-  APINodeInfo,
-  apiToUIExperiment,
-  uiToAPIExperiment,
-} from "../types/api";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000",
@@ -16,7 +7,7 @@ const api = axios.create({
   },
 });
 
-// Notes and Discussion Operations
+// Notes Operations
 export async function getNotes(): Promise<{ last_meeting_notes: string }> {
   const response = await api.get("/notes");
   return response.data;
@@ -31,6 +22,7 @@ export async function updateNotes(
   return response.data;
 }
 
+// Discussion Operations
 export async function getDiscussion(): Promise<{ discussion_points: string }> {
   const response = await api.get("/discussion");
   return response.data;
@@ -45,12 +37,24 @@ export async function updateDiscussion(
   return response.data;
 }
 
-// Graph and Node Operations
-export async function getGraphOverview(): Promise<APIGraphOverview> {
-  const response = await api.get("/graph/overview");
+// Feedback Operations
+export async function getFeedback(): Promise<{ professor_feedback: string }> {
+  const response = await api.get("/feedback");
   return response.data;
 }
 
-// ... rest of the existing code ...
+export async function updateFeedback(
+  feedback: string
+): Promise<{ success: boolean }> {
+  const response = await api.post("/feedback", null, {
+    params: { professor_feedback: feedback },
+  });
+  return response.data;
+}
+
+export async function deleteFeedback(): Promise<{ success: boolean }> {
+  const response = await api.delete("/feedback");
+  return response.data;
+}
 
 export default api;

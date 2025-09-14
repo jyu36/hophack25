@@ -1,9 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { ProTable } from "@ant-design/pro-components";
 import type { ProColumns } from "@ant-design/pro-components";
-import { Tag, Typography, Card, message } from "antd";
+import {
+  Tag,
+  Typography,
+  Card,
+  Button,
+  message,
+  Input,
+  Row,
+  Col,
+  Space,
+} from "antd";
+import { PlusOutlined, MinusOutlined, SendOutlined } from "@ant-design/icons";
 import { Student } from "../mockData";
-import api from "../utils/api";
+import api, { getFeedback, updateFeedback } from "../utils/api";
 import axios, { AxiosError } from "axios";
 
 const { Paragraph } = Typography;
@@ -32,15 +43,25 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
     discussionPoints: "",
   });
   const [loading, setLoading] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [feedback, setFeedback] = useState<string>("");
+  const [sendingFeedback, setSendingFeedback] = useState(false);
 
-  const fetchExperiments = async () => {
+  const fetchTomData = async () => {
     try {
-      const response = await api.get("/graph/overview");
-      const experiments: Experiment[] = response.data.nodes || [];
-
-      // Get tasks from the last 10 days
+      setLoading(true);
       const tenDaysAgo = new Date();
       tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+
+      // Fetch all data in parallel
+      const [graphResponse, notesResponse, discussionResponse] =
+        await Promise.all([
+          api.get("/graph/overview"),
+          api.get("/notes"),
+          api.get("/discussion"),
+        ]);
+
+      const experiments: Experiment[] = graphResponse.data.nodes || [];
 
       // Filter experiments by date and status
       const recentExperiments = experiments.filter((exp) => {
@@ -56,99 +77,77 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
         .filter((exp) => exp.status === "planned")
         .map((exp) => exp.title);
 
-      return { completed, planning };
+      setRealStudentData({
+        completed,
+        planning,
+        lastMeetingNotes: notesResponse.data.last_meeting_notes || "",
+        discussionPoints: discussionResponse.data.discussion_points || "",
+      });
     } catch (error) {
-      console.error("Error fetching experiments:", error);
-      return { completed: [], planning: [] };
+      console.error("Error fetching data:", error);
+      message.error("Failed to fetch data from backend");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const setupSSE = () => {
-      const notesEventSource = new EventSource(
-        "http://localhost:8000/notes/updates"
-      );
-      const discussionEventSource = new EventSource(
-        "http://localhost:8000/discussion/updates"
-      );
-
-      notesEventSource.onmessage = async (event) => {
-        const notesData = JSON.parse(event.data);
-        const experimentsData = await fetchExperiments();
-
-        setRealStudentData((prev) => ({
-          ...prev,
-          ...experimentsData,
-          lastMeetingNotes:
-            notesData.last_meeting_notes || "No meeting notes available",
-        }));
-      };
-
-      discussionEventSource.onmessage = (event) => {
-        const discussionData = JSON.parse(event.data);
-        setRealStudentData((prev) => ({
-          ...prev,
-          discussionPoints:
-            discussionData.discussion_points ||
-            "No discussion points available",
-        }));
-      };
-
-      notesEventSource.onerror = (error) => {
-        console.error("Notes SSE error:", error);
-        notesEventSource.close();
-        setTimeout(setupSSE, 5000); // Try to reconnect after 5 seconds
-      };
-
-      discussionEventSource.onerror = (error) => {
-        console.error("Discussion SSE error:", error);
-        discussionEventSource.close();
-        setTimeout(setupSSE, 5000); // Try to reconnect after 5 seconds
-      };
-
-      return () => {
-        notesEventSource.close();
-        discussionEventSource.close();
-      };
-    };
-
-    // Initial data fetch
-    const fetchInitialData = async () => {
-      try {
-        setLoading(true);
-        const [notesResponse, discussionResponse] = await Promise.all([
-          api.get("/notes"),
-          api.get("/discussion"),
-        ]);
-
-        const experimentsData = await fetchExperiments();
-
-        setRealStudentData({
-          ...experimentsData,
-          lastMeetingNotes:
-            notesResponse.data.last_meeting_notes ||
-            "No meeting notes available",
-          discussionPoints:
-            discussionResponse.data.discussion_points ||
-            "No discussion points available",
-        });
-      } catch (error) {
-        console.error("Error fetching initial data:", error);
-        message.error("Failed to load initial data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInitialData();
-    const cleanup = setupSSE();
-
-    return () => {
-      cleanup();
-    };
+    fetchTomData();
+    loadFeedback();
   }, []);
 
+  const loadFeedback = async () => {
+    try {
+      const feedbackData = await getFeedback();
+      setFeedback(feedbackData.professor_feedback || "");
+    } catch (error) {
+      console.error("Error loading feedback:", error);
+    }
+  };
+
+  const toggleExpand = (studentId: string) => {
+    const newExpandedRows = new Set(expandedRows);
+    if (newExpandedRows.has(studentId)) {
+      newExpandedRows.delete(studentId);
+    } else {
+      newExpandedRows.add(studentId);
+    }
+    setExpandedRows(newExpandedRows);
+  };
+
+  const handleSendFeedback = async () => {
+    if (!feedback.trim()) {
+      message.warning("Please enter feedback before sending");
+      return;
+    }
+
+    try {
+      setSendingFeedback(true);
+      await updateFeedback(feedback);
+      message.success("Feedback sent successfully!");
+    } catch (error) {
+      console.error("Error sending feedback:", error);
+      message.error("Failed to send feedback");
+    } finally {
+      setSendingFeedback(false);
+    }
+  };
+
   const columns: ProColumns<Student>[] = [
+    {
+      title: "",
+      dataIndex: "expand",
+      width: 48,
+      render: (_, record) => (
+        <Button
+          type="text"
+          icon={
+            expandedRows.has(record.id) ? <MinusOutlined /> : <PlusOutlined />
+          }
+          onClick={() => toggleExpand(record.id)}
+        />
+      ),
+    },
     {
       title: "Student Name",
       dataIndex: "name",
@@ -162,16 +161,16 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
       key: "completed",
       width: 300,
       render: (_, record) => {
-        const completedTasks = record.isReal
+        const tasks = record.isReal
           ? realStudentData.completed
           : record.completed;
         return (
           <>
-            {completedTasks?.map((item, index) => (
+            {tasks?.map((item, index) => (
               <Tag key={index} color="green">
                 {item}
               </Tag>
-            )) || null}
+            ))}
           </>
         );
       },
@@ -182,16 +181,16 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
       key: "planning",
       width: 300,
       render: (_, record) => {
-        const planningTasks = record.isReal
+        const tasks = record.isReal
           ? realStudentData.planning
           : record.planning;
         return (
           <>
-            {planningTasks?.map((item, index) => (
+            {tasks?.map((item, index) => (
               <Tag key={index} color="blue">
                 {item}
               </Tag>
-            )) || null}
+            ))}
           </>
         );
       },
@@ -201,10 +200,8 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
       dataIndex: "lastMeetingNotes",
       key: "lastMeetingNotes",
       width: 300,
-      render: (_, record) => {
-        const notes = record.isReal
-          ? realStudentData.lastMeetingNotes
-          : record.lastMeetingNotes;
+      render: (text, record) => {
+        const notes = record.isReal ? realStudentData.lastMeetingNotes : text;
         return (
           <Card
             size="small"
@@ -221,7 +218,6 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
                 rows: 3,
                 expandable: true,
                 symbol: "Click to expand",
-                onExpand: () => console.log("expanded"),
               }}
               style={{ marginBottom: 0 }}
             >
@@ -236,10 +232,8 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
       dataIndex: "discussionPoints",
       key: "discussionPoints",
       width: 300,
-      render: (_, record) => {
-        const points = record.isReal
-          ? realStudentData.discussionPoints
-          : record.discussionPoints;
+      render: (text, record) => {
+        const points = record.isReal ? realStudentData.discussionPoints : text;
         return (
           <Card
             size="small"
@@ -256,7 +250,6 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
                 rows: 3,
                 expandable: true,
                 symbol: "Click to expand",
-                onExpand: () => console.log("expanded"),
               }}
               style={{ marginBottom: 0 }}
             >
@@ -268,19 +261,72 @@ const StudentTable: React.FC<{ students: Student[] }> = ({ students }) => {
     },
   ];
 
+  const expandedRowRender = (record: Student) => {
+    return (
+      <div style={{ padding: "16px", backgroundColor: "#fafafa" }}>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Card title="Summary" size="small">
+              <div style={{ minHeight: "200px", padding: "8px" }}>
+                <Typography.Text type="secondary">
+                  Summary will be loaded from API endpoint (to be implemented)
+                </Typography.Text>
+                <br />
+                <Typography.Text type="secondary">
+                  This section will contain student progress summary, key
+                  achievements, and recommendations.
+                </Typography.Text>
+              </div>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card title="Professor Feedback" size="small">
+              <Space direction="vertical" style={{ width: "100%" }}>
+                <Input.TextArea
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Enter your feedback for the student..."
+                  rows={6}
+                  style={{ marginBottom: "8px" }}
+                />
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  onClick={handleSendFeedback}
+                  loading={sendingFeedback}
+                  style={{ width: "100%" }}
+                >
+                  Send Feedback
+                </Button>
+              </Space>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    );
+  };
+
   return (
     <ProTable<Student>
       columns={columns}
       dataSource={students}
       rowKey="id"
       search={false}
+      options={false}
       dateFormatter="string"
       headerTitle="Student Progress Overview"
       scroll={{ x: 1500 }}
-      pagination={{
-        pageSize: 10,
-      }}
+      pagination={false}
       loading={loading}
+      expandable={{
+        expandedRowKeys: Array.from(expandedRows),
+        onExpandedRowsChange: (expandedKeys) => {
+          setExpandedRows(new Set(expandedKeys as string[]));
+        },
+        expandedRowRender,
+        expandRowByClick: false,
+        expandIcon: () => null, // Hide the default expand icon
+      }}
     />
   );
 };

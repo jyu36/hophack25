@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import ChatPanel from "./Chat/ChatPanel";
 import GraphPanel from "./Graph/GraphPanel";
 import ResizableDivider from "./Common/ResizableDivider";
@@ -9,12 +9,10 @@ import { ExperimentSuggestion, NodeStatus } from "../types/research";
 
 interface AIChatResearchAssistantProps {
   initialSuggestions?: ExperimentSuggestion[];
-  onBackToDashboard: () => void;
 }
 
 const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   initialSuggestions = [],
-  onBackToDashboard,
 }) => {
   const { messages, isLoading, error, sendMessage, sendFile, clearConversation } = useChat(initialSuggestions);
   const { experiments, getExperimentsByStatus, updateExperimentStatus } =
@@ -57,18 +55,11 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
   }));
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-gray-50 fixed inset-0">
+    <div className="flex flex-col bg-gray-50" style={{ height: "calc(100vh - 64px)" }}>
       {/* Header */}
       <header className="bg-white shadow-sm border-b px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <button
-              onClick={onBackToDashboard}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Back to Dashboard"
-            >
-              <ArrowLeft className="text-gray-600" size={20} />
-            </button>
             <Sparkles className="text-blue-600" size={24} />
             <h1 className="text-2xl font-bold text-gray-900">
               AI Research Assistant
@@ -87,7 +78,7 @@ const AIChatResearchAssistant: React.FC<AIChatResearchAssistantProps> = ({
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden min-h-0">
+      <div className="flex-1 flex overflow-hidden">
         <div className="flex-shrink-0" style={{ width: `${chatPanelWidth}px` }}>
           <ChatPanel
             messages={messages}

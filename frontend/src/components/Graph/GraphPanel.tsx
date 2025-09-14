@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
-import { Network } from "lucide-react";
+import { Network, GitBranch } from "lucide-react";
 import GraphView from "./GraphView";
+import LineagePanel from "./LineagePanel";
 import Legend from "./Legend";
 import KeywordList from "./KeywordList";
 import { Experiment, NodeDetails, NodeStatus } from "../../types/research";
@@ -33,6 +34,8 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
 }) => {
   const [isLegendCollapsed, setIsLegendCollapsed] = useState(false);
   const [isKeywordListCollapsed, setIsKeywordListCollapsed] = useState(false);
+  const [viewMode, setViewMode] = useState<'graph' | 'lineage'>('graph');
+  const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
 
   console.log("GraphPanel received experiments:", experiments);
   console.log("GraphPanel received relationships:", relationships);
@@ -123,15 +126,68 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
     []
   );
 
+  const handleNodeSelect = useCallback((nodeId: number) => {
+    setSelectedNodeId(nodeId);
+    if (viewMode === 'graph') {
+      setViewMode('lineage');
+    }
+  }, [viewMode]);
+
+  const handleBackToGraph = useCallback(() => {
+    setViewMode('graph');
+    setSelectedNodeId(null);
+  }, []);
+
   return (
     <div className="flex flex-col flex-1">
       <div className="p-4 border-b bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <Network size={20} className="text-green-600" />
-          <h2 className="font-semibold">Research Graph</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            {viewMode === 'graph' ? (
+              <>
+                <Network size={20} className="text-green-600" />
+                <h2 className="font-semibold">Research Graph</h2>
+              </>
+            ) : (
+              <>
+                <GitBranch size={20} className="text-purple-600" />
+                <h2 className="font-semibold">Experiment Lineage</h2>
+              </>
+            )}
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center p-1 space-x-1 bg-white border rounded-lg">
+            <button
+              onClick={() => setViewMode('graph')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                viewMode === 'graph'
+                  ? 'bg-green-100 text-green-700'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <Network size={16} className="inline mr-1" />
+              Graph
+            </button>
+            <button
+              onClick={() => setViewMode('lineage')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                viewMode === 'lineage'
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+              disabled={!selectedNodeId}
+            >
+              <GitBranch size={16} className="inline mr-1" />
+              Lineage
+            </button>
+          </div>
         </div>
         <p className="mt-1 text-sm text-gray-600">
-          Visual representation of your research experiments
+          {viewMode === 'graph'
+            ? 'Visual representation of your research experiments'
+            : 'Ancestry and descendant tree for selected experiment'
+          }
         </p>
       </div>
 
@@ -145,6 +201,13 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
             </p>
           </div>
         </div>
+      ) : viewMode === 'lineage' ? (
+        <LineagePanel
+          selectedNodeId={selectedNodeId}
+          onBackToGraph={handleBackToGraph}
+          onNodeSelect={handleNodeSelect}
+          experiments={experiments}
+        />
       ) : (
         <div className="relative flex-1">
           <GraphView
@@ -155,9 +218,10 @@ const GraphPanel: React.FC<GraphPanelProps> = ({
             onCreateEdge={handleCreateEdge}
             onDeleteEdge={handleDeleteEdge}
             fetchNodeDetails={fetchNodeDetails}
+            onNodeSelect={handleNodeSelect}
           />
           <div
-            className="fixed right-4 flex flex-col"
+            className="fixed flex flex-col right-4"
             style={{ top: "5rem", width: "240px" }}
           >
             <div className="mb-4">

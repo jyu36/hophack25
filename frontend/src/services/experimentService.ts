@@ -163,6 +163,127 @@ class ExperimentService {
       method: 'POST'
     });
   }
+
+  // Lineage operations
+  async getNodeLineage(nodeId: number): Promise<{
+    node: ResearchNode;
+    ancestors: ResearchNode[];
+    descendants: ResearchNode[];
+    lineageEdges: Edge[];
+  }> {
+    // Get the full lineage by recursively fetching parents and children
+    const visited = new Set<number>();
+    const ancestors: ResearchNode[] = [];
+    const descendants: ResearchNode[] = [];
+    const lineageEdges: Edge[] = [];
+
+    // Get the root node
+    const rootNodeInfo = await this.getNode(nodeId, true, true);
+    const rootNode = rootNodeInfo.node;
+
+    // Recursively fetch all ancestors
+    const fetchAncestors = async (currentNodeId: number): Promise<void> => {
+      if (visited.has(currentNodeId)) return;
+      visited.add(currentNodeId);
+
+      const nodeInfo = await this.getNode(currentNodeId, true, false);
+
+      for (const parent of nodeInfo.parents) {
+        if (!ancestors.find(a => a.id === parent.id)) {
+          ancestors.push(parent);
+        }
+        await fetchAncestors(parent.id);
+      }
+    };
+
+    // Recursively fetch all descendants
+    const fetchDescendants = async (currentNodeId: number): Promise<void> => {
+      if (visited.has(currentNodeId)) return;
+      visited.add(currentNodeId);
+
+      const nodeInfo = await this.getNode(currentNodeId, false, true);
+
+      for (const child of nodeInfo.children) {
+        if (!descendants.find(d => d.id === child.id)) {
+          descendants.push(child);
+        }
+        await fetchDescendants(child.id);
+      }
+    };
+
+    // Reset visited set for descendants
+    visited.clear();
+
+    // Fetch all ancestors and descendants
+    await Promise.all([
+      fetchAncestors(nodeId),
+      fetchDescendants(nodeId)
+    ]);
+
+    // Get all edges in the lineage
+    const graphOverview = await this.getGraphOverview();
+    const allNodeIds = new Set([rootNode.id, ...ancestors.map(a => a.id), ...descendants.map(d => d.id)]);
+
+    const filteredEdges = graphOverview.edges.filter(edge =>
+      allNodeIds.has(edge.from_experiment_id) && allNodeIds.has(edge.to_experiment_id)
+    );
+
+    return {
+      node: rootNode,
+      ancestors,
+      descendants,
+      lineageEdges: filteredEdges
+    };
+  }
+
+  async getAncestorPath(nodeId: number, targetAncestorId?: number): Promise<{
+    path: ResearchNode[];
+    edges: Edge[];
+  }> {
+    const path: ResearchNode[] = [];
+    const edges: Edge[] = [];
+    const visited = new Set<number>();
+
+    const findPath = async (currentNodeId: number): Promise<boolean> => {
+      if (visited.has(currentNodeId)) return false;
+      visited.add(currentNodeId);
+
+      const nodeInfo = await this.getNode(currentNodeId, true, false);
+      path.push(nodeInfo.node);
+
+      // If we're looking for a specific ancestor and found it
+      if (targetAncestorId && currentNodeId === targetAncestorId) {
+        return true;
+      }
+
+      // If no specific target, just go to the root (node with no parents)
+      if (!targetAncestorId && nodeInfo.parents.length === 0) {
+        return true;
+      }
+
+      // Continue with the first parent (could be enhanced to find best path)
+      if (nodeInfo.parents.length > 0) {
+        const parent = nodeInfo.parents[0];
+        const found = await findPath(parent.id);
+        if (found) {
+          // Add edge information
+          const graphOverview = await this.getGraphOverview();
+          const edge = graphOverview.edges.find(e =>
+            e.from_experiment_id === parent.id && e.to_experiment_id === currentNodeId
+          );
+          if (edge) edges.push(edge);
+          return true;
+        }
+      }
+
+      // Backtrack
+      path.pop();
+      return false;
+    };
+
+    await findPath(nodeId);
+    return { path: path.reverse(), edges: edges.reverse() };
+  }
 }
 
 // Create a singleton instance

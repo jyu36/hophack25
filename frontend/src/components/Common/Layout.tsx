@@ -53,6 +53,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         collapsed={collapsed}
         theme="light"
         className="border-r"
+        style={{ position: "fixed", height: "100vh", left: 0, top: 0, zIndex: 100 }}
       >
         <div className="p-4 h-16 flex items-center justify-between">
           <h1
@@ -70,9 +71,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           onClick={handleMenuClick}
         />
       </Sider>
-      <AntLayout>
+      <AntLayout style={{ marginLeft: collapsed ? 80 : 200, transition: "margin-left 0.2s" }}>
         <Header
-          style={{ padding: 0, background: "white" }}
+          style={{ padding: 0, background: "white", position: "fixed", width: `calc(100% - ${collapsed ? 80 : 200}px)`, zIndex: 99, top: 0 }}
           className="border-b flex items-center"
         >
           {React.createElement(
@@ -83,7 +84,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             }
           )}
         </Header>
-        <Content className="m-6">{children}</Content>
+        <Content style={{ marginTop: 64, padding: 0, overflow: "visible" }}>{children}</Content>
       </AntLayout>
     </AntLayout>
   );

@@ -100,8 +100,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   }
 
   return (
-    <div className="flex-1 p-6 overflow-auto bg-gray-50">
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl p-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
@@ -161,7 +161,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 pb-8">
           {/* Experiments Section */}
           <div className="bg-white rounded-lg shadow">
             {/* Tabs Header */}
@@ -203,8 +203,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </div>
 
-            {/* Scrollable Content Area */}
-            <div className="h-[calc(100vh-32rem)] min-h-[400px] overflow-y-auto p-6">
+            {/* Content Area */}
+            <div className="p-6">
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center text-gray-500">

@@ -33,6 +33,7 @@ interface GraphViewProps {
   ) => void;
   onDeleteEdge: (edgeId: string) => void;
   fetchNodeDetails: (nodeId: string) => Promise<NodeDetails>;
+  onNodeSelect?: (nodeId: number) => void;
 }
 
 const nodeTypes: NodeTypes = {
@@ -92,6 +93,7 @@ const GraphView: React.FC<GraphViewProps> = ({
   onNodeStatusChange,
   onCreateBranch,
   fetchNodeDetails,
+  onNodeSelect,
 }) => {
   const [selectedNode, setSelectedNode] = useState<ResearchNode | null>(null);
   const [nodeDetails, setNodeDetails] = useState<NodeDetails>({
@@ -145,6 +147,13 @@ const GraphView: React.FC<GraphViewProps> = ({
     }
   };
 
+  const handleNodeClick = useCallback((nodeId: string) => {
+    const numericId = parseInt(nodeId);
+    if (onNodeSelect) {
+      onNodeSelect(numericId);
+    }
+  }, [onNodeSelect]);
+
   // Add onNodeDoubleClick to node data
   const nodesWithCallback = nodes.map((node) => ({
     ...node,
@@ -176,6 +185,7 @@ const GraphView: React.FC<GraphViewProps> = ({
         nodesDraggable={true}
         nodesConnectable={true}
         elementsSelectable={true}
+        onNodeClick={(_, node) => handleNodeClick(node.id)}
       >
         <Background />
       </ReactFlow>

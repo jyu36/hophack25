@@ -27,11 +27,9 @@ const DashboardWrapper: React.FC = () => {
 };
 
 const ResearchAssistantWrapper: React.FC = () => {
-  const navigate = useNavigate();
   return (
     <AIChatResearchAssistant
       initialSuggestions={[]}
-      onBackToDashboard={() => navigate("/")}
     />
   );
 };

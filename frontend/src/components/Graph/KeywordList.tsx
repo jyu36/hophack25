@@ -1,5 +1,5 @@
-import React from 'react';
-import { Check, ChevronRight } from 'lucide-react';
+import React from "react";
+import { Check, ChevronRight } from "lucide-react";
 
 interface Keyword {
   text: string;
@@ -23,7 +23,7 @@ const KeywordList: React.FC<KeywordListProps> = ({
   return (
     <div
       className={`absolute top-4 right-4 bg-white rounded-lg shadow-lg border transition-all duration-300 ${
-        isCollapsed ? 'w-12' : 'w-64'
+        isCollapsed ? "w-12" : "w-64"
       }`}
     >
       {/* Header */}
@@ -35,7 +35,7 @@ const KeywordList: React.FC<KeywordListProps> = ({
           >
             <ChevronRight
               className={`h-4 w-4 transition-transform duration-300 ${
-                isCollapsed ? '' : 'rotate-180'
+                isCollapsed ? "" : "rotate-180"
               }`}
             />
           </button>
@@ -65,18 +65,20 @@ const KeywordList: React.FC<KeywordListProps> = ({
                   <span
                     className={`ml-2 text-sm ${
                       keyword.isUsed
-                        ? 'line-through text-gray-400'
-                        : 'text-gray-700 hover:text-blue-600 cursor-pointer'
+                        ? "line-through text-gray-400"
+                        : "text-gray-700 hover:text-blue-600 cursor-pointer"
                     }`}
-                    onClick={() => !keyword.isUsed && onKeywordClick(keyword.text)}
+                    onClick={() =>
+                      !keyword.isUsed && onKeywordClick(keyword.text)
+                    }
                   >
                     {keyword.text}
                   </span>
                 </div>
                 <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100">
-                  {new Date(keyword.timestamp).toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
+                  {new Date(keyword.timestamp).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </span>
               </div>

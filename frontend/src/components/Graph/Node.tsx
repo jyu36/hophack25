@@ -77,4 +77,5 @@ const CustomNode = ({ data }: NodeProps<CustomNodeData>) => {
   );
 };
 
-export default memo(CustomNode);
+const MemoizedNode = memo(CustomNode);
+export default MemoizedNode;

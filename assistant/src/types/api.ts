@@ -95,3 +95,35 @@ export interface ServerConfig {
   graphApiBase: string;
   logLevel: string;
 }
+
+// Summary types
+export interface SummaryRequest {
+  ignore_cache?: boolean;
+}
+
+export interface SummaryResponse {
+  summary: string;
+  generated_at: string;
+  cache_hit: boolean;
+  node_count: number;
+  edge_count: number;
+}
+
+export interface GraphOverview {
+  nodes: Array<{
+    id: number;
+    title: string;
+    status: string;
+    type: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
+  }>;
+  edges: Array<{
+    id: number;
+    from: number;
+    to: number;
+    type: string;
+    label: string;
+  }>;
+}

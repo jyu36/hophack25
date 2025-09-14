@@ -89,13 +89,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="border-t bg-gray-50 p-4">
+    <div className="p-4 border-t bg-gray-50">
       {/* File Upload Section */}
       {selectedFile && (
-        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="p-3 mb-3 border border-blue-200 rounded-lg bg-blue-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <File className="h-4 w-4 text-blue-500" />
+              <File className="w-4 h-4 text-blue-500" />
               <span className="text-sm text-blue-700">{selectedFile.name}</span>
               <span className="text-xs text-blue-500">
                 ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
@@ -105,7 +105,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               onClick={clearFile}
               className="text-blue-400 hover:text-blue-600"
             >
-              <X className="h-4 w-4" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -113,19 +113,22 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
       {/* Error Message */}
       {error && (
-        <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+        <div className="p-2 mb-3 text-sm text-red-600 border border-red-200 rounded bg-red-50">
           {error}
         </div>
       )}
 
-      <div className="flex space-x-2 min-w-0">
+      <div className="flex min-w-0 space-x-2">
         <input
           type="text"
           value={message}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            // console.log("Input value:", e.target.value);
+            setMessage(e.target.value);
+          }}
+          onKeyPress={handleKeyPress} // Re-enabled
           placeholder="Describe your research interests or ask about experiments..."
-          className="flex-1 min-w-0 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          className="flex-1 min-w-0 px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
           disabled={isLoading}
         />
 
@@ -137,7 +140,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           size="sm"
           className="flex-shrink-0"
         >
-          <Paperclip className="h-5 w-5" />
+          <Paperclip className="w-5 h-5" />
         </Button>
 
         <Button
@@ -146,7 +149,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           isLoading={isLoading}
           className="flex-shrink-0"
         >
-          <Send className="h-5 w-5" />
+          <Send className="w-5 h-5" />
         </Button>
       </div>
 
@@ -167,7 +170,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               <button
                 key={keyword}
                 onClick={() => setMessage(keyword)}
-                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                className="px-3 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50"
               >
                 {keyword}
               </button>

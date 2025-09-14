@@ -101,7 +101,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl p-6">
+      <div className="p-6 mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
@@ -119,14 +119,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
             <StatsCard
-              title="Total Experiments"
+              title={<>Total<br />Experiments</>}
               value={counts.total}
               icon={LayoutGrid}
               description="All research experiments"
               trend={{ value: counts.total, label: "total" }}
             />
             <StatsCard
-              title="Completed Experiments"
+              title={<>Completed<br />Experiments</>}
               value={counts.completed}
               icon={Lightbulb}
               description="Successfully completed experiments"
@@ -137,14 +137,14 @@ const Dashboard: React.FC<DashboardProps> = ({
               }}
             />
             <StatsCard
-              title="Planned Experiments"
+              title={<>Planned<br />Experiments</>}
               value={counts.planned}
               icon={Clock}
               description="Experiments for later consideration"
               trend={{ value: counts.planned, label: "planned" }}
             />
             <StatsCard
-              title="Connected Ideas"
+              title={<>Connected<br />Ideas</>}
               value={counts.total > 1 ? counts.total - 1 : 0}
               icon={GitBranch}
               description="Relationships between experiments"
@@ -161,9 +161,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 pb-8">
+        <div className="grid grid-cols-1 gap-6 pb-8 lg:grid-cols-2">
           {/* Experiments Section */}
-          <div className="bg-white rounded-lg shadow">
+          <div className="flex flex-col h-full bg-white rounded-lg shadow">
             {/* Tabs Header */}
             <div className="border-b border-gray-200">
               <div className="flex items-center justify-between px-6 pt-6">
@@ -204,7 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Content Area */}
-            <div className="p-6">
+            <div className="flex-grow p-6 overflow-y-auto" style={{maxHeight: "460px"}}>
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center text-gray-500">

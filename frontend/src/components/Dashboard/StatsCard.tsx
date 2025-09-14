@@ -2,7 +2,7 @@ import React from 'react';
 import { LucideIcon } from 'lucide-react';
 
 interface StatsCardProps {
-  title: string;
+  title: React.ReactNode;
   value: number;
   icon: LucideIcon;
   description: string;
@@ -29,8 +29,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
           <Icon className="h-5 w-5 text-blue-600" />
         </div>
         <div className="ml-3">
-          <h3 className={`text-xs font-medium text-gray-900 ${titleClassName}`}>{title}</h3>
-          <p className="text-xl font-semibold text-gray-900">{value}</p>
+          <h3 className={`text-xs font-medium text-gray-900 mb-1 ${titleClassName}`}>{title}</h3>
+          <p className="text-xl font-semibold text-gray-900 mb-0 leading-none">{value}</p>
           <span
             className={`text-xs ${
               trend.label === "planned"

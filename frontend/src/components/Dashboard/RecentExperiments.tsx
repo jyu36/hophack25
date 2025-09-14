@@ -16,9 +16,13 @@ const RecentExperiments: React.FC<RecentExperimentsProps> = ({ experiments }) =>
   }
 
   return (
-    <div className="space-y-4">
-      {experiments.map((experiment) => (
-        <ExperimentCard key={experiment.id} experiment={experiment} />
+    <div className="space-y-4 h-full flex flex-col">
+      {experiments.map((experiment, index) => (
+        <ExperimentCard
+          key={experiment.id}
+          experiment={experiment}
+          className={index === experiments.length - 1 ? 'mb-0' : ''}
+        />
       ))}
     </div>
   );

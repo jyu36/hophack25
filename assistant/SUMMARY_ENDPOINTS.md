@@ -190,13 +190,43 @@ The service fetches data from the backend's `/graph/overview` endpoint and proce
 
 ### LLM Integration
 
-Currently uses a template-based approach for summary generation. The service is designed to easily integrate with:
+The service uses OpenAI's GPT models for intelligent summary generation:
 
-- OpenAI API
-- Anthropic Claude
-- Other LLM services
+- **Model**: Uses the same model as the main agent (default: `gpt-4o`)
+- **API Key**: Uses the same `OPENAI_API_KEY` environment variable
+- **Fallback**: Falls back to template-based summaries if LLM fails
+- **Token Management**: Configured with appropriate token limits (2000 max tokens)
+- **Temperature**: Set to 0.7 for balanced creativity and consistency
 
-The `generateSummaryWithLLM` method can be extended to call actual LLM services.
+The service automatically handles:
+- API errors and retries
+- Token usage tracking
+- Fallback to template summaries
+- Detailed logging of LLM interactions
+
+### Logging Details
+
+The service provides comprehensive logging for debugging and monitoring:
+
+**Request Logging** (`DEBUG` level):
+- Complete system and user prompts sent to GPT-4o
+- Full graph data (nodes and edges) being processed
+- Request parameters (model, temperature, max tokens)
+- Data size and prompt length metrics
+
+**Response Logging** (`DEBUG` level):
+- Complete response from GPT-4o
+- Token usage breakdown (prompt, completion, total)
+- Response metadata (finish reason, response ID, model)
+- Generated summary content
+
+**Summary Logging** (`INFO` level):
+- Summary type (overview vs weekly)
+- Node and edge counts processed
+- Summary length and token usage
+- Generation success/failure status
+
+To see detailed logs, set your log level to `DEBUG` in the environment variables.
 
 ## Testing
 
@@ -227,9 +257,11 @@ private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 ## Future Enhancements
 
-1. **LLM Integration**: Replace template-based summaries with actual LLM calls
-2. **Custom Time Ranges**: Allow custom date ranges for weekly summaries
-3. **Summary Formats**: Support different output formats (JSON, HTML, PDF)
-4. **Real-time Updates**: WebSocket support for real-time summary updates
-5. **Advanced Caching**: Redis-based distributed caching
-6. **Summary Templates**: Customizable summary templates per project
+1. **Custom Time Ranges**: Allow custom date ranges for weekly summaries
+2. **Summary Formats**: Support different output formats (JSON, HTML, PDF)
+3. **Real-time Updates**: WebSocket support for real-time summary updates
+4. **Advanced Caching**: Redis-based distributed caching
+5. **Summary Templates**: Customizable summary templates per project
+6. **Multiple LLM Providers**: Support for Anthropic Claude, Google Gemini, etc.
+7. **Summary Customization**: Allow users to specify summary focus areas
+8. **Export Features**: Direct export to various formats

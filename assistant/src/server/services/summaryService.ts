@@ -1,4 +1,5 @@
 import axios from 'axios';
+import OpenAI from 'openai';
 import { createCategoryLogger } from '../../logger';
 import { getGraphOverview } from '../../tools';
 
@@ -47,8 +48,14 @@ export class SummaryService {
   private cache: Map<string, CacheEntry> = new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private readonly BASE_URL = process.env.GRAPH_API_BASE || 'http://127.0.0.1:8000';
+  private openai: OpenAI;
 
   constructor() {
+    // Initialize OpenAI client
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+
     // Clean up expired cache entries every 10 minutes
     setInterval(() => this.cleanupCache(), 10 * 60 * 1000);
   }
@@ -130,22 +137,122 @@ export class SummaryService {
         }))
       };
 
-      // For now, we'll use a simple template-based approach
-      // In a real implementation, you'd call your LLM service here
-      // This could be integrated with OpenAI, Anthropic, or other LLM services
-      const summary = this.generateTemplateSummary(graphData, prompt);
-      
-      logger.info('Generated summary with LLM', { 
+      // Create a comprehensive prompt for the LLM
+      const systemPrompt = `You are a research assistant that generates comprehensive summaries of research projects. 
+You will be given graph data containing experiments (nodes) and their relationships (edges). 
+Generate a well-structured, informative summary that provides insights into the research progress and connections. 
+Be concise and to the point.
+
+Guidelines:
+- Use clear, professional language
+- Structure the summary with appropriate headings
+- Highlight key findings, progress, and relationships
+- Include statistics about the research scope
+- Make the summary engaging and informative
+- Focus on the most important and recent developments`;
+
+      const userPrompt = `${prompt}
+
+Here is the research project data in a graphical format:
+
+**Experiments (${nodes.length} total):**
+${JSON.stringify(graphData.nodes, null, 2)}
+
+**Relationships (${edges.length} total):**
+${JSON.stringify(graphData.edges, null, 2)}
+
+Please generate a comprehensive summary of this research project.`;
+
+      logger.info('Calling OpenAI API for summary generation', { 
         nodeCount: nodes.length, 
-        edgeCount: edges.length 
+        edgeCount: edges.length,
+        model: process.env.ASSISTANT_MODEL || 'gpt-4o',
+        summaryType: prompt.includes('weekly') ? 'weekly' : 'overview'
+      });
+
+      // Log the complete prompt and data being sent to GPT-4o
+      const messages = [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: userPrompt
+        }
+      ];
+
+      logger.debug('GPT-4o Summary Generation Request', {
+        messages,
+        systemPrompt,
+        userPrompt,
+        graphData: {
+          nodes: graphData.nodes,
+          edges: graphData.edges
+        },
+        promptLength: userPrompt.length,
+        dataSize: JSON.stringify(graphData).length,
+        model: process.env.ASSISTANT_MODEL || 'gpt-4o',
+        temperature: 0.7,
+        maxTokens: 2000
+      });
+
+      const response = await this.openai.chat.completions.create({
+        model: process.env.ASSISTANT_MODEL || 'gpt-4o',
+        messages: messages as any,
+        temperature: 0.7,
+        max_tokens: 2000
+      });
+
+      const summary = response.choices[0].message.content || 'Unable to generate summary';
+      
+      // Log the complete response from GPT-4o
+      logger.debug('GPT-4o Summary Generation Response', {
+        summary,
+        finishReason: response.choices[0].finish_reason,
+        usage: response.usage,
+        responseId: response.id,
+        model: response.model
+      });
+      
+      logger.info('Generated summary with OpenAI', { 
+        nodeCount: nodes.length, 
+        edgeCount: edges.length,
+        summaryLength: summary.length,
+        tokensUsed: response.usage?.total_tokens || 0,
+        promptTokens: response.usage?.prompt_tokens || 0,
+        completionTokens: response.usage?.completion_tokens || 0
       });
       
       return summary;
     } catch (error) {
-      logger.error('Failed to generate summary with LLM', { 
-        error: error instanceof Error ? error.message : String(error) 
+      logger.error('Failed to generate summary with OpenAI', { 
+        error: error instanceof Error ? error.message : String(error),
+        nodeCount: nodes.length,
+        edgeCount: edges.length
       });
-      throw new Error('Failed to generate summary');
+      
+      // Fallback to template-based summary if LLM fails
+      logger.warn('Falling back to template-based summary generation');
+      const graphData = {
+        nodes: nodes.map(node => ({
+          id: node.id,
+          title: node.title,
+          status: node.status,
+          description: node.description,
+          created_at: node.created_at,
+          updated_at: node.updated_at
+        })),
+        edges: edges.map(edge => ({
+          id: edge.id,
+          from: edge.from,
+          to: edge.to,
+          type: edge.type,
+          label: edge.label
+        }))
+      };
+      
+      return this.generateTemplateSummary(graphData, prompt);
     }
   }
 
@@ -216,7 +323,18 @@ export class SummaryService {
       const { nodes, edges } = graphData;
 
       // Generate summary
-      const overviewPrompt = `Generate a comprehensive overview summary of this research project from the beginning. Include all experiments, their relationships, and overall progress.`;
+      const overviewPrompt = `Generate a comprehensive overview summary of this research project from the beginning. 
+
+Focus on:
+- Overall project scope and objectives
+- Complete timeline of all experiments
+- Key relationships and dependencies between experiments
+- Progress status across all experiments
+- Major findings and results
+- Project structure and organization
+- Next steps and future directions
+
+Provide a complete picture of the entire research project. Space is limited, so be concise and to the point.`;
       const summary = await this.generateSummaryWithLLM(nodes, edges, overviewPrompt);
 
       const response: SummaryResponse = {
@@ -284,7 +402,20 @@ export class SummaryService {
       );
 
       // Generate summary
-      const weeklyPrompt = `Generate a weekly summary focusing only on experiments and relationships that were updated in the last week. Highlight recent progress, changes, and new developments.`;
+      const weeklyPrompt = `Generate a weekly summary focusing only on experiments and relationships that were updated in the last week. 
+This will be a first-person narrative on the progress of the project this week, which is well-readable to reportable to professors and other stakeholders.
+Focus on:
+- Recent changes and updates to experiments
+- New experiments or relationships created this week, with intention or desired outcomes. (Emphasize the high level picture)
+- Progress made on ongoing experiments (status changes, etc.)
+- Results or findings from completed experiments
+- Changes in experiment status or direction
+- New insights or discoveries
+- Impact of recent changes on the overall project
+- What was accomplished this week
+- Any blockers or challenges encountered
+
+This should be a focused report on recent activity and progress.`;
       const summary = await this.generateSummaryWithLLM(recentNodes, recentEdges, weeklyPrompt);
 
       const response: SummaryResponse = {

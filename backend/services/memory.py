@@ -87,8 +87,16 @@ async def get_node_context(node_id: int, db: Session) -> Dict[str, Any]:
         print(f"[memory] API get_node_info failed: {e}; falling back to DB")
         info = await _get_node_info_db(node_id, db, with_parents=True, with_children=True)
 
-    parents_brief = [f"{p['title']} ({p['relationship']})" for p in info.get("parents", [])]
-    children_brief = [f"{c['title']} ({c['relationship']})" for c in info.get("children", [])]
+    def _brief(items):
+        out = []
+        for it in items or []:
+            title = it.get("title") or ""
+            rel = it.get("relationship") or ""
+            out.append(f"{title} ({rel})" if rel else title)
+        return out
+
+    parents_brief = _brief(info.get("parents", []))
+    children_brief = _brief(info.get("children", []))
 
     return {
         "problem": info["node"].get("title"),

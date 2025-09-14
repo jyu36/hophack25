@@ -1,5 +1,6 @@
 # backend/services/llm_gemini.py
 import os, json
+from pathlib import Path
 from typing import Dict, Any, List
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -14,15 +15,19 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 if API_KEY:
     genai.configure(api_key=API_KEY)
 
-# Jinja2 environment for prompt templates
+# Jinja2 environment for prompt templates (absolute path, robust to CWD)
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "prompts"
 env = Environment(
-    loader=FileSystemLoader("backend/prompts"),
+    loader=FileSystemLoader(str(TEMPLATES_DIR)),
     autoescape=select_autoescape([]),
     trim_blocks=True, lstrip_blocks=True,
 )
 
 def _render(tpl: str, **kw) -> str:
-    return env.get_template(tpl).render(**kw)
+    try:
+        return env.get_template(tpl).render(**kw)
+    except Exception as e:
+        raise RuntimeError(f"Template render failed for {tpl} in {TEMPLATES_DIR}: {e}")
 
 def _resp_text(resp) -> str:
     """

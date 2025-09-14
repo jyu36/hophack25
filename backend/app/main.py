@@ -38,8 +38,8 @@ app.include_router(feedback.router, tags=["feedback"])
 app.include_router(slides_endpoints.router, tags=["slides"])
 app.include_router(file_upload.router, prefix="/files", tags=["files"])
 
-BASE_DIR = Path(__file__).resolve().parents[1]       
-GENERATED_DIR = BASE_DIR / "generated"                 
+BASE_DIR = Path(__file__).resolve().parents[1]
+GENERATED_DIR = BASE_DIR / "generated"
 GENERATED_DIR.mkdir(exist_ok=True)
 app.mount("/download", StaticFiles(directory=GENERATED_DIR), name="download")
 

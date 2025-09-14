@@ -9,6 +9,35 @@ const api = axios.create({
   },
 });
 
+// Notes and Discussion Operations
+export async function getNotes(): Promise<{ last_meeting_notes: string }> {
+  const response = await api.get("/notes");
+  return response.data;
+}
+
+export async function updateNotes(
+  notes: string
+): Promise<{ success: boolean }> {
+  const response = await api.post("/notes", null, {
+    params: { last_meeting_notes: notes },
+  });
+  return response.data;
+}
+
+export async function getDiscussion(): Promise<{ discussion_points: string }> {
+  const response = await api.get("/discussion");
+  return response.data;
+}
+
+export async function updateDiscussion(
+  points: string
+): Promise<{ success: boolean }> {
+  const response = await api.post("/discussion", null, {
+    params: { discussion_points: points },
+  });
+  return response.data;
+}
+
 // Graph and Node Operations
 export async function getGraphOverview(): Promise<GraphOverview> {
   const response = await api.get("/graph/overview");

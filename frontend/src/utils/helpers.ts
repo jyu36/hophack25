@@ -13,12 +13,10 @@ export function experimentsToNodes(experiments: Experiment[]): Node[] {
   return experiments.map((exp) => ({
     id: exp.id.toString(),
     type: 'custom',
-    position: { x: Math.random() * 500, y: Math.random() * 500 }, // You might want to use a proper layout algorithm
+    position: { x: 0, y: 0 }, // Let dagre layout handle positioning
     data: {
-      title: exp.title,
-      type: exp.type,
-      status: exp.status,
-      description: exp.description,
+      ...exp, // Include all experiment data
+      onNodeDoubleClick: () => {}, // Will be set by GraphView
     },
   }));
 }

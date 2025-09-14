@@ -8,22 +8,9 @@ interface LegendProps {
 
 const Legend: React.FC<LegendProps> = ({ isCollapsed, onToggle }) => {
   const nodeStatuses = [
-<<<<<<< HEAD
     { label: 'Completed', color: 'bg-green-500', description: 'Successfully completed experiments' },
     { label: 'Planned', color: 'bg-yellow-500', description: 'Experiments planned for later' },
     { label: 'Postponed', color: 'bg-red-500', description: 'Postponed or cancelled experiments' },
-=======
-    {
-      label: "Accepted Experiments",
-      color: "bg-green-500",
-      description: "Successfully validated experiments",
-    },
-    {
-      label: "For Later",
-      color: "bg-yellow-500",
-      description: "Ideas to revisit later",
-    },
->>>>>>> main
   ];
 
   const nodeTypes = [

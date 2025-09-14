@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from "react";
 import ReactFlow, {
   Background,
-  // Controls, // Removed Controls import
   Edge,
   Node,
   NodeTypes,
@@ -16,7 +15,6 @@ import "reactflow/dist/style.css";
 
 import CustomNode from "./Node";
 import NodeDetailsModal from "./NodeDetailsModal";
-import CustomZoomControls from "./CustomZoomControls";
 import { ResearchNode, NodeDetails, NodeStatus } from "../../types/research";
 
 interface GraphViewProps {
@@ -41,86 +39,6 @@ const nodeTypes: NodeTypes = {
   custom: CustomNode,
 };
 
-<<<<<<< HEAD
-// Custom Zoom Controls Component
-const CustomZoomControls: React.FC<{
-  reactFlowInstance: ReactFlowInstance | null;
-  isPanMode: boolean;
-  onPanModeToggle: () => void;
-}> = ({ reactFlowInstance, isPanMode, onPanModeToggle }) => {
-  const [zoomLevel, setZoomLevel] = useState(1);
-
-  const updateZoomLevel = useCallback(() => {
-    if (reactFlowInstance) {
-      setZoomLevel(reactFlowInstance.getZoom());
-    }
-  }, [reactFlowInstance]);
-
-  const handleZoomIn = useCallback(() => {
-    if (reactFlowInstance) {
-      reactFlowInstance.zoomIn();
-      updateZoomLevel();
-    }
-  }, [reactFlowInstance, updateZoomLevel]);
-
-  const handleZoomOut = useCallback(() => {
-    if (reactFlowInstance) {
-      reactFlowInstance.zoomOut();
-      updateZoomLevel();
-    }
-  }, [reactFlowInstance, updateZoomLevel]);
-
-  const handleFitView = useCallback(() => {
-    if (reactFlowInstance) {
-      reactFlowInstance.fitView({ padding: 0.1 });
-      updateZoomLevel();
-    }
-  }, [reactFlowInstance, updateZoomLevel]);
-
-  const handleResetView = useCallback(() => {
-    if (reactFlowInstance) {
-      reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
-      setZoomLevel(1);
-    }
-  }, [reactFlowInstance]);
-
-  const handleZoomSlider = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (reactFlowInstance) {
-        const newZoom = parseFloat(event.target.value);
-        const viewport = reactFlowInstance.getViewport();
-        reactFlowInstance.setViewport({ ...viewport, zoom: newZoom });
-        setZoomLevel(newZoom);
-      }
-    },
-    [reactFlowInstance]
-  );
-
-  const handlePanModeToggle = useCallback(() => {
-    onPanModeToggle();
-  }, [onPanModeToggle]);
-
-  // Update zoom level when ReactFlow instance changes
-  React.useEffect(() => {
-    if (reactFlowInstance) {
-      updateZoomLevel();
-    }
-  }, [reactFlowInstance, updateZoomLevel]);
-
-  // Debug log to verify component is rendering
-  // console.log(
-  //   "CustomZoomControls rendering, reactFlowInstance:",
-  //   !!reactFlowInstance
-  // );
-
-  return (
-    // Removed CustomZoomControls component
-    null
-  );
-};
-
-=======
->>>>>>> main
 // Use dagre layout algorithm
 const getLayoutedElements = (
   nodes: Node[],
@@ -183,7 +101,6 @@ const GraphView: React.FC<GraphViewProps> = ({
   });
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance | null>(null);
-  // const [isPanMode, setIsPanMode] = useState(false); // Removed isPanMode state
 
   // Apply layout
   const { nodes, edges } = getLayoutedElements(initialNodes, initialEdges);
@@ -228,41 +145,6 @@ const GraphView: React.FC<GraphViewProps> = ({
     }
   };
 
-  // Keyboard shortcuts for zoom and pan
-  // const handleKeyDown = useCallback(
-  //   (event: KeyboardEvent) => {
-  //     if (!reactFlowInstance) return;
-  //
-  //     if (event.ctrlKey || event.metaKey) {
-  //       switch (event.key) {
-  //         case "=":
-  //         case "+":
-  //           event.preventDefault();
-  //           reactFlowInstance.zoomIn();
-  //           break;
-  //         case "-":
-  //           event.preventDefault();
-  //           reactFlowInstance.zoomOut();
-  //           break;
-  //         case "0":
-  //           event.preventDefault();
-  //           reactFlowInstance.fitView({ padding: 0.1 });
-  //           break;
-  //       }
-  //     } else if (event.key === " ") {
-  //       event.preventDefault();
-  //       setIsPanMode(!isPanMode);
-  //     }
-  //   },
-  //   [reactFlowInstance, isPanMode]
-  // );
-
-  // Add keyboard event listeners
-  // React.useEffect(() => {
-  //   document.addEventListener("keydown", handleKeyDown);
-  //   return () => document.removeEventListener("keydown", handleKeyDown);
-  // }, [handleKeyDown]);
-
   // Add onNodeDoubleClick to node data
   const nodesWithCallback = nodes.map((node) => ({
     ...node,
@@ -273,38 +155,7 @@ const GraphView: React.FC<GraphViewProps> = ({
   }));
 
   return (
-    <div
-      className="h-full w-full bg-gray-50 relative"
-      style={{ width: "100%", height: "100vh", position: "relative" }}
-    >
-      <style>{`
-        .react-flow {
-          width: 100%;
-          height: 100%;
-        }
-        .react-flow__container {
-          width: 100%;
-          height: 100%;
-        }
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .slider::-moz-range-thumb {
-          height: 16px;
-          width: 16px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-      `}</style>
+    <div className="relative w-full h-full bg-gray-50">
       <ReactFlow
         nodes={nodesWithCallback}
         edges={edgesWithStyle}
@@ -318,23 +169,16 @@ const GraphView: React.FC<GraphViewProps> = ({
         minZoom={0.1}
         maxZoom={2}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-        // panOnDrag={!isPanMode} // Removed panOnDrag
         panOnScroll={true}
         zoomOnScroll={true}
         zoomOnPinch={true}
         preventScrolling={false}
-        // nodesDraggable={!isPanMode} // Removed nodesDraggable
-        // nodesConnectable={!isPanMode} // Removed nodesConnectable
-        // elementsSelectable={!isPanMode} // Removed elementsSelectable
+        nodesDraggable={true}
+        nodesConnectable={true}
+        elementsSelectable={true}
       >
         <Background />
-        {/* <Controls /> */} {/* Removed Controls component */}
       </ReactFlow>
-      {/* <CustomZoomControls // Removed CustomZoomControls
-        reactFlowInstance={reactFlowInstance}
-        isPanMode={isPanMode}
-        onPanModeToggle={() => setIsPanMode(!isPanMode)}
-      /> */}
 
       {selectedNode && (
         <NodeDetailsModal

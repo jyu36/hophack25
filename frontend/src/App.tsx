@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import AIChatResearchAssistant from "./components/AIChatResearchAssistant";
 import Dashboard from "./components/Dashboard/Dashboard";
+import Communication from "./components/Communication/Communication";
+import MainLayout from "./components/Common/Layout";
 import { ExperimentSuggestion } from "./types/research";
 
 const DashboardWrapper: React.FC = () => {
@@ -37,12 +39,13 @@ const ResearchAssistantWrapper: React.FC = () => {
 const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <div className="h-screen">
+      <MainLayout>
         <Routes>
           <Route path="/" element={<DashboardWrapper />} />
           <Route path="/research" element={<ResearchAssistantWrapper />} />
+          <Route path="/communication" element={<Communication />} />
         </Routes>
-      </div>
+      </MainLayout>
     </BrowserRouter>
   );
 };

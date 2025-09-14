@@ -5,6 +5,7 @@ export const createCorsMiddleware = (config: ServerConfig) => {
   // Allow multiple origins for different frontend ports
   const allowedOrigins = [
     "http://localhost:3000", // Main frontend
+    "http://localhost:3003", // Professor Frontend
 
     config.corsOrigin,
   ].filter((origin, index, self) => self.indexOf(origin) === index); // Remove duplicates
